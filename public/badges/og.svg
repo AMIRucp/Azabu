@@ -1,0 +1,93 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <defs>
+    <clipPath id="c"><circle cx="128" cy="128" r="120"/></clipPath>
+    <radialGradient id="sunburst" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#F59E0B" stop-opacity="0.2"/>
+      <stop offset="100%" stop-color="#111419" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="gold-mask" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFE566"/>
+      <stop offset="40%" stop-color="#FFD700"/>
+      <stop offset="100%" stop-color="#C89A00"/>
+    </linearGradient>
+    <filter id="shimmer">
+      <feGaussianBlur stdDeviation="2" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <circle cx="128" cy="128" r="128" fill="#0E1117"/>
+  <g clip-path="url(#c)">
+    <circle cx="128" cy="128" r="128" fill="#0A0B0E"/>
+    <!-- Sunburst pattern -->
+    <circle cx="128" cy="105" r="90" fill="url(#sunburst)"/>
+    <g stroke="#F59E0B" stroke-width="0.5" opacity="0.1">
+      <line x1="128" y1="30" x2="128" y2="15"/>
+      <line x1="170" y1="47" x2="182" y2="36"/>
+      <line x1="196" y1="88" x2="210" y2="80"/>
+      <line x1="196" y1="130" x2="214" y2="130"/>
+      <line x1="86" y1="47" x2="74" y2="36"/>
+      <line x1="60" y1="88" x2="46" y2="80"/>
+      <line x1="60" y1="130" x2="42" y2="130"/>
+    </g>
+    <!-- Shrine pedestal (kamidana) -->
+    <rect x="76" y="185" width="104" height="12" rx="2" fill="#8B4513"/>
+    <rect x="70" y="196" width="116" height="8" rx="2" fill="#6B3410"/>
+    <rect x="64" y="203" width="128" height="15" rx="3" fill="#7A3A10"/>
+    <!-- Pedestal decorative lines -->
+    <line x1="70" y1="200" x2="186" y2="200" stroke="#9B5520" stroke-width="1" opacity="0.5"/>
+    <!-- Kanji 元祖 carved into pedestal -->
+    <text x="128" y="215" font-family="serif" font-size="14" text-anchor="middle" fill="#D4A020" opacity="0.85" font-weight="bold">元祖</text>
+    <!-- Candle left -->
+    <rect x="84" y="148" width="8" height="40" rx="2" fill="#F0F2F5" opacity="0.9"/>
+    <rect x="82" y="186" width="12" height="4" rx="1" fill="#D0D0D0"/>
+    <path d="M88 142 Q88 136 90 140 Q92 135 90 148 Q88 143 86 148 Q84 135 86 140 Q88 136 88 142Z" fill="#FBBF24">
+      <animate attributeName="d" values="M88 142 Q88 136 90 140 Q92 135 90 148 Q88 143 86 148 Q84 135 86 140 Q88 136 88 142Z;M88 140 Q89 134 91 138 Q93 133 91 148 Q89 143 87 148 Q85 133 87 138 Q89 134 88 140Z;M88 142 Q88 136 90 140 Q92 135 90 148 Q88 143 86 148 Q84 135 86 140 Q88 136 88 142Z" dur="2s" repeatCount="indefinite"/>
+    </path>
+    <!-- Candle right -->
+    <rect x="164" y="148" width="8" height="40" rx="2" fill="#F0F2F5" opacity="0.9"/>
+    <rect x="162" y="186" width="12" height="4" rx="1" fill="#D0D0D0"/>
+    <path d="M168 142 Q168 136 170 140 Q172 135 170 148 Q168 143 166 148 Q164 135 166 140 Q168 136 168 142Z" fill="#FBBF24">
+      <animate attributeName="d" values="M168 142 Q168 136 170 140 Q172 135 170 148 Q168 143 166 148 Q164 135 166 140 Q168 136 168 142Z;M168 140 Q169 134 171 138 Q173 133 171 148 Q169 143 167 148 Q165 133 167 138 Q169 134 168 140Z;M168 142 Q168 136 170 140 Q172 135 170 148 Q168 143 166 148 Q164 135 166 140 Q168 136 168 142Z" dur="2s" repeatCount="indefinite" begin="0.5s"/>
+    </path>
+    <!-- Gold Oni Mask (aged patina) -->
+    <g filter="url(#shimmer)">
+      <!-- Mask face -->
+      <ellipse cx="128" cy="120" rx="44" ry="48" fill="url(#gold-mask)"/>
+      <!-- Aged texture marks -->
+      <path d="M100 100 Q110 108 108 120" fill="none" stroke="#C89A00" stroke-width="1.5" opacity="0.5"/>
+      <path d="M155 102 Q146 110 148 122" fill="none" stroke="#C89A00" stroke-width="1.5" opacity="0.5"/>
+      <!-- Forehead wrinkles -->
+      <path d="M108 98 Q128 92 148 98" fill="none" stroke="#C89A00" stroke-width="2" opacity="0.5"/>
+      <!-- Horns (gold) -->
+      <polygon points="108,82 94,52 118,80" fill="#FFD700"/>
+      <polygon points="148,82 162,52 138,80" fill="#FFD700"/>
+      <!-- Eyes -->
+      <ellipse cx="110" cy="114" rx="12" ry="10" fill="#8B4513"/>
+      <ellipse cx="146" cy="114" rx="12" ry="10" fill="#8B4513"/>
+      <ellipse cx="110" cy="114" rx="7" ry="6" fill="#5A2A00"/>
+      <ellipse cx="146" cy="114" rx="7" ry="6" fill="#5A2A00"/>
+      <!-- Eye gold shimmer -->
+      <circle cx="110" cy="114" r="5" fill="#D4A020" opacity="0.6">
+        <animate attributeName="opacity" values="0.6;0.2;0.6" dur="4s" repeatCount="indefinite"/>
+      </circle>
+      <circle cx="146" cy="114" r="5" fill="#D4A020" opacity="0.6">
+        <animate attributeName="opacity" values="0.6;0.2;0.6" dur="4s" repeatCount="indefinite" begin="0.5s"/>
+      </circle>
+      <!-- Nose -->
+      <ellipse cx="128" cy="128" rx="7" ry="5" fill="#C89A00"/>
+      <!-- Mouth -->
+      <path d="M106 143 Q118 155 128 156 Q138 155 150 143" fill="#7A3A00"/>
+      <!-- Fangs -->
+      <polygon points="114,148 110,160 118,150" fill="#F0F2F5"/>
+      <polygon points="142,148 146,160 138,150" fill="#F0F2F5"/>
+      <!-- Shimmer sweep effect -->
+      <ellipse cx="108" cy="105" rx="15" ry="40" fill="white" opacity="0.08" transform="rotate(-20, 108, 105)">
+        <animate attributeName="cx" values="90;170;90" dur="4s" repeatCount="indefinite"/>
+        <animate attributeName="opacity" values="0;0.12;0" dur="4s" repeatCount="indefinite"/>
+      </ellipse>
+    </g>
+  </g>
+  <circle cx="128" cy="128" r="122" fill="none" stroke="#F59E0B" stroke-width="2.5">
+    <animate attributeName="stroke-dasharray" values="0,800;200,600;400,400;600,200;800,0;600,200;400,400;200,600;0,800" dur="4s" repeatCount="indefinite"/>
+  </circle>
+</svg>

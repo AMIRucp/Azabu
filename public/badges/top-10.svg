@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <defs>
+    <clipPath id="c"><circle cx="128" cy="128" r="120"/></clipPath>
+    <linearGradient id="sunrise" x1="0%" y1="100%" x2="0%" y2="0%">
+      <stop offset="0%" stop-color="#E8751A"/>
+      <stop offset="100%" stop-color="#FFD700"/>
+    </linearGradient>
+    <linearGradient id="mountain" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#334155"/>
+      <stop offset="100%" stop-color="#1E293B"/>
+    </linearGradient>
+  </defs>
+  <circle cx="128" cy="128" r="128" fill="#0E1117"/>
+  <g clip-path="url(#c)">
+    <circle cx="128" cy="128" r="128" fill="#0A0E14"/>
+    <!-- Sunrise rays behind mountain -->
+    <g opacity="0.3" stroke="#FFD700" stroke-width="1.5">
+      <line x1="128" y1="90" x2="128" y2="20"/>
+      <line x1="148" y1="95" x2="168" y2="30"/>
+      <line x1="165" y1="108" x2="200" y2="60"/>
+      <line x1="108" y1="95" x2="88" y2="30"/>
+      <line x1="91" y1="108" x2="56" y2="60"/>
+      <line x1="175" y1="128" x2="220" y2="105"/>
+      <line x1="81" y1="128" x2="36" y2="105"/>
+    </g>
+    <!-- Gold sunrise arc -->
+    <path d="M40 165 Q84 90 128 78 Q172 90 216 165" fill="url(#sunrise)" opacity="0.35"/>
+    <!-- Clouds at base of mountain -->
+    <ellipse cx="55" cy="180" rx="50" ry="20" fill="white" opacity="0.4"/>
+    <ellipse cx="200" cy="175" rx="48" ry="18" fill="white" opacity="0.35"/>
+    <ellipse cx="128" cy="190" rx="55" ry="22" fill="white" opacity="0.3"/>
+    <!-- Mountain peak -->
+    <polygon points="128,55 55,195 201,195" fill="url(#mountain)"/>
+    <!-- Snow cap on peak -->
+    <polygon points="128,55 108,100 148,100" fill="#E8F4F8" opacity="0.7"/>
+    <!-- Mountain dark shadow side -->
+    <polygon points="128,55 55,195 128,195" fill="#1E293B" opacity="0.5"/>
+    <!-- Ground/platform -->
+    <rect x="40" y="192" width="176" height="20" rx="2" fill="#1E293B" opacity="0.6"/>
+    <!-- War banner (sashimono) pole -->
+    <rect x="124" y="45" width="8" height="100" rx="2" fill="#8B4513"/>
+    <!-- Banner cloth -->
+    <rect x="132" y="45" width="50" height="65" rx="3" fill="#F0F2F5">
+      <animate attributeName="width" values="50;44;50;46;50" dur="3s" repeatCount="indefinite"/>
+      <animate attributeName="x" values="132;134;132;133;132" dur="3s" repeatCount="indefinite"/>
+    </rect>
+    <!-- Number 10 brushstroke -->
+    <text x="160" y="90" font-family="serif" font-size="38" text-anchor="middle" fill="#EF4444" font-weight="bold" opacity="0.95">十</text>
+    <!-- Rope at top of banner -->
+    <line x1="132" y1="45" x2="182" y2="45" stroke="#8B4513" stroke-width="3"/>
+    <!-- Tassel ends -->
+    <circle cx="182" cy="48" r="4" fill="#8B4513"/>
+  </g>
+  <circle cx="128" cy="128" r="122" fill="none" stroke="#F59E0B" stroke-width="2.5"/>
+</svg>

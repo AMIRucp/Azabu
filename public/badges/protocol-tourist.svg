@@ -1,0 +1,69 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <defs>
+    <clipPath id="c"><circle cx="128" cy="128" r="120"/></clipPath>
+  </defs>
+  <circle cx="128" cy="128" r="128" fill="#0E1117"/>
+  <g clip-path="url(#c)">
+    <circle cx="128" cy="128" r="128" fill="#111419"/>
+    <!-- Winding path connecting all three castles -->
+    <path d="M55 195 Q75 180 98 175 Q118 170 128 175 Q138 170 158 175 Q181 180 201 195" fill="none" stroke="#F59E0B" stroke-width="3" stroke-dasharray="8 4" opacity="0.8"/>
+    <!-- Banner at top -->
+    <g transform="translate(128, 38)">
+      <rect x="-45" y="0" width="90" height="26" rx="3" fill="#F0F2F5"/>
+      <text x="0" y="19" font-family="serif" font-size="14" text-anchor="middle" fill="#111419" font-weight="bold">遍歴</text>
+    </g>
+    <!-- Aster Castle (left, orange) -->
+    <g transform="translate(52, 140)">
+      <!-- Main tower body -->
+      <rect x="-20" y="-65" width="40" height="70" rx="2" fill="#C05A0A"/>
+      <rect x="-20" y="-65" width="40" height="70" rx="2" fill="#E8751A" opacity="0.6"/>
+      <!-- Tier 1 -->
+      <rect x="-24" y="-68" width="48" height="10" rx="1" fill="#D06810"/>
+      <!-- Tier 2 roof -->
+      <rect x="-16" y="-90" width="32" height="30" rx="2" fill="#C05A0A"/>
+      <rect x="-20" y="-93" width="40" height="8" rx="1" fill="#B04A00"/>
+      <!-- Roof -->
+      <polygon points="-22,-108 0,-125 22,-108" fill="#8B3A00"/>
+      <polygon points="-22,-108 0,-118 22,-108" fill="#E8751A" opacity="0.5"/>
+      <!-- Windows -->
+      <rect x="-8" y="-55" width="8" height="10" rx="1" fill="#FFD700" opacity="0.7"/>
+      <rect x="2" y="-55" width="8" height="10" rx="1" fill="#FFD700" opacity="0.7"/>
+      <!-- Aster label -->
+      <text x="0" y="18" font-family="sans-serif" font-size="8" text-anchor="middle" fill="#E8751A" font-weight="bold">ASTER</text>
+    </g>
+    <!-- Hyperliquid Castle (center, green) -->
+    <g transform="translate(128, 128)">
+      <rect x="-22" y="-68" width="44" height="75" rx="2" fill="#134E35"/>
+      <rect x="-22" y="-68" width="44" height="75" rx="2" fill="#22C55E" opacity="0.5"/>
+      <rect x="-26" y="-72" width="52" height="10" rx="1" fill="#166534"/>
+      <rect x="-18" y="-95" width="36" height="32" rx="2" fill="#15543D"/>
+      <rect x="-22" y="-98" width="44" height="8" rx="1" fill="#124D38"/>
+      <polygon points="-24,-115 0,-135 24,-115" fill="#0D3D2A"/>
+      <polygon points="-24,-115 0,-124 24,-115" fill="#22C55E" opacity="0.4"/>
+      <rect x="-9" y="-58" width="9" height="12" rx="1" fill="#86EFAC" opacity="0.8"/>
+      <rect x="3" y="-58" width="9" height="12" rx="1" fill="#86EFAC" opacity="0.8"/>
+      <text x="0" y="20" font-family="sans-serif" font-size="7" text-anchor="middle" fill="#22C55E" font-weight="bold">HYPERLIQUID</text>
+    </g>
+    <!-- Lighter Castle (right, blue) -->
+    <g transform="translate(204, 140)">
+      <rect x="-20" y="-65" width="40" height="70" rx="2" fill="#1E3A5F"/>
+      <rect x="-20" y="-65" width="40" height="70" rx="2" fill="#3B82F6" opacity="0.5"/>
+      <rect x="-24" y="-68" width="48" height="10" rx="1" fill="#2563EB"/>
+      <rect x="-16" y="-90" width="32" height="30" rx="2" fill="#1E3A5F"/>
+      <rect x="-20" y="-93" width="40" height="8" rx="1" fill="#1E40AF"/>
+      <polygon points="-22,-108 0,-125 22,-108" fill="#1E3A5F"/>
+      <polygon points="-22,-108 0,-118 22,-108" fill="#3B82F6" opacity="0.4"/>
+      <rect x="-8" y="-55" width="8" height="10" rx="1" fill="#93C5FD" opacity="0.8"/>
+      <rect x="2" y="-55" width="8" height="10" rx="1" fill="#93C5FD" opacity="0.8"/>
+      <text x="0" y="18" font-family="sans-serif" font-size="7" text-anchor="middle" fill="#3B82F6" font-weight="bold">LIGHTER</text>
+    </g>
+    <!-- Footprint marks on path -->
+    <g fill="#F59E0B" opacity="0.5">
+      <ellipse cx="90" cy="192" rx="3" ry="4"/>
+      <ellipse cx="100" cy="188" rx="3" ry="4" transform="rotate(10, 100, 188)"/>
+      <ellipse cx="155" cy="188" rx="3" ry="4"/>
+      <ellipse cx="165" cy="192" rx="3" ry="4" transform="rotate(-10, 165, 192)"/>
+    </g>
+  </g>
+  <circle cx="128" cy="128" r="122" fill="none" stroke="#22C55E" stroke-width="1.5" opacity="0.7"/>
+</svg>

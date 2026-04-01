@@ -1,0 +1,9 @@
+<svg viewBox="0 0 200 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <circle cx="100" cy="60" r="24" stroke="#2A2A2A" stroke-width="1" fill="none" />
+  <circle cx="100" cy="60" r="24" stroke="#4A4A47" stroke-width="1" fill="none"
+    stroke-dasharray="20 131" class="arc" />
+  <style>
+    .arc { transform-origin: 100px 60px; animation: spin 1.2s linear infinite; }
+    @keyframes spin { 100%{transform:rotate(360deg)} }
+  </style>
+</svg>

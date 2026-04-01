@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <defs>
+    <clipPath id="c"><circle cx="128" cy="128" r="120"/></clipPath>
+    <linearGradient id="shuriken-g" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF"/>
+      <stop offset="40%" stop-color="#C0C8D8"/>
+      <stop offset="100%" stop-color="#708090"/>
+    </linearGradient>
+    <filter id="metal-shine">
+      <feGaussianBlur stdDeviation="1" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <circle cx="128" cy="128" r="128" fill="#0E1117"/>
+  <g clip-path="url(#c)">
+    <circle cx="128" cy="128" r="128" fill="#0A0D10"/>
+    <!-- Wooden post -->
+    <rect x="112" y="40" width="32" height="180" rx="4" fill="#6B4423"/>
+    <rect x="116" y="40" width="8" height="180" rx="2" fill="#7A5030" opacity="0.5"/>
+    <!-- Wood grain -->
+    <g stroke="#5A3815" stroke-width="0.5" opacity="0.4">
+      <line x1="115" y1="60" x2="142" y2="58"/>
+      <line x1="114" y1="80" x2="141" y2="82"/>
+      <line x1="115" y1="100" x2="143" y2="98"/>
+      <line x1="114" y1="120" x2="142" y2="122"/>
+      <line x1="115" y1="140" x2="143" y2="138"/>
+      <line x1="114" y1="160" x2="141" y2="162"/>
+      <line x1="115" y1="180" x2="143" y2="178"/>
+    </g>
+    <!-- Crack from shuriken impact -->
+    <g stroke="#4A2E10" stroke-width="2" fill="none" opacity="0.7">
+      <line x1="128" y1="128" x2="108" y2="108"/>
+      <line x1="128" y1="128" x2="148" y2="108"/>
+      <line x1="128" y1="128" x2="108" y2="148"/>
+      <line x1="128" y1="128" x2="148" y2="148"/>
+      <line x1="128" y1="128" x2="118" y2="104"/>
+      <line x1="128" y1="128" x2="138" y2="152"/>
+    </g>
+    <!-- Scope reticle rings (blue) -->
+    <g stroke="#3B82F6" fill="none" opacity="0.35">
+      <circle cx="128" cy="128" r="72"/>
+      <circle cx="128" cy="128" r="54"/>
+      <circle cx="128" cy="128" r="36"/>
+      <circle cx="128" cy="128" r="18"/>
+    </g>
+    <!-- Reticle crosshairs -->
+    <g stroke="#3B82F6" stroke-width="0.8" opacity="0.25">
+      <line x1="56" y1="128" x2="200" y2="128"/>
+      <line x1="128" y1="56" x2="128" y2="200"/>
+    </g>
+    <!-- Shuriken (4-point throwing star) -->
+    <g transform="translate(128, 128)" filter="url(#metal-shine)">
+      <!-- 4 blade shuriken -->
+      <polygon points="0,-28 -8,-8 0,-4 8,-8" fill="url(#shuriken-g)"/>
+      <polygon points="28,0 8,-8 4,0 8,8" fill="url(#shuriken-g)"/>
+      <polygon points="0,28 8,8 0,4 -8,8" fill="url(#shuriken-g)"/>
+      <polygon points="-28,0 -8,8 -4,0 -8,-8" fill="url(#shuriken-g)"/>
+      <!-- Center hub -->
+      <circle cx="0" cy="0" r="8" fill="#708090"/>
+      <circle cx="0" cy="0" r="4" fill="#C0C8D8"/>
+      <!-- Shine effect -->
+      <ellipse cx="-5" cy="-5" rx="8" ry="4" fill="white" opacity="0.3" transform="rotate(-45, -5, -5)">
+        <animate attributeName="opacity" values="0.3;0.7;0.3" dur="4s" repeatCount="indefinite"/>
+      </ellipse>
+    </g>
+  </g>
+  <circle cx="128" cy="128" r="122" fill="none" stroke="#3B82F6" stroke-width="2"/>
+</svg>

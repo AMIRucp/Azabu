@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <defs>
+    <clipPath id="c"><circle cx="128" cy="128" r="120"/></clipPath>
+  </defs>
+  <circle cx="128" cy="128" r="128" fill="#0E1117"/>
+  <g clip-path="url(#c)">
+    <circle cx="128" cy="128" r="128" fill="#111419"/>
+    <!-- Target board (mato) -->
+    <circle cx="128" cy="140" r="76" fill="#8B4513"/>
+    <circle cx="128" cy="140" r="60" fill="#A0522D"/>
+    <circle cx="128" cy="140" r="44" fill="#8B4513"/>
+    <circle cx="128" cy="140" r="28" fill="#A0522D"/>
+    <!-- Bullseye (hinomaru) -->
+    <circle cx="128" cy="140" r="14" fill="#EF4444"/>
+    <!-- Wood grain lines -->
+    <line x1="52" y1="140" x2="204" y2="140" stroke="#7A3A0A" stroke-width="1" opacity="0.4"/>
+    <line x1="65" y1="100" x2="65" y2="180" stroke="#7A3A0A" stroke-width="1" opacity="0.3"/>
+    <line x1="191" y1="100" x2="191" y2="180" stroke="#7A3A0A" stroke-width="1" opacity="0.3"/>
+    <!-- Arrow shaft -->
+    <line x1="128" y1="30" x2="128" y2="142" stroke="#C0C0C0" stroke-width="4" stroke-linecap="round"/>
+    <!-- Arrow fletchings -->
+    <polygon points="128,30 118,52 138,52" fill="#888888"/>
+    <polygon points="128,30 116,48 120,30" fill="#AAAAAA"/>
+    <polygon points="128,30 140,48 136,30" fill="#AAAAAA"/>
+    <!-- Arrowhead -->
+    <polygon points="128,138 122,158 134,158" fill="#C0C0C0"/>
+    <polygon points="122,158 128,170 134,158" fill="#9090A0"/>
+    <!-- Wood splinters from impact -->
+    <g fill="#D4A574" opacity="0.9">
+      <polygon points="128,126 132,118 136,126"/>
+      <polygon points="128,126 120,118 124,128"/>
+      <polygon points="140,132 148,124 146,134"/>
+      <polygon points="116,132 108,124 110,134"/>
+      <polygon points="134,122 140,112 143,122"/>
+      <polygon points="122,122 116,112 113,122"/>
+    </g>
+    <!-- Impact mark -->
+    <circle cx="128" cy="140" r="8" fill="none" stroke="#6B3A1A" stroke-width="1.5" opacity="0.6"/>
+  </g>
+  <circle cx="128" cy="128" r="122" fill="none" stroke="#6B7280" stroke-width="1.5"/>
+</svg>

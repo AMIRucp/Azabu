@@ -1,0 +1,12 @@
+<svg viewBox="0 0 200 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <line x1="60" y1="76" x2="140" y2="44" stroke="#4A4A47" stroke-width="1" stroke-linecap="round" class="path" />
+  <polyline points="132,40 140,44 134,52" stroke="#6B6A67" stroke-width="1" fill="none" stroke-linecap="round" stroke-linejoin="round" class="head" />
+  <circle cx="60" cy="76" r="3" stroke="#3D3D3A" stroke-width="1" fill="none" class="origin" />
+  <style>
+    .path { stroke-dasharray: 100; stroke-dashoffset: 100; animation: draw 0.6s ease-out forwards; }
+    @keyframes draw { 100%{stroke-dashoffset:0} }
+    .head { opacity:0; animation: fadeIn 0.3s 0.4s ease-out forwards; }
+    .origin { opacity:0; animation: fadeIn 0.3s ease-out forwards; }
+    @keyframes fadeIn { 100%{opacity:1} }
+  </style>
+</svg>

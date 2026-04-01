@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <defs>
+    <clipPath id="c"><circle cx="128" cy="128" r="120"/></clipPath>
+    <radialGradient id="lantern-glow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#FEF3C7" stop-opacity="0.5"/>
+      <stop offset="100%" stop-color="#E8751A" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <circle cx="128" cy="128" r="128" fill="#0E1117"/>
+  <g clip-path="url(#c)">
+    <circle cx="128" cy="128" r="128" fill="#0F1218"/>
+    <!-- Glow from lantern -->
+    <circle cx="128" cy="138" r="80" fill="url(#lantern-glow)"/>
+    <!-- Lantern top -->
+    <rect x="120" y="48" width="16" height="20" rx="2" fill="#8B4513"/>
+    <rect x="116" y="62" width="24" height="8" rx="3" fill="#6B3410"/>
+    <!-- Lantern frame top ring -->
+    <ellipse cx="128" cy="75" rx="32" ry="8" fill="#8B4513" stroke="#6B3410" stroke-width="1"/>
+    <!-- Lantern paper body -->
+    <rect x="96" y="75" width="64" height="120" rx="4" fill="#FEF3C7"/>
+    <!-- Warm inner glow effect on paper -->
+    <rect x="96" y="75" width="64" height="120" rx="4" fill="#E8751A" opacity="0.25"/>
+    <!-- Lantern ribs (horizontal bands of wood frame) -->
+    <g stroke="#8B4513" stroke-width="2" opacity="0.6">
+      <line x1="96" y1="90" x2="160" y2="90"/>
+      <line x1="96" y1="105" x2="160" y2="105"/>
+      <line x1="96" y1="120" x2="160" y2="120"/>
+      <line x1="96" y1="150" x2="160" y2="150"/>
+      <line x1="96" y1="165" x2="160" y2="165"/>
+      <line x1="96" y1="180" x2="160" y2="180"/>
+    </g>
+    <!-- Number 7 painted on lantern -->
+    <text x="128" y="142" font-family="serif" font-size="52" text-anchor="middle" fill="#EF4444" font-weight="bold" opacity="0.85">七</text>
+    <!-- Kanji 燃 on back side hint -->
+    <text x="128" y="185" font-family="serif" font-size="18" text-anchor="middle" fill="#8B4513" opacity="0.5" font-weight="bold">燃</text>
+    <!-- Lantern bottom ring -->
+    <ellipse cx="128" cy="195" rx="32" ry="8" fill="#8B4513" stroke="#6B3410" stroke-width="1"/>
+    <rect x="116" y="195" width="24" height="8" rx="3" fill="#6B3410"/>
+    <!-- Flame inside top -->
+    <g>
+      <path d="M120 82 Q128 72 136 82 Q132 68 128 60 Q124 68 120 82Z" fill="#E8751A" opacity="0.9">
+        <animate attributeName="d" values="M120 82 Q128 72 136 82 Q132 68 128 60 Q124 68 120 82Z;M122 82 Q128 70 134 82 Q131 66 128 58 Q125 66 122 82Z;M120 82 Q128 72 136 82 Q132 68 128 60 Q124 68 120 82Z" dur="2s" repeatCount="indefinite"/>
+      </path>
+      <path d="M124 82 Q128 76 132 82 Q130 72 128 65 Q126 72 124 82Z" fill="#FFD700" opacity="0.8">
+        <animate attributeName="d" values="M124 82 Q128 76 132 82 Q130 72 128 65 Q126 72 124 82Z;M124 82 Q128 74 132 82 Q130 70 128 63 Q126 70 124 82Z;M124 82 Q128 76 132 82 Q130 72 128 65 Q126 72 124 82Z" dur="1.8s" repeatCount="indefinite" begin="0.3s"/>
+      </path>
+    </g>
+    <!-- Glow pulses -->
+    <circle cx="128" cy="138" r="80" fill="url(#lantern-glow)" opacity="0.4">
+      <animate attributeName="opacity" values="0.4;0.7;0.4" dur="2s" repeatCount="indefinite"/>
+    </circle>
+  </g>
+  <circle cx="128" cy="128" r="122" fill="none" stroke="#22C55E" stroke-width="1.5" opacity="0.8"/>
+</svg>

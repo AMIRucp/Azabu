@@ -1,0 +1,91 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <defs>
+    <clipPath id="c">
+      <circle cx="128" cy="128" r="120"/>
+    </clipPath>
+    <radialGradient id="bg-g" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#1A0A00"/>
+      <stop offset="100%" stop-color="#0A0505"/>
+    </radialGradient>
+    <linearGradient id="flame-g" x1="0%" y1="100%" x2="0%" y2="0%">
+      <stop offset="0%" stop-color="#E8751A"/>
+      <stop offset="50%" stop-color="#EF4444"/>
+      <stop offset="100%" stop-color="#FFD700"/>
+    </linearGradient>
+    <filter id="lglow">
+      <feGaussianBlur stdDeviation="6" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <circle cx="128" cy="128" r="128" fill="#0A0505"/>
+  <g clip-path="url(#c)">
+    <circle cx="128" cy="128" r="128" fill="url(#bg-g)"/>
+    <!-- Mandala of crossed katanas (background) -->
+    <g opacity="0.12" stroke="#F59E0B" stroke-width="1.5" fill="none">
+      <line x1="128" y1="30" x2="128" y2="226"/>
+      <line x1="30" y1="128" x2="226" y2="128"/>
+      <line x1="56" y1="56" x2="200" y2="200"/>
+      <line x1="200" y1="56" x2="56" y2="200"/>
+      <line x1="78" y1="34" x2="178" y2="222"/>
+      <line x1="178" y1="34" x2="78" y2="222"/>
+      <line x1="34" y1="78" x2="222" y2="178"/>
+      <line x1="222" y1="78" x2="34" y2="178"/>
+      <circle cx="128" cy="128" r="50" opacity="0.5"/>
+      <circle cx="128" cy="128" r="75"/>
+    </g>
+    <!-- Flames surrounding mask -->
+    <g filter="url(#lglow)">
+      <!-- Left flame -->
+      <path d="M68 210 Q55 170 65 140 Q72 120 60 100 Q75 115 70 140 Q80 160 72 185 Q78 200 68 210Z" fill="url(#flame-g)" opacity="0.8">
+        <animate attributeName="d" values="M68 210 Q55 170 65 140 Q72 120 60 100 Q75 115 70 140 Q80 160 72 185 Q78 200 68 210Z;M65 210 Q52 170 63 140 Q71 118 59 98 Q74 113 68 140 Q78 158 70 183 Q76 200 65 210Z;M68 210 Q55 170 65 140 Q72 120 60 100 Q75 115 70 140 Q80 160 72 185 Q78 200 68 210Z" dur="2s" repeatCount="indefinite"/>
+      </path>
+      <!-- Right flame -->
+      <path d="M188 210 Q201 170 191 140 Q184 120 196 100 Q181 115 186 140 Q176 160 184 185 Q178 200 188 210Z" fill="url(#flame-g)" opacity="0.8">
+        <animate attributeName="d" values="M188 210 Q201 170 191 140 Q184 120 196 100 Q181 115 186 140 Q176 160 184 185 Q178 200 188 210Z;M191 210 Q204 170 193 140 Q185 118 197 98 Q182 113 188 140 Q178 158 186 183 Q180 200 191 210Z;M188 210 Q201 170 191 140 Q184 120 196 100 Q181 115 186 140 Q176 160 184 185 Q178 200 188 210Z" dur="2s" repeatCount="indefinite" begin="0.5s"/>
+      </path>
+      <!-- Top flame -->
+      <path d="M128 55 Q110 45 95 55 Q110 48 115 65 Q118 45 128 40 Q138 45 141 65 Q146 48 161 55 Q146 45 128 55Z" fill="#FFD700" opacity="0.9">
+        <animate attributeName="d" values="M128 55 Q110 45 95 55 Q110 48 115 65 Q118 45 128 40 Q138 45 141 65 Q146 48 161 55 Q146 45 128 55Z;M128 52 Q108 42 92 52 Q108 46 113 63 Q116 43 128 37 Q140 43 143 63 Q148 46 164 52 Q148 42 128 52Z;M128 55 Q110 45 95 55 Q110 48 115 65 Q118 45 128 40 Q138 45 141 65 Q146 48 161 55 Q146 45 128 55Z" dur="1.8s" repeatCount="indefinite"/>
+      </path>
+    </g>
+    <!-- Oni mask face -->
+    <ellipse cx="128" cy="128" rx="58" ry="65" fill="#CC2222"/>
+    <ellipse cx="128" cy="120" rx="52" ry="52" fill="#DD2424"/>
+    <!-- Forehead wrinkles -->
+    <path d="M105 98 Q115 92 128 90 Q141 92 151 98" fill="none" stroke="#AA1818" stroke-width="2"/>
+    <path d="M110 106 Q119 102 128 101 Q137 102 146 106" fill="none" stroke="#AA1818" stroke-width="2"/>
+    <!-- Horns -->
+    <polygon points="108,82 92,42 115,78" fill="#FFD700"/>
+    <polygon points="148,82 164,42 141,78" fill="#FFD700"/>
+    <!-- Horn highlights -->
+    <polygon points="108,82 100,58 112,78" fill="#FFE566"/>
+    <polygon points="148,82 156,58 144,78" fill="#FFE566"/>
+    <!-- Eyes (glowing orange) -->
+    <ellipse cx="108" cy="116" rx="14" ry="11" fill="#1A0000"/>
+    <ellipse cx="148" cy="116" rx="14" ry="11" fill="#1A0000"/>
+    <ellipse cx="108" cy="116" rx="10" ry="8" fill="#E8751A">
+      <animate attributeName="rx" values="10;12;10" dur="3s" repeatCount="indefinite"/>
+      <animate attributeName="ry" values="8;10;8" dur="3s" repeatCount="indefinite"/>
+    </ellipse>
+    <ellipse cx="148" cy="116" rx="10" ry="8" fill="#E8751A">
+      <animate attributeName="rx" values="10;12;10" dur="3s" repeatCount="indefinite" begin="0.5s"/>
+      <animate attributeName="ry" values="8;10;8" dur="3s" repeatCount="indefinite" begin="0.5s"/>
+    </ellipse>
+    <circle cx="108" cy="116" r="4" fill="#FFFFFF" opacity="0.6"/>
+    <circle cx="148" cy="116" r="4" fill="#FFFFFF" opacity="0.6"/>
+    <!-- Nose -->
+    <ellipse cx="128" cy="132" rx="8" ry="6" fill="#AA1818"/>
+    <!-- Mouth with fangs -->
+    <path d="M100 150 Q114 168 128 170 Q142 168 156 150" fill="#1A0000" stroke="#AA1818" stroke-width="1"/>
+    <polygon points="110,155 106,170 114,158" fill="white"/>
+    <polygon points="122,157 120,174 126,159" fill="white"/>
+    <polygon points="146,155 150,170 142,158" fill="white"/>
+    <polygon points="134,157 136,174 130,159" fill="white"/>
+    <!-- Kanji 伝説 below -->
+    <text x="128" y="215" font-family="serif" font-size="18" text-anchor="middle" fill="#FFD700" opacity="0.9" font-weight="bold">伝説</text>
+  </g>
+  <!-- Animated gradient border -->
+  <circle cx="128" cy="128" r="122" fill="none" stroke="url(#flame-g)" stroke-width="3">
+    <animate attributeName="stroke" values="#FFD700;#E8751A;#EF4444;#FFD700" dur="4s" repeatCount="indefinite"/>
+  </circle>
+</svg>

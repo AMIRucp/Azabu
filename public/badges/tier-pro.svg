@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <defs>
+    <clipPath id="c">
+      <circle cx="128" cy="128" r="120"/>
+    </clipPath>
+    <linearGradient id="helmet-g" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#475569"/>
+      <stop offset="100%" stop-color="#1E293B"/>
+    </linearGradient>
+    <filter id="pglow">
+      <feGaussianBlur stdDeviation="4" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <circle cx="128" cy="128" r="128" fill="#0E1117"/>
+  <g clip-path="url(#c)">
+    <circle cx="128" cy="128" r="128" fill="#0D1117"/>
+    <!-- Purple wisps left -->
+    <g filter="url(#pglow)" opacity="0.7">
+      <path d="M62 180 Q50 140 58 100 Q65 80 55 60" fill="none" stroke="#A855F7" stroke-width="3" stroke-linecap="round">
+        <animate attributeName="d" values="M62 180 Q50 140 58 100 Q65 80 55 60;M58 180 Q46 140 55 100 Q62 78 52 58;M62 180 Q50 140 58 100 Q65 80 55 60" dur="4s" repeatCount="indefinite"/>
+      </path>
+      <path d="M72 180 Q60 148 65 115 Q68 95 60 75" fill="none" stroke="#A855F7" stroke-width="2" stroke-linecap="round" opacity="0.6">
+        <animate attributeName="d" values="M72 180 Q60 148 65 115 Q68 95 60 75;M68 180 Q57 148 62 115 Q65 95 57 75;M72 180 Q60 148 65 115 Q68 95 60 75" dur="3.5s" repeatCount="indefinite"/>
+      </path>
+    </g>
+    <!-- Purple wisps right -->
+    <g filter="url(#pglow)" opacity="0.7">
+      <path d="M194 180 Q206 140 198 100 Q191 80 201 60" fill="none" stroke="#A855F7" stroke-width="3" stroke-linecap="round">
+        <animate attributeName="d" values="M194 180 Q206 140 198 100 Q191 80 201 60;M198 180 Q210 140 201 100 Q194 78 204 58;M194 180 Q206 140 198 100 Q191 80 201 60" dur="4s" repeatCount="indefinite"/>
+      </path>
+      <path d="M184 180 Q196 148 191 115 Q188 95 196 75" fill="none" stroke="#A855F7" stroke-width="2" stroke-linecap="round" opacity="0.6">
+        <animate attributeName="d" values="M184 180 Q196 148 191 115 Q188 95 196 75;M188 180 Q199 148 194 115 Q191 95 199 75;M184 180 Q196 148 191 115 Q188 95 196 75" dur="3.5s" repeatCount="indefinite"/>
+      </path>
+    </g>
+    <!-- Kabuto (helmet) main dome -->
+    <ellipse cx="128" cy="120" rx="64" ry="55" fill="url(#helmet-g)" stroke="#334155" stroke-width="2"/>
+    <!-- Helmet ridges -->
+    <path d="M80 120 Q95 80 128 72 Q161 80 176 120" fill="none" stroke="#4A5568" stroke-width="2" opacity="0.7"/>
+    <path d="M90 130 Q105 95 128 88 Q151 95 166 130" fill="none" stroke="#4A5568" stroke-width="1.5" opacity="0.5"/>
+    <!-- Maedate (crest) - Oni mask -->
+    <g transform="translate(128, 70)">
+      <!-- Oni face -->
+      <ellipse cx="0" cy="0" rx="20" ry="22" fill="#E8751A"/>
+      <!-- Horns -->
+      <polygon points="-10,-18 -16,-38 -4,-20" fill="#FFD700"/>
+      <polygon points="10,-18 16,-38 4,-20" fill="#FFD700"/>
+      <!-- Eyes -->
+      <ellipse cx="-7" cy="-6" rx="5" ry="4" fill="#FF4444"/>
+      <ellipse cx="7" cy="-6" rx="5" ry="4" fill="#FF4444"/>
+      <circle cx="-7" cy="-6" r="2" fill="#1A0A00"/>
+      <circle cx="7" cy="-6" r="2" fill="#1A0A00"/>
+      <!-- Mouth/fangs -->
+      <path d="M-8 6 Q0 14 8 6" stroke="#1A0A00" stroke-width="2" fill="none"/>
+      <polygon points="-4,6 -2,14 0,6" fill="white"/>
+      <polygon points="2,6 4,14 6,6" fill="white"/>
+    </g>
+    <!-- Shikoro (neck guard) -->
+    <path d="M65 150 Q70 175 90 185 L128 190 L166 185 Q186 175 191 150" fill="#1E293B" stroke="#334155" stroke-width="2"/>
+    <path d="M70 152 Q75 170 92 178 L128 182 L164 178 Q181 170 186 152" fill="none" stroke="#4A5568" stroke-width="1" opacity="0.6"/>
+    <!-- Kanji 達 on forehead -->
+    <text x="128" y="128" font-family="serif" font-size="22" text-anchor="middle" fill="#A855F7" opacity="0.7" font-weight="bold">達</text>
+    <!-- Purple accent lines on helmet -->
+    <path d="M80 118 L90 108" stroke="#A855F7" stroke-width="1.5" opacity="0.5"/>
+    <path d="M176 118 L166 108" stroke="#A855F7" stroke-width="1.5" opacity="0.5"/>
+  </g>
+  <circle cx="128" cy="128" r="122" fill="none" stroke="#A855F7" stroke-width="2">
+    <animate attributeName="opacity" values="1;0.5;1" dur="2s" repeatCount="indefinite"/>
+  </circle>
+</svg>

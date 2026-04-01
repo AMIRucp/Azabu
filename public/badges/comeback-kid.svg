@@ -1,0 +1,75 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <defs>
+    <clipPath id="c"><circle cx="128" cy="128" r="120"/></clipPath>
+    <radialGradient id="sun-g" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#F59E0B" stop-opacity="0.9"/>
+      <stop offset="100%" stop-color="#E8751A" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="wglow">
+      <feGaussianBlur stdDeviation="4" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <circle cx="128" cy="128" r="128" fill="#0E1117"/>
+  <g clip-path="url(#c)">
+    <circle cx="128" cy="128" r="128" fill="#0D1117"/>
+    <!-- Storm clouds -->
+    <ellipse cx="55" cy="78" rx="55" ry="32" fill="#1E2535" opacity="0.9"/>
+    <ellipse cx="145" cy="68" rx="60" ry="28" fill="#252C3A" opacity="0.8"/>
+    <ellipse cx="200" cy="82" rx="45" ry="25" fill="#1E2535" opacity="0.7"/>
+    <!-- Rising sun breaking through -->
+    <circle cx="128" cy="85" r="45" fill="url(#sun-g)"/>
+    <!-- Sun rays -->
+    <g stroke="#F59E0B" stroke-width="1.5" opacity="0.5">
+      <line x1="128" y1="40" x2="128" y2="20"/>
+      <line x1="160" y1="52" x2="172" y2="36"/>
+      <line x1="180" y1="78" x2="198" y2="68"/>
+      <line x1="96" y1="52" x2="84" y2="36"/>
+      <line x1="76" y1="78" x2="58" y2="68"/>
+    </g>
+    <!-- Kanji 復活 in the sun -->
+    <text x="128" y="95" font-family="serif" font-size="20" text-anchor="middle" fill="#FFD700" opacity="0.9" font-weight="bold">復活</text>
+    <!-- Dust cloud at impact point -->
+    <g fill="#6B7280" opacity="0.4">
+      <ellipse cx="100" cy="198" rx="22" ry="10"/>
+      <ellipse cx="128" cy="202" rx="18" ry="8"/>
+      <ellipse cx="158" cy="196" rx="20" ry="9"/>
+    </g>
+    <!-- Impact debris/rocks -->
+    <g fill="#4A5568" opacity="0.6">
+      <polygon points="88,188 80,200 96,198"/>
+      <polygon points="165,185 158,198 172,195"/>
+      <polygon points="108,192 102,204 114,202"/>
+    </g>
+    <!-- Samurai rising from one knee -->
+    <g fill="#1A1A2E" filter="url(#wglow)">
+      <!-- Back leg (kneeling) -->
+      <rect x="118" y="190" width="18" height="28" rx="4" transform="rotate(-10, 127, 204)"/>
+      <!-- Front leg (standing up) -->
+      <rect x="128" y="175" width="18" height="38" rx="4" transform="rotate(15, 137, 194)"/>
+      <!-- Body torso -->
+      <rect x="108" y="148" width="38" height="50" rx="8" transform="rotate(-5, 127, 173)"/>
+      <!-- Left arm (hand on katana ground) -->
+      <rect x="88" y="162" width="30" height="12" rx="6" transform="rotate(20, 103, 168)"/>
+      <!-- Right arm (sword hand) -->
+      <rect x="140" y="152" width="30" height="12" rx="6" transform="rotate(-30, 155, 158)"/>
+      <!-- Head -->
+      <circle cx="127" cy="140" r="16"/>
+      <!-- Kabuto helmet -->
+      <path d="M111 135 Q115 122 127 118 Q139 122 143 135" fill="#1A1A2E"/>
+      <rect x="111" y="130" width="32" height="8" rx="2" fill="#252535"/>
+      <!-- Katana resting on ground -->
+      <rect x="85" y="178" width="65" height="5" rx="2" transform="rotate(12, 117, 180)" fill="#C0C8D8" opacity="0.9"/>
+    </g>
+    <!-- Purple energy glow on warrior -->
+    <g filter="url(#wglow)" opacity="0.6">
+      <circle cx="127" cy="165" r="32" fill="none" stroke="#A855F7" stroke-width="3">
+        <animate attributeName="r" values="32;36;32" dur="2s" repeatCount="indefinite"/>
+        <animate attributeName="opacity" values="0.6;0.2;0.6" dur="2s" repeatCount="indefinite"/>
+      </circle>
+    </g>
+  </g>
+  <circle cx="128" cy="128" r="122" fill="none" stroke="#A855F7" stroke-width="2">
+    <animate attributeName="opacity" values="1;0.5;1" dur="2s" repeatCount="indefinite"/>
+  </circle>
+</svg>

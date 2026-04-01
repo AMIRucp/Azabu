@@ -1,0 +1,10 @@
+<svg viewBox="0 0 200 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <line x1="100" y1="100" x2="100" y2="30" stroke="#3D3D3A" stroke-width="1" stroke-linecap="round" class="trail" />
+  <polygon points="100,20 94,36 106,36" stroke="#6B6A67" stroke-width="1" fill="none" stroke-linejoin="round" class="tip" />
+  <style>
+    .trail { stroke-dasharray: 70; stroke-dashoffset: 70; animation: drawTrail 0.8s ease-out forwards; }
+    @keyframes drawTrail { 100%{stroke-dashoffset:0} }
+    .tip { opacity:0; animation: tipIn 0.3s 0.5s ease-out forwards; }
+    @keyframes tipIn { 0%{opacity:0;transform:translateY(4px)} 100%{opacity:1;transform:translateY(0)} }
+  </style>
+</svg>

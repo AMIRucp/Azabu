@@ -1,0 +1,131 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <defs>
+    <clipPath id="c"><circle cx="128" cy="128" r="120"/></clipPath>
+    <filter id="ink-blur">
+      <feTurbulence type="fractalNoise" baseFrequency="0.04" numOctaves="4" result="noise"/>
+      <feDisplacementMap in="SourceGraphic" in2="noise" scale="3" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+  </defs>
+  <circle cx="128" cy="128" r="128" fill="#0E1117"/>
+  <g clip-path="url(#c)">
+    <circle cx="128" cy="128" r="128" fill="#0A0E14"/>
+    <!-- Ink splash backdrop -->
+    <circle cx="128" cy="128" r="65" fill="#3B82F6" opacity="0.08"/>
+    <!-- Tally marks circle (100 tiny marks around clock face) -->
+    <g stroke="#6B7280" stroke-width="1" opacity="0.5">
+      <!-- Generate marks at positions around circle -->
+      <g transform="rotate(0, 128, 128)"><line x1="128" y1="30" x2="128" y2="40"/></g>
+      <g transform="rotate(3.6, 128, 128)"><line x1="128" y1="30" x2="128" y2="38"/></g>
+      <g transform="rotate(7.2, 128, 128)"><line x1="128" y1="30" x2="128" y2="38"/></g>
+      <g transform="rotate(10.8, 128, 128)"><line x1="128" y1="30" x2="128" y2="38"/></g>
+      <g transform="rotate(14.4, 128, 128)"><line x1="128" y1="30" x2="128" y2="40"/></g>
+      <g transform="rotate(18, 128, 128)"><line x1="128" y1="30" x2="128" y2="38"/></g>
+      <g transform="rotate(21.6, 128, 128)"><line x1="128" y1="30" x2="128" y2="38"/></g>
+      <g transform="rotate(25.2, 128, 128)"><line x1="128" y1="30" x2="128" y2="38"/></g>
+      <g transform="rotate(28.8, 128, 128)"><line x1="128" y1="30" x2="128" y2="38"/></g>
+      <g transform="rotate(32.4, 128, 128)"><line x1="128" y1="30" x2="128" y2="40"/></g>
+      <g transform="rotate(36, 128, 128)"><line x1="128" y1="30" x2="128" y2="38"/></g>
+      <g transform="rotate(39.6, 128, 128)"><line x1="128" y1="30" x2="128" y2="38"/></g>
+      <g transform="rotate(43.2, 128, 128)"><line x1="128" y1="30" x2="128" y2="38"/></g>
+      <g transform="rotate(46.8, 128, 128)"><line x1="128" y1="30" x2="128" y2="38"/></g>
+      <g transform="rotate(50.4, 128, 128)"><line x1="128" y1="30" x2="128" y2="40"/></g>
+      <g transform="rotate(54, 128, 128)"><line x1="128" y1="30" x2="128" y2="38"/></g>
+      <g transform="rotate(57.6, 128, 128)"><line x1="128" y1="30" x2="128" y2="38"/></g>
+      <g transform="rotate(61.2, 128, 128)"><line x1="128" y1="30" x2="128" y2="38"/></g>
+      <g transform="rotate(64.8, 128, 128)"><line x1="128" y1="30" x2="128" y2="38"/></g>
+      <g transform="rotate(68.4, 128, 128)"><line x1="128" y1="30" x2="128" y2="40"/></g>
+      <g transform="rotate(72, 128, 128)"><line x1="128" y1="30" x2="128" y2="38"/></g>
+      <g transform="rotate(75.6, 128, 128)"><line x1="128" y1="30" x2="128" y2="38"/></g>
+      <g transform="rotate(79.2, 128, 128)"><line x1="128" y1="30" x2="128" y2="38"/></g>
+      <g transform="rotate(82.8, 128, 128)"><line x1="128" y1="30" x2="128" y2="38"/></g>
+      <g transform="rotate(86.4, 128, 128)"><line x1="128" y1="30" x2="128" y2="40"/></g>
+      <g transform="rotate(90, 128, 128)"><line x1="128" y1="30" x2="128" y2="38"/></g>
+      <g transform="rotate(93.6, 128, 128)"><line x1="128" y1="30" x2="128" y2="38"/></g>
+      <g transform="rotate(97.2, 128, 128)"><line x1="128" y1="30" x2="128" y2="38"/></g>
+      <g transform="rotate(100.8, 128, 128)"><line x1="128" y1="30" x2="128" y2="38"/></g>
+      <g transform="rotate(104.4, 128, 128)"><line x1="128" y1="30" x2="128" y2="40"/></g>
+      <g transform="rotate(108, 128, 128)"><line x1="128" y1="30" x2="128" y2="38"/></g>
+      <g transform="rotate(111.6, 128, 128)"><line x1="128" y1="30" x2="128" y2="38"/></g>
+      <g transform="rotate(115.2, 128, 128)"><line x1="128" y1="30" x2="128" y2="38"/></g>
+      <g transform="rotate(118.8, 128, 128)"><line x1="128" y1="30" x2="128" y2="38"/></g>
+      <g transform="rotate(122.4, 128, 128)"><line x1="128" y1="30" x2="128" y2="40"/></g>
+      <g transform="rotate(126, 128, 128)"><line x1="128" y1="30" x2="128" y2="38"/></g>
+      <g transform="rotate(129.6, 128, 128)"><line x1="128" y1="30" x2="128" y2="38"/></g>
+      <g transform="rotate(133.2, 128, 128)"><line x1="128" y1="30" x2="128" y2="38"/></g>
+      <g transform="rotate(136.8, 128, 128)"><line x1="128" y1="30" x2="128" y2="38"/></g>
+      <g transform="rotate(140.4, 128, 128)"><line x1="128" y1="30" x2="128" y2="40"/></g>
+      <g transform="rotate(144, 128, 128)"><line x1="128" y1="30" x2="128" y2="38"/></g>
+      <g transform="rotate(147.6, 128, 128)"><line x1="128" y1="30" x2="128" y2="38"/></g>
+      <g transform="rotate(151.2, 128, 128)"><line x1="128" y1="30" x2="128" y2="38"/></g>
+      <g transform="rotate(154.8, 128, 128)"><line x1="128" y1="30" x2="128" y2="38"/></g>
+      <g transform="rotate(158.4, 128, 128)"><line x1="128" y1="30" x2="128" y2="40"/></g>
+      <g transform="rotate(162, 128, 128)"><line x1="128" y1="30" x2="128" y2="38"/></g>
+      <g transform="rotate(165.6, 128, 128)"><line x1="128" y1="30" x2="128" y2="38"/></g>
+      <g transform="rotate(169.2, 128, 128)"><line x1="128" y1="30" x2="128" y2="38"/></g>
+      <g transform="rotate(172.8, 128, 128)"><line x1="128" y1="30" x2="128" y2="38"/></g>
+      <g transform="rotate(176.4, 128, 128)"><line x1="128" y1="30" x2="128" y2="40"/></g>
+      <g transform="rotate(180, 128, 128)"><line x1="128" y1="30" x2="128" y2="38"/></g>
+      <g transform="rotate(183.6, 128, 128)"><line x1="128" y1="30" x2="128" y2="38"/></g>
+      <g transform="rotate(187.2, 128, 128)"><line x1="128" y1="30" x2="128" y2="38"/></g>
+      <g transform="rotate(190.8, 128, 128)"><line x1="128" y1="30" x2="128" y2="38"/></g>
+      <g transform="rotate(194.4, 128, 128)"><line x1="128" y1="30" x2="128" y2="40"/></g>
+      <g transform="rotate(198, 128, 128)"><line x1="128" y1="30" x2="128" y2="38"/></g>
+      <g transform="rotate(201.6, 128, 128)"><line x1="128" y1="30" x2="128" y2="38"/></g>
+      <g transform="rotate(205.2, 128, 128)"><line x1="128" y1="30" x2="128" y2="38"/></g>
+      <g transform="rotate(208.8, 128, 128)"><line x1="128" y1="30" x2="128" y2="38"/></g>
+      <g transform="rotate(212.4, 128, 128)"><line x1="128" y1="30" x2="128" y2="40"/></g>
+      <g transform="rotate(216, 128, 128)"><line x1="128" y1="30" x2="128" y2="38"/></g>
+      <g transform="rotate(219.6, 128, 128)"><line x1="128" y1="30" x2="128" y2="38"/></g>
+      <g transform="rotate(223.2, 128, 128)"><line x1="128" y1="30" x2="128" y2="38"/></g>
+      <g transform="rotate(226.8, 128, 128)"><line x1="128" y1="30" x2="128" y2="38"/></g>
+      <g transform="rotate(230.4, 128, 128)"><line x1="128" y1="30" x2="128" y2="40"/></g>
+      <g transform="rotate(234, 128, 128)"><line x1="128" y1="30" x2="128" y2="38"/></g>
+      <g transform="rotate(237.6, 128, 128)"><line x1="128" y1="30" x2="128" y2="38"/></g>
+      <g transform="rotate(241.2, 128, 128)"><line x1="128" y1="30" x2="128" y2="38"/></g>
+      <g transform="rotate(244.8, 128, 128)"><line x1="128" y1="30" x2="128" y2="38"/></g>
+      <g transform="rotate(248.4, 128, 128)"><line x1="128" y1="30" x2="128" y2="40"/></g>
+      <g transform="rotate(252, 128, 128)"><line x1="128" y1="30" x2="128" y2="38"/></g>
+      <g transform="rotate(255.6, 128, 128)"><line x1="128" y1="30" x2="128" y2="38"/></g>
+      <g transform="rotate(259.2, 128, 128)"><line x1="128" y1="30" x2="128" y2="38"/></g>
+      <g transform="rotate(262.8, 128, 128)"><line x1="128" y1="30" x2="128" y2="38"/></g>
+      <g transform="rotate(266.4, 128, 128)"><line x1="128" y1="30" x2="128" y2="40"/></g>
+      <g transform="rotate(270, 128, 128)"><line x1="128" y1="30" x2="128" y2="38"/></g>
+      <g transform="rotate(273.6, 128, 128)"><line x1="128" y1="30" x2="128" y2="38"/></g>
+      <g transform="rotate(277.2, 128, 128)"><line x1="128" y1="30" x2="128" y2="38"/></g>
+      <g transform="rotate(280.8, 128, 128)"><line x1="128" y1="30" x2="128" y2="38"/></g>
+      <g transform="rotate(284.4, 128, 128)"><line x1="128" y1="30" x2="128" y2="40"/></g>
+      <g transform="rotate(288, 128, 128)"><line x1="128" y1="30" x2="128" y2="38"/></g>
+      <g transform="rotate(291.6, 128, 128)"><line x1="128" y1="30" x2="128" y2="38"/></g>
+      <g transform="rotate(295.2, 128, 128)"><line x1="128" y1="30" x2="128" y2="38"/></g>
+      <g transform="rotate(298.8, 128, 128)"><line x1="128" y1="30" x2="128" y2="38"/></g>
+      <g transform="rotate(302.4, 128, 128)"><line x1="128" y1="30" x2="128" y2="40"/></g>
+      <g transform="rotate(306, 128, 128)"><line x1="128" y1="30" x2="128" y2="38"/></g>
+      <g transform="rotate(309.6, 128, 128)"><line x1="128" y1="30" x2="128" y2="38"/></g>
+      <g transform="rotate(313.2, 128, 128)"><line x1="128" y1="30" x2="128" y2="38"/></g>
+      <g transform="rotate(316.8, 128, 128)"><line x1="128" y1="30" x2="128" y2="38"/></g>
+      <g transform="rotate(320.4, 128, 128)"><line x1="128" y1="30" x2="128" y2="40"/></g>
+      <g transform="rotate(324, 128, 128)"><line x1="128" y1="30" x2="128" y2="38"/></g>
+      <g transform="rotate(327.6, 128, 128)"><line x1="128" y1="30" x2="128" y2="38"/></g>
+      <g transform="rotate(331.2, 128, 128)"><line x1="128" y1="30" x2="128" y2="38"/></g>
+      <g transform="rotate(334.8, 128, 128)"><line x1="128" y1="30" x2="128" y2="38"/></g>
+      <g transform="rotate(338.4, 128, 128)"><line x1="128" y1="30" x2="128" y2="40"/></g>
+      <g transform="rotate(342, 128, 128)"><line x1="128" y1="30" x2="128" y2="38"/></g>
+      <g transform="rotate(345.6, 128, 128)"><line x1="128" y1="30" x2="128" y2="38"/></g>
+      <g transform="rotate(349.2, 128, 128)"><line x1="128" y1="30" x2="128" y2="38"/></g>
+      <g transform="rotate(352.8, 128, 128)"><line x1="128" y1="30" x2="128" y2="38"/></g>
+      <g transform="rotate(356.4, 128, 128)"><line x1="128" y1="30" x2="128" y2="40"/></g>
+    </g>
+    <!-- Bold kanji 百 sumi-e style -->
+    <text x="128" y="160" font-family="'Hiragino Mincho ProN', serif" font-size="120" text-anchor="middle" fill="#3B82F6" font-weight="900" opacity="0.9" filter="url(#ink-blur)">百</text>
+    <!-- Ink splash dots -->
+    <g fill="#3B82F6" opacity="0.35">
+      <circle cx="75" cy="100" r="3"/>
+      <circle cx="180" cy="90" r="2"/>
+      <circle cx="65" cy="155" r="2.5"/>
+      <circle cx="190" cy="160" r="2"/>
+      <circle cx="100" cy="195" r="3"/>
+      <circle cx="165" cy="192" r="2"/>
+    </g>
+  </g>
+  <circle cx="128" cy="128" r="122" fill="none" stroke="#3B82F6" stroke-width="2"/>
+</svg>

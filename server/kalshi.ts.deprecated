@@ -1,0 +1,179 @@
+const KALSHI_API = "https://api.elections.kalshi.com/trade-api/v2";
+
+export interface KalshiMarket {
+  title: string;
+  ticker: string | null;
+  eventTicker: string | null;
+  yesPrice: number;
+  yesBid: number;
+  yesAsk: number;
+  volume24h: number | null;
+  openInterest: number | null;
+  closeTime: number | null;
+  category: string;
+  kalshiUrl: string;
+  isLive: boolean;
+  source: "kalshi";
+}
+
+const KALSHI_CATEGORY_MAP = [
+  { words: ["election","president","senate","congress","vote","poll","democrat","republican","trump","harris","governor","ballot"], category: "Politics" },
+  { words: ["fed","rate","fomc","cpi","inflation","gdp","recession","unemployment","jobs","payroll","rate cut","rate hike"], category: "Economics" },
+  { words: ["bitcoin","btc","ethereum","eth","crypto","solana","sol","defi","coinbase","altcoin","dominance","binance","memecoin","nft","web3","stablecoin"], category: "Crypto" },
+  { words: ["nfl","nba","mlb","nhl","soccer","football","basketball","baseball","world cup","ufc","mma","tennis","golf","super bowl","championship"], category: "Sports" },
+  { words: ["oscar","grammy","emmy","movie","film","box office","celebrity","award","music","tv"], category: "Entertainment" },
+  { words: ["war","israel","ukraine","russia","iran","china","nato","geopolit","sanction","conflict","military"], category: "Geopolitics" },
+  { words: ["ai","artificial intelligence","openai","gpt","nvidia","tech","earnings","ipo","merger","stock market","s&p","nasdaq"], category: "Finance" },
+  { words: ["weather","hurricane","tornado","earthquake","climate","temperature","snow","flood"], category: "Weather" },
+];
+
+function kalshiCategoryForQuery(q: string): string | null {
+  const lower = q.toLowerCase();
+  let best: typeof KALSHI_CATEGORY_MAP[0] | null = null;
+  let bestScore = 0;
+  for (const entry of KALSHI_CATEGORY_MAP) {
+    const score = entry.words.filter(w => lower.includes(w)).length;
+    if (score > bestScore) { bestScore = score; best = entry; }
+  }
+  return best?.category || null;
+}
+
+function kalshiNormalise(m: any, eventTitle?: string, eventCategory?: string, eventTicker?: string): KalshiMarket {
+  const yesAsk = m.yes_ask != null ? m.yes_ask / 100 : 0.5;
+  const yesBid = m.yes_bid != null ? m.yes_bid / 100 : 0.5;
+  const yesPrice = (yesAsk + yesBid) / 2;
+
+  const closeTime = m.close_time
+    ? Math.floor(new Date(m.close_time).getTime() / 1000)
+    : null;
+
+  const ticker = m.ticker || null;
+  const evTicker = m.event_ticker || eventTicker || null;
+  const outcomeLabel = m.yes_sub_title || m.subtitle || "";
+  const baseTitle = eventTitle || m.title || "Kalshi Market";
+  const title = outcomeLabel ? `${baseTitle}: ${outcomeLabel}` : baseTitle;
+  const category = eventCategory || m.category || "Market";
+
+  return {
+    title,
+    ticker,
+    eventTicker: evTicker,
+    yesPrice,
+    yesBid,
+    yesAsk,
+    volume24h: m.volume_24h ?? m.volume ?? null,
+    openInterest: m.open_interest ?? null,
+    closeTime,
+    category,
+    kalshiUrl: evTicker
+      ? `https://kalshi.com/markets/${evTicker}`
+      : ticker
+      ? `https://kalshi.com/markets/${ticker}`
+      : "https://kalshi.com",
+    isLive: true,
+    source: "kalshi",
+  };
+}
+
+const kalshiCache: { data: KalshiMarket[] | null; ts: number; key: string } = { data: null, ts: 0, key: "" };
+const CACHE_TTL = 60_000;
+
+export async function fetchKalshiMarkets(query: string): Promise<KalshiMarket[] | null> {
+  const q = query.toLowerCase();
+  const cacheKey = q.slice(0, 50);
+
+  if (kalshiCache.key === cacheKey && kalshiCache.data && Date.now() - kalshiCache.ts < CACHE_TTL) {
+    return kalshiCache.data;
+  }
+
+  try {
+    const params = new URLSearchParams({
+      limit: "100",
+      status: "open",
+      with_nested_markets: "true",
+    });
+
+    const res = await fetch(`${KALSHI_API}/events?${params}`, {
+      signal: AbortSignal.timeout(8000),
+    });
+    if (!res.ok) return null;
+
+    const data = await res.json();
+    const events = data.events || [];
+    if (!events.length) return null;
+
+    const qWords = q.split(/\s+/).filter((w: string) => w.length > 2 && !["the","and","for","that","will","how","what","about","with","this","show","prediction","markets","trending","find","are","has","have","does","can","any","there","related"].includes(w));
+
+    const allMarkets: { market: KalshiMarket; score: number }[] = [];
+
+    for (const event of events) {
+      const eventTitle = event.title || "";
+      const eventCategory = event.category || "";
+      const eventTicker = event.event_ticker || "";
+      const eventLower = eventTitle.toLowerCase();
+      const markets = event.markets || [];
+
+      const eventScore = qWords.length > 0
+        ? qWords.filter((w: string) => eventLower.includes(w)).length
+        : 1;
+
+      const activeMarkets = markets
+        .filter((m: any) => m.status === "active" && (m.yes_bid || m.yes_ask))
+        .sort((a: any, b: any) => (b.volume_24h || 0) - (a.volume_24h || 0));
+
+      const topMarket = activeMarkets[0];
+      if (!topMarket) continue;
+
+      const subtitleLower = (topMarket.yes_sub_title || topMarket.subtitle || "").toLowerCase();
+      const marketScore = qWords.length > 0
+        ? qWords.filter((w: string) => subtitleLower.includes(w)).length
+        : 0;
+
+      const totalScore = eventScore + marketScore;
+      const volumeBonus = (topMarket.volume_24h || 0) > 100 ? 1 : 0;
+
+      allMarkets.push({
+        market: kalshiNormalise(topMarket, eventTitle, eventCategory, eventTicker),
+        score: totalScore + volumeBonus,
+      });
+    }
+
+    const sorted = allMarkets
+      .filter(x => x.score > 0)
+      .sort((a, b) => b.score - a.score);
+
+    if (!sorted.length) return null;
+
+    const result = sorted.slice(0, 5).map(x => x.market);
+
+    if (result.length > 0) {
+      kalshiCache.data = result;
+      kalshiCache.ts = Date.now();
+      kalshiCache.key = cacheKey;
+    }
+
+    return result.length > 0 ? result : null;
+  } catch (e: any) {
+    console.warn("Kalshi fetch failed:", e.message);
+    return null;
+  }
+}
+
+export async function fetchKalshiEvent(eventTicker: string): Promise<KalshiMarket[] | null> {
+  try {
+    const res = await fetch(`${KALSHI_API}/events/${encodeURIComponent(eventTicker)}`, {
+      signal: AbortSignal.timeout(6000),
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    const event = data.event || {};
+    const markets = data.markets || event.markets || [];
+    return markets
+      .filter((m: any) => m.yes_bid || m.yes_ask)
+      .slice(0, 5)
+      .map((m: any) => kalshiNormalise(m, event.title, event.category, event.event_ticker));
+  } catch (e: any) {
+    console.warn("Kalshi event fetch failed:", e.message);
+    return null;
+  }
+}

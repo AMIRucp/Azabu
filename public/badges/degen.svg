@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <defs>
+    <clipPath id="c"><circle cx="128" cy="128" r="120"/></clipPath>
+    <linearGradient id="flame-g" x1="0%" y1="100%" x2="0%" y2="0%">
+      <stop offset="0%" stop-color="#E8751A"/>
+      <stop offset="100%" stop-color="#EF4444"/>
+    </linearGradient>
+  </defs>
+  <circle cx="128" cy="128" r="128" fill="#0E1117"/>
+  <g clip-path="url(#c)">
+    <circle cx="128" cy="128" r="128" fill="#111419"/>
+    <!-- Daruma body -->
+    <ellipse cx="128" cy="135" rx="72" ry="80" fill="#EF4444"/>
+    <!-- Daruma face area -->
+    <ellipse cx="128" cy="118" rx="52" ry="50" fill="#F0F2F5"/>
+    <!-- Eyes - left eye filled (one wish granted) -->
+    <ellipse cx="108" cy="112" rx="16" ry="14" fill="#1A1A1A"/>
+    <ellipse cx="108" cy="112" rx="10" ry="9" fill="#111419"/>
+    <circle cx="104" cy="108" r="3" fill="#F0F2F5" opacity="0.6"/>
+    <!-- Right eye - empty (unfilled circle) -->
+    <ellipse cx="148" cy="112" rx="16" ry="14" fill="#FFFFFF" stroke="#C0C0C0" stroke-width="2"/>
+    <ellipse cx="148" cy="112" rx="10" ry="9" fill="none" stroke="#888" stroke-width="1.5"/>
+    <!-- Eyebrows (crane-like) -->
+    <path d="M92 96 Q108 88 118 96" fill="none" stroke="#111419" stroke-width="3" stroke-linecap="round"/>
+    <path d="M138 96 Q148 88 164 96" fill="none" stroke="#111419" stroke-width="3" stroke-linecap="round"/>
+    <!-- Mustache/beard -->
+    <path d="M105 135 Q128 148 151 135" fill="none" stroke="#111419" stroke-width="2.5" stroke-linecap="round"/>
+    <!-- Kanji 無謀 on belly -->
+    <g transform="translate(128, 165)">
+      <rect x="-26" y="-18" width="52" height="28" rx="3" fill="#CC2222" opacity="0.8"/>
+      <text x="0" y="8" font-family="serif" font-size="22" text-anchor="middle" fill="#FFD700" font-weight="bold">無謀</text>
+    </g>
+    <!-- Bottom base/feet -->
+    <ellipse cx="128" cy="210" rx="50" ry="12" fill="#CC2222"/>
+    <!-- Flames at base -->
+    <g filter="none">
+      <path d="M78 210 Q65 185 72 165 Q80 150 70 135 Q84 152 80 170 Q88 185 82 200 Q85 208 78 210Z" fill="url(#flame-g)" opacity="0.9">
+        <animate attributeName="d" values="M78 210 Q65 185 72 165 Q80 150 70 135 Q84 152 80 170 Q88 185 82 200 Q85 208 78 210Z;M76 210 Q63 185 70 165 Q78 150 68 133 Q82 150 78 170 Q86 183 80 198 Q83 207 76 210Z;M78 210 Q65 185 72 165 Q80 150 70 135 Q84 152 80 170 Q88 185 82 200 Q85 208 78 210Z" dur="1.5s" repeatCount="indefinite"/>
+      </path>
+      <path d="M178 210 Q191 185 184 165 Q176 150 186 135 Q172 152 176 170 Q168 185 174 200 Q171 208 178 210Z" fill="url(#flame-g)" opacity="0.9">
+        <animate attributeName="d" values="M178 210 Q191 185 184 165 Q176 150 186 135 Q172 152 176 170 Q168 185 174 200 Q171 208 178 210Z;M180 210 Q193 185 186 165 Q178 150 188 133 Q174 150 178 170 Q170 183 176 198 Q173 207 180 210Z;M178 210 Q191 185 184 165 Q176 150 186 135 Q172 152 176 170 Q168 185 174 200 Q171 208 178 210Z" dur="1.5s" repeatCount="indefinite" begin="0.4s"/>
+      </path>
+      <path d="M128 218 Q115 195 120 175 Q126 160 118 145 Q130 162 128 178 Q130 195 125 208 Q126 215 128 218Z" fill="#FFD700" opacity="0.7">
+        <animate attributeName="d" values="M128 218 Q115 195 120 175 Q126 160 118 145 Q130 162 128 178 Q130 195 125 208 Q126 215 128 218Z;M128 218 Q116 193 121 173 Q127 158 119 143 Q131 160 129 176 Q131 193 126 207 Q127 215 128 218Z;M128 218 Q115 195 120 175 Q126 160 118 145 Q130 162 128 178 Q130 195 125 208 Q126 215 128 218Z" dur="1.2s" repeatCount="indefinite" begin="0.2s"/>
+      </path>
+    </g>
+  </g>
+  <circle cx="128" cy="128" r="122" fill="none" stroke="#6B7280" stroke-width="1.5"/>
+</svg>

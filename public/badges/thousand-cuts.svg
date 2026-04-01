@@ -1,0 +1,85 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <defs>
+    <clipPath id="c"><circle cx="128" cy="128" r="120"/></clipPath>
+    <radialGradient id="bg-g" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#1A0A2E"/>
+      <stop offset="100%" stop-color="#0A0510"/>
+    </radialGradient>
+    <linearGradient id="frag-g" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF"/>
+      <stop offset="100%" stop-color="#8090A0"/>
+    </linearGradient>
+    <filter id="pglow">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <circle cx="128" cy="128" r="128" fill="#0A0510"/>
+  <g clip-path="url(#c)">
+    <circle cx="128" cy="128" r="128" fill="url(#bg-g)"/>
+    <!-- Purple energy spiral lines -->
+    <g stroke="#A855F7" stroke-width="0.5" fill="none" opacity="0.2">
+      <circle cx="128" cy="128" r="90"/>
+      <circle cx="128" cy="128" r="65"/>
+      <circle cx="128" cy="128" r="40"/>
+    </g>
+    <!-- Purple energy crackles -->
+    <g filter="url(#pglow)" stroke="#A855F7" stroke-width="1.5" fill="none" opacity="0.6">
+      <path d="M128 60 Q115 80 125 95 Q135 110 120 128"/>
+      <path d="M170 80 Q155 100 165 115 Q175 130 155 145"/>
+      <path d="M86 82 Q100 100 90 118 Q80 136 100 148"/>
+      <path d="M60 138 Q82 128 80 148 Q78 165 100 168"/>
+      <path d="M196 138 Q174 128 176 148 Q178 165 156 168"/>
+    </g>
+    <!-- Katana fragments in spiral formation -->
+    <!-- Large center fragments -->
+    <g fill="url(#frag-g)" opacity="0.9">
+      <!-- Fragment 1 - top -->
+      <polygon points="118,52 132,48 135,70 121,74"/>
+      <!-- Fragment 2 - upper right -->
+      <polygon points="158,68 170,78 162,95 150,85"/>
+      <!-- Fragment 3 - right -->
+      <polygon points="182,110 192,125 178,135 168,120"/>
+      <!-- Fragment 4 - lower right -->
+      <polygon points="170,158 180,170 165,178 155,166"/>
+      <!-- Fragment 5 - bottom -->
+      <polygon points="135,192 120,196 118,178 133,174"/>
+      <!-- Fragment 6 - lower left -->
+      <polygon points="86,170 76,158 90,148 100,160"/>
+      <!-- Fragment 7 - left -->
+      <polygon points="68,125 64,110 78,105 82,120"/>
+      <!-- Fragment 8 - upper left -->
+      <polygon points="86,78 98,68 106,82 94,92"/>
+      <!-- Inner fragments - medium -->
+      <polygon points="120,88 130,84 133,100 123,104"/>
+      <polygon points="148,94 158,100 152,114 142,108"/>
+      <polygon points="160,128 166,138 155,142 149,132"/>
+      <polygon points="145,155 150,165 140,167 135,157"/>
+      <polygon points="118,160 112,168 103,162 109,152"/>
+      <polygon points="96,140 90,128 100,124 106,136"/>
+      <polygon points="98,106 104,96 114,102 108,112"/>
+      <!-- Small inner fragments -->
+      <polygon points="124,112 130,110 131,118 125,120"/>
+      <polygon points="140,115 146,118 143,126 137,123"/>
+      <polygon points="140,138 145,142 141,148 136,144"/>
+      <polygon points="125,142 120,146 118,140 123,136"/>
+    </g>
+    <!-- Purple energy between fragments -->
+    <g filter="url(#pglow)" opacity="0.4">
+      <circle cx="128" cy="128" r="8" fill="#A855F7">
+        <animate attributeName="r" values="8;12;8" dur="3s" repeatCount="indefinite"/>
+        <animate attributeName="opacity" values="0.4;0.8;0.4" dur="3s" repeatCount="indefinite"/>
+      </circle>
+    </g>
+    <!-- Kanji 千 -->
+    <text x="128" y="136" font-family="serif" font-size="28" text-anchor="middle" fill="#A855F7" opacity="0.6" font-weight="bold">千</text>
+    <!-- Slow rotation animation via a ring -->
+    <g>
+      <animateTransform attributeName="transform" type="rotate" from="0 128 128" to="360 128 128" dur="20s" repeatCount="indefinite"/>
+      <circle cx="128" cy="128" r="75" fill="none" stroke="#A855F7" stroke-width="0.5" stroke-dasharray="5 10" opacity="0.3"/>
+    </g>
+  </g>
+  <circle cx="128" cy="128" r="122" fill="none" stroke="#A855F7" stroke-width="2">
+    <animate attributeName="opacity" values="1;0.4;1" dur="2s" repeatCount="indefinite"/>
+  </circle>
+</svg>

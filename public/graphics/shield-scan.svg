@@ -1,0 +1,11 @@
+<svg viewBox="0 0 200 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <path d="M100 18 L132 32 L132 62 Q132 88 100 100 Q68 88 68 62 L68 32 Z"
+    stroke="#4A4A47" stroke-width="1" fill="none" class="shield" />
+  <polyline points="88,55 95,62 112,45" stroke="#6B6A67" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round" class="check" />
+  <style>
+    .shield { stroke-dasharray: 260; stroke-dashoffset: 260; animation: drawShield 0.8s ease-out forwards; }
+    @keyframes drawShield { 100%{stroke-dashoffset:0} }
+    .check { opacity:0; animation: checkIn 0.3s 0.6s ease-out forwards; }
+    @keyframes checkIn { 0%{opacity:0} 100%{opacity:1} }
+  </style>
+</svg>

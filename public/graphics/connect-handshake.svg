@@ -1,0 +1,13 @@
+<svg viewBox="0 0 200 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <line x1="40" y1="60" x2="86" y2="60" stroke="#3D3D3A" stroke-width="1" stroke-linecap="round" class="left" />
+  <line x1="114" y1="60" x2="160" y2="60" stroke="#3D3D3A" stroke-width="1" stroke-linecap="round" class="right" />
+  <circle cx="100" cy="60" r="4" stroke="#6B6A67" stroke-width="1" fill="none" class="center" />
+  <style>
+    .left { opacity:0; animation: slideR 0.5s ease-out forwards; }
+    .right { opacity:0; animation: slideL 0.5s ease-out forwards; }
+    @keyframes slideR { 0%{opacity:0;transform:translateX(-10px)} 100%{opacity:1;transform:translateX(0)} }
+    @keyframes slideL { 0%{opacity:0;transform:translateX(10px)} 100%{opacity:1;transform:translateX(0)} }
+    .center { opacity:0; animation: fadeIn 0.3s 0.4s ease-out forwards; }
+    @keyframes fadeIn { 100%{opacity:1} }
+  </style>
+</svg>

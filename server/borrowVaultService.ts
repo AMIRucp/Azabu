@@ -1,0 +1,328 @@
+export interface BorrowVault {
+  id: string;
+  collateralSymbol: string;
+  collateralName: string;
+  collateralMint: string;
+  debtTokenCount: number;
+  primaryDebtTokens: string[];
+  maxLiqThreshold: number;
+  marketSizeUsd: number;
+  collateralApy: number;
+  category: 'sol' | 'btc' | 'stablecoin' | 'pegged' | 'native_staked' | 'other';
+  tags: string[];
+}
+
+const BORROW_VAULTS: BorrowVault[] = [
+  {
+    id: 'JLP',
+    collateralSymbol: 'JLP',
+    collateralName: 'Jupiter Perps LP',
+    collateralMint: '27G8MtK7VtTcCHkpASjSDdkWWYfoqT6ggEuKidVJidD4',
+    debtTokenCount: 6,
+    primaryDebtTokens: ['USDC', 'JupUSD', 'USDS'],
+    maxLiqThreshold: 90,
+    marketSizeUsd: 384_000_000,
+    collateralApy: 12.4,
+    category: 'other',
+    tags: ['incentivised'],
+  },
+  {
+    id: 'SOL',
+    collateralSymbol: 'SOL',
+    collateralName: 'Wrapped SOL',
+    collateralMint: 'So11111111111111111111111111111111111111112',
+    debtTokenCount: 8,
+    primaryDebtTokens: ['USDC', 'USDT', 'GUSD'],
+    maxLiqThreshold: 85,
+    marketSizeUsd: 187_000_000,
+    collateralApy: 5.6,
+    category: 'sol',
+    tags: [],
+  },
+  {
+    id: 'syrupUSDC',
+    collateralSymbol: 'syrupUSDC',
+    collateralName: 'Syrup USDC',
+    collateralMint: 'Bt44ABbo3YkLVHf5KVUF3XpBiRxDCvjQHDkTkRiY3GTs',
+    debtTokenCount: 5,
+    primaryDebtTokens: ['USDC', 'USDT', 'JupUSD'],
+    maxLiqThreshold: 92,
+    marketSizeUsd: 100_000_000,
+    collateralApy: 4.6,
+    category: 'stablecoin',
+    tags: ['pegged', 'incentivised'],
+  },
+  {
+    id: 'JupSOL',
+    collateralSymbol: 'JupSOL',
+    collateralName: 'Jupiter Staked SOL',
+    collateralMint: 'jupSoLaHXQiZZTSfEWMTRRgpnyFm8f6sZdosWBjdb9J',
+    debtTokenCount: 7,
+    primaryDebtTokens: ['SOL', 'GUSD', 'USDC'],
+    maxLiqThreshold: 95,
+    marketSizeUsd: 91_400_000,
+    collateralApy: 6.6,
+    category: 'sol',
+    tags: ['pegged', 'native_staked'],
+  },
+  {
+    id: 'INF',
+    collateralSymbol: 'INF',
+    collateralName: 'Infinity',
+    collateralMint: '5oVNBeEEQvYi1cX3ir8Dx5n1P7pdxydbGF2X4TxVusJm',
+    debtTokenCount: 2,
+    primaryDebtTokens: ['SOL', 'USDC'],
+    maxLiqThreshold: 95,
+    marketSizeUsd: 89_100_000,
+    collateralApy: 6.4,
+    category: 'sol',
+    tags: ['pegged'],
+  },
+  {
+    id: 'LBTC',
+    collateralSymbol: 'LBTC',
+    collateralName: 'Lombard Staked BTC',
+    collateralMint: 'LBTCxMEVMVFB3kYBbiCfEKnw2jWKP6oVzSGhEBp4XCb',
+    debtTokenCount: 4,
+    primaryDebtTokens: ['GUSD', 'JupUSD', 'USDC'],
+    maxLiqThreshold: 90,
+    marketSizeUsd: 52_500_000,
+    collateralApy: 0.4,
+    category: 'btc',
+    tags: [],
+  },
+  {
+    id: 'PST',
+    collateralSymbol: 'PST',
+    collateralName: 'PayFi Strategy Token',
+    collateralMint: 'PSTfCBkR8eNnkSnaUBESAP5mXhEuYQVBEnXErmzBjWi',
+    debtTokenCount: 2,
+    primaryDebtTokens: ['USDC', 'JupUSD'],
+    maxLiqThreshold: 87,
+    marketSizeUsd: 50_100_000,
+    collateralApy: 8.0,
+    category: 'stablecoin',
+    tags: ['incentivised', 'new'],
+  },
+  {
+    id: 'JUICED',
+    collateralSymbol: 'JUICED',
+    collateralName: 'jupiter lend JUPUSD',
+    collateralMint: 'Jui8EXG1FaTsjiFFXaCvFmGHiMT4xWMQfx3hPRH9Czb',
+    debtTokenCount: 3,
+    primaryDebtTokens: ['USDC', 'USDT', 'GUSD'],
+    maxLiqThreshold: 91,
+    marketSizeUsd: 32_400_000,
+    collateralApy: 4.9,
+    category: 'stablecoin',
+    tags: ['pegged'],
+  },
+  {
+    id: 'cbBTC',
+    collateralSymbol: 'cbBTC',
+    collateralName: 'Coinbase Wrapped BTC',
+    collateralMint: 'cbbtcf3aa214zXHbiAZQwf4122FBYbraNdFqgw4iMij',
+    debtTokenCount: 6,
+    primaryDebtTokens: ['SOL', 'USDC', 'EURC'],
+    maxLiqThreshold: 90,
+    marketSizeUsd: 28_500_000,
+    collateralApy: 0,
+    category: 'btc',
+    tags: [],
+  },
+  {
+    id: 'dfdvSOL',
+    collateralSymbol: 'dfdvSOL',
+    collateralName: 'DeFi Development Corp Staked SOL',
+    collateralMint: 'DfDvSoLZqN4SxC4i3fk3e3SvNX3y9YwLrFLWKhCunaJh',
+    debtTokenCount: 2,
+    primaryDebtTokens: ['SOL', 'USDC'],
+    maxLiqThreshold: 93,
+    marketSizeUsd: 16_700_000,
+    collateralApy: 6.2,
+    category: 'sol',
+    tags: ['pegged', 'native_staked'],
+  },
+  {
+    id: 'xBTC',
+    collateralSymbol: 'xBTC',
+    collateralName: 'OKX Wrapped BTC',
+    collateralMint: 'xBTCsQxW1wd5DkYzrATmsLixWpN1aVq6eTnApavFjdm',
+    debtTokenCount: 5,
+    primaryDebtTokens: ['GUSD', 'EURC', 'SOL'],
+    maxLiqThreshold: 85,
+    marketSizeUsd: 7_870_000,
+    collateralApy: 0,
+    category: 'btc',
+    tags: ['new'],
+  },
+  {
+    id: 'JitoSOL',
+    collateralSymbol: 'JitoSOL',
+    collateralName: 'Jito Staked SOL',
+    collateralMint: 'J1toso1uCk3RLmjorhTtrVwY9HJ7X8V9yYac6Y7kGCPn',
+    debtTokenCount: 5,
+    primaryDebtTokens: ['USDC', 'GUSD', 'SOL'],
+    maxLiqThreshold: 95,
+    marketSizeUsd: 6_850_000,
+    collateralApy: 5.7,
+    category: 'sol',
+    tags: ['pegged', 'native_staked'],
+  },
+  {
+    id: 'JUP',
+    collateralSymbol: 'JUP',
+    collateralName: 'Jupiter',
+    collateralMint: 'JUPyiwrYJFskUPiHa7hkeR8VUtAeFoSYbKedZNsDvCN',
+    debtTokenCount: 2,
+    primaryDebtTokens: ['USDC', 'USDT'],
+    maxLiqThreshold: 70,
+    marketSizeUsd: 2_780_000,
+    collateralApy: 0,
+    category: 'other',
+    tags: ['new'],
+  },
+  {
+    id: 'WBTC',
+    collateralSymbol: 'WBTC',
+    collateralName: 'Wrapped BTC (Wormhole)',
+    collateralMint: '3NZ9JMVBmGAqocybic2c7LQCJScmgsAZ6vQqTDzcqmJh',
+    debtTokenCount: 5,
+    primaryDebtTokens: ['USDC', 'EURC', 'GUSD'],
+    maxLiqThreshold: 85,
+    marketSizeUsd: 2_520_000,
+    collateralApy: 0,
+    category: 'btc',
+    tags: [],
+  },
+  {
+    id: 'mSOL',
+    collateralSymbol: 'mSOL',
+    collateralName: 'Marinade staked SOL',
+    collateralMint: 'mSoLzYCxHdYgdzU16g5QSh3i5K3z3KZK7ytfqcJm7So',
+    debtTokenCount: 3,
+    primaryDebtTokens: ['SOL', 'GUSD', 'USDC'],
+    maxLiqThreshold: 90,
+    marketSizeUsd: 2_490_000,
+    collateralApy: 5.9,
+    category: 'sol',
+    tags: ['pegged'],
+  },
+  {
+    id: 'fwdSOL',
+    collateralSymbol: 'fwdSOL',
+    collateralName: 'Forward Industries Staked SOL',
+    collateralMint: 'FwdSoL1tiZ9axBc4oqGHJKRwPYFkzqSqFaLJ1D4ow5Bs',
+    debtTokenCount: 1,
+    primaryDebtTokens: ['SOL'],
+    maxLiqThreshold: 95,
+    marketSizeUsd: 72_200,
+    collateralApy: 6.3,
+    category: 'sol',
+    tags: ['pegged', 'native_staked'],
+  },
+  {
+    id: 'nsHELIUS',
+    collateralSymbol: 'nsHELIUS',
+    collateralName: 'SPL Single Pool (Helius)',
+    collateralMint: 'he1iusunGwqrNtafDtLdhsUQDFvo13z9sUa36PauBtk',
+    debtTokenCount: 1,
+    primaryDebtTokens: ['SOL'],
+    maxLiqThreshold: 88,
+    marketSizeUsd: 47_300,
+    collateralApy: 6.2,
+    category: 'sol',
+    tags: ['native_staked'],
+  },
+  {
+    id: 'nsJUPITER',
+    collateralSymbol: 'nsJUPITER',
+    collateralName: 'SPL Single Pool (Jupiter)',
+    collateralMint: 'CatzoSMUkTRidT54inr89WEb2x9DmzSnUqTgQ2HxHdcn',
+    debtTokenCount: 1,
+    primaryDebtTokens: ['SOL'],
+    maxLiqThreshold: 88,
+    marketSizeUsd: 4_260,
+    collateralApy: 6.2,
+    category: 'sol',
+    tags: ['native_staked'],
+  },
+  {
+    id: 'nsNANSEN',
+    collateralSymbol: 'nsNANSEN',
+    collateralName: 'SPL Single Pool (Nansen)',
+    collateralMint: '2NxEEbhqqj1Qptqhht52jqWULJkh8kfxY6sAXWL6oRrG',
+    debtTokenCount: 1,
+    primaryDebtTokens: ['SOL'],
+    maxLiqThreshold: 88,
+    marketSizeUsd: 1_220,
+    collateralApy: 6.3,
+    category: 'sol',
+    tags: ['native_staked'],
+  },
+  {
+    id: 'nsSHIFT',
+    collateralSymbol: 'nsSHIFT',
+    collateralName: 'SPL Single Pool (Shift)',
+    collateralMint: 'shft7Fry1js37HmuUoV3XAqAQdgckVh3bHK6fCH5V5J',
+    debtTokenCount: 1,
+    primaryDebtTokens: ['SOL'],
+    maxLiqThreshold: 88,
+    marketSizeUsd: 29,
+    collateralApy: 6.3,
+    category: 'sol',
+    tags: ['native_staked'],
+  },
+  {
+    id: 'nsTEMPORAL',
+    collateralSymbol: 'nsTEMPORAL',
+    collateralName: 'SPL Single Pool (Temporal)',
+    collateralMint: 'Haz7b47sZBpxh9SiH2JkgLixxs1KFazcxzaLhJqbz4cK',
+    debtTokenCount: 1,
+    primaryDebtTokens: ['SOL'],
+    maxLiqThreshold: 88,
+    marketSizeUsd: 11,
+    collateralApy: 6.3,
+    category: 'sol',
+    tags: ['native_staked'],
+  },
+  {
+    id: 'nsKILN',
+    collateralSymbol: 'nsKILN',
+    collateralName: 'SPL Single Pool (Kiln)',
+    collateralMint: 'DdCNGDpP7qMgoAy6paFzjZFzMAj5M5vTYzAiTsaCjyVE',
+    debtTokenCount: 1,
+    primaryDebtTokens: ['SOL'],
+    maxLiqThreshold: 88,
+    marketSizeUsd: 8,
+    collateralApy: 5.8,
+    category: 'sol',
+    tags: ['native_staked'],
+  },
+];
+
+export type BorrowVaultFilter = 'all' | 'sol' | 'btc' | 'stablecoin' | 'incentivised' | 'pegged' | 'native_staked' | 'new';
+
+export function getBorrowVaults(filter?: BorrowVaultFilter): BorrowVault[] {
+  let vaults = [...BORROW_VAULTS];
+
+  if (filter && filter !== 'all') {
+    if (filter === 'sol' || filter === 'btc' || filter === 'stablecoin') {
+      vaults = vaults.filter(v => v.category === filter);
+    } else {
+      vaults = vaults.filter(v => v.tags.includes(filter));
+    }
+  }
+
+  return vaults.sort((a, b) => b.marketSizeUsd - a.marketSizeUsd);
+}
+
+export function getBorrowVaultBySymbol(symbol: string): BorrowVault | undefined {
+  return BORROW_VAULTS.find(v => v.collateralSymbol.toLowerCase() === symbol.toLowerCase());
+}
+
+export function getTotalBorrowStats() {
+  const totalSupply = BORROW_VAULTS.reduce((sum, v) => sum + v.marketSizeUsd, 0);
+  const activeLoans = 697_000_000;
+  return { totalSupply, activeLoans, vaultCount: BORROW_VAULTS.length };
+}

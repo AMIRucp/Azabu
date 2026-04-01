@@ -1,0 +1,422 @@
+const METADATA_API = "https://dev-prediction-markets-api.dflow.net";
+const TRADE_API = "https://dev-quote-api.dflow.net";
+const USDC_MINT = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v";
+
+export interface DFlowMarketAccount {
+  marketLedger: string;
+  yesMint: string;
+  noMint: string;
+  isInitialized: boolean;
+  redemptionStatus: string | null;
+}
+
+export interface DFlowMarket {
+  ticker: string;
+  eventTicker: string;
+  title: string;
+  yesSubTitle: string;
+  noSubTitle: string;
+  status: string;
+  result: string;
+  openTime: number;
+  closeTime: number;
+  yesBid: string | null;
+  yesAsk: string | null;
+  noBid: string | null;
+  noAsk: string | null;
+  accounts: Record<string, DFlowMarketAccount>;
+}
+
+export interface DFlowEvent {
+  ticker: string;
+  seriesTicker: string;
+  title: string;
+  subtitle: string | null;
+  status: string;
+  markets: DFlowMarket[];
+}
+
+export interface NormalizedPredictionMarket {
+  title: string;
+  ticker: string;
+  eventTicker: string;
+  yesSubTitle: string;
+  yesPrice: number;
+  yesBid: number;
+  yesAsk: number;
+  noPrice: number;
+  noBid: number;
+  noAsk: number;
+  spread: number;
+  closeTime: number | null;
+  category: string;
+  status: string;
+  yesMint: string | null;
+  noMint: string | null;
+  settlementMint: string;
+  isLive: boolean;
+  source: "dflow";
+  kalshiUrl: string;
+  volume24h: number | null;
+}
+
+interface SeriesInfo {
+  ticker: string;
+  title: string;
+  category: string;
+  tags: string[];
+}
+
+const marketCache: { data: NormalizedPredictionMarket[] | null; ts: number; key: string } = { data: null, ts: 0, key: "" };
+const CACHE_TTL = 60_000;
+
+const CATEGORY_SERIES_MAP: Record<string, string[]> = {};
+let allSeriesCache: SeriesInfo[] | null = null;
+let allSeriesCacheTs = 0;
+
+async function fetchAllSeries(): Promise<SeriesInfo[]> {
+  if (allSeriesCache && Date.now() - allSeriesCacheTs < 300_000) {
+    return allSeriesCache;
+  }
+
+  try {
+    const tagsRes = await fetch(`${METADATA_API}/api/v1/tags_by_categories`, {
+      signal: AbortSignal.timeout(8000),
+    });
+    if (!tagsRes.ok) return allSeriesCache || [];
+    const tagsData = await tagsRes.json();
+    const tagsByCategories = tagsData.tagsByCategories || {};
+
+    const allSeries: SeriesInfo[] = [];
+    const categoryEntries = Object.entries(tagsByCategories) as [string, string[] | null][];
+
+    const seriesPromises = categoryEntries.map(async ([category, tags]) => {
+      try {
+        const params = new URLSearchParams({ category });
+        if (tags && tags.length > 0) {
+          params.set("tags", tags.join(","));
+        }
+        const res = await fetch(`${METADATA_API}/api/v1/series?${params}`, {
+          signal: AbortSignal.timeout(8000),
+        });
+        if (!res.ok) return [];
+        const data = await res.json();
+        return (data.series || []).map((s: any) => ({
+          ticker: s.ticker,
+          title: s.title,
+          category: s.category || category,
+          tags: s.tags || tags || [],
+        }));
+      } catch {
+        return [];
+      }
+    });
+
+    const results = await Promise.all(seriesPromises);
+    for (const seriesList of results) {
+      allSeries.push(...seriesList);
+    }
+
+    allSeriesCache = allSeries;
+    allSeriesCacheTs = Date.now();
+    return allSeries;
+  } catch (e: any) {
+    console.warn("DFlow series fetch failed:", e.message);
+    return allSeriesCache || [];
+  }
+}
+
+function normalizeMarket(market: DFlowMarket, event: DFlowEvent, category: string): NormalizedPredictionMarket | null {
+  const usdcAccount = market.accounts?.[USDC_MINT];
+  if (!usdcAccount || !usdcAccount.isInitialized) return null;
+
+  const yesBid = market.yesBid ? parseFloat(market.yesBid) : 0;
+  const yesAsk = market.yesAsk ? parseFloat(market.yesAsk) : 0;
+  const noBid = market.noBid ? parseFloat(market.noBid) : 0;
+  const noAsk = market.noAsk ? parseFloat(market.noAsk) : 0;
+  const yesPrice = yesBid > 0 && yesAsk > 0 ? (yesBid + yesAsk) / 2 : yesAsk || yesBid;
+  const noPrice = noBid > 0 && noAsk > 0 ? (noBid + noAsk) / 2 : noAsk || noBid;
+
+  const label = market.yesSubTitle || "";
+  const baseTitle = event.title || market.title || "Prediction Market";
+  const title = label ? `${baseTitle}: ${label}` : baseTitle;
+
+  return {
+    title,
+    ticker: market.ticker,
+    eventTicker: market.eventTicker || event.ticker,
+    yesSubTitle: market.yesSubTitle || "",
+    yesPrice,
+    yesBid,
+    yesAsk,
+    noPrice,
+    noBid,
+    noAsk,
+    spread: yesAsk > 0 && yesBid > 0 ? yesAsk - yesBid : 0,
+    closeTime: market.closeTime || null,
+    category,
+    status: market.status,
+    yesMint: usdcAccount.yesMint,
+    noMint: usdcAccount.noMint,
+    settlementMint: USDC_MINT,
+    isLive: true,
+    source: "dflow",
+    kalshiUrl: `https://kalshi.com/markets/${market.eventTicker || event.ticker}`,
+    volume24h: null,
+  };
+}
+
+export async function fetchDFlowMarkets(query?: string): Promise<NormalizedPredictionMarket[]> {
+  const cacheKey = (query || "all").toLowerCase().slice(0, 50);
+
+  if (marketCache.key === cacheKey && marketCache.data && Date.now() - marketCache.ts < CACHE_TTL) {
+    return marketCache.data;
+  }
+
+  try {
+    const allSeries = await fetchAllSeries();
+    if (allSeries.length === 0) {
+      console.warn("DFlow: No series found");
+      return [];
+    }
+
+    let targetSeries: SeriesInfo[] = allSeries;
+
+    if (query) {
+      const q = query.toLowerCase();
+      const scored = allSeries.map(s => {
+        const titleLower = s.title.toLowerCase();
+        const catLower = s.category.toLowerCase();
+        const tagsLower = s.tags.map(t => t.toLowerCase());
+        const words = q.split(/\s+/).filter(w => w.length > 2);
+
+        let score = 0;
+        for (const w of words) {
+          if (titleLower.includes(w)) score += 3;
+          if (catLower.includes(w)) score += 2;
+          if (tagsLower.some(t => t.includes(w))) score += 2;
+        }
+        return { series: s, score };
+      });
+
+      const matches = scored.filter(s => s.score > 0).sort((a, b) => b.score - a.score);
+      if (matches.length > 0) {
+        targetSeries = matches.slice(0, 5).map(m => m.series);
+      } else {
+        targetSeries = allSeries.slice(0, 10);
+      }
+    } else {
+      targetSeries = allSeries.slice(0, 10);
+    }
+
+    const seriesTickers = targetSeries.map(s => s.ticker).join(",");
+    const params = new URLSearchParams({
+      seriesTickers,
+      status: "active",
+      withNestedMarkets: "true",
+    });
+
+    const res = await fetch(`${METADATA_API}/api/v1/events?${params}`, {
+      signal: AbortSignal.timeout(10000),
+    });
+
+    if (!res.ok) {
+      console.warn("DFlow events fetch failed:", res.status);
+      return [];
+    }
+
+    const data = await res.json();
+    const events: DFlowEvent[] = data.events || [];
+
+    const allMarkets: NormalizedPredictionMarket[] = [];
+
+    for (const event of events) {
+      const seriesInfo = targetSeries.find(s => s.ticker === event.seriesTicker);
+      const category = seriesInfo?.category || "Market";
+
+      const activeMarkets = (event.markets || []).filter(m => m.status === "active");
+
+      for (const market of activeMarkets) {
+        const normalized = normalizeMarket(market, event, category);
+        if (normalized) {
+          allMarkets.push(normalized);
+        }
+      }
+    }
+
+    if (query) {
+      const q = query.toLowerCase();
+      const words = q.split(/\s+/).filter(w => w.length > 2 && !["the", "and", "for", "that", "will", "how", "what", "about", "with", "show", "prediction", "markets", "trending", "search", "find", "any"].includes(w));
+
+      if (words.length > 0) {
+        allMarkets.sort((a, b) => {
+          const aScore = words.filter(w => a.title.toLowerCase().includes(w)).length;
+          const bScore = words.filter(w => b.title.toLowerCase().includes(w)).length;
+          return bScore - aScore;
+        });
+      }
+    }
+
+    const result = allMarkets.slice(0, 10);
+
+    if (result.length > 0) {
+      marketCache.data = result;
+      marketCache.ts = Date.now();
+      marketCache.key = cacheKey;
+    }
+
+    return result;
+  } catch (e: any) {
+    console.warn("DFlow markets fetch failed:", e.message);
+    return [];
+  }
+}
+
+export async function fetchDFlowCategories(): Promise<Record<string, string[] | null>> {
+  try {
+    const res = await fetch(`${METADATA_API}/api/v1/tags_by_categories`, {
+      signal: AbortSignal.timeout(6000),
+    });
+    if (!res.ok) return {};
+    const data = await res.json();
+    return data.tagsByCategories || {};
+  } catch (e: any) {
+    console.warn("DFlow categories fetch failed:", e.message);
+    return {};
+  }
+}
+
+export interface BuyOrderRequest {
+  walletPubkey: string;
+  marketTicker: string;
+  side: "yes" | "no";
+  amount: number;
+  yesMint: string;
+  noMint: string;
+  settlementMint?: string;
+}
+
+export interface BuyOrderResponse {
+  transaction: string;
+  outAmount: string;
+  executionMode: string;
+  lastValidBlockHeight: number;
+}
+
+export async function buildBuyOrder(req: BuyOrderRequest): Promise<BuyOrderResponse> {
+  const mint = req.side === "yes" ? req.yesMint : req.noMint;
+  const settlementMint = req.settlementMint || USDC_MINT;
+
+  const body = {
+    trader: req.walletPubkey,
+    inMint: settlementMint,
+    outMint: mint,
+    inAmount: String(req.amount * 1_000_000),
+  };
+
+  const res = await fetch(`${TRADE_API}/api/v1/order`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+    signal: AbortSignal.timeout(15000),
+  });
+
+  if (!res.ok) {
+    const errorText = await res.text().catch(() => "Unknown error");
+    throw new Error(`DFlow order failed (${res.status}): ${errorText}`);
+  }
+
+  return await res.json();
+}
+
+export interface RedeemRequest {
+  walletPubkey: string;
+  yesMint: string;
+  noMint: string;
+  settlementMint?: string;
+}
+
+export interface RedeemResponse {
+  transaction: string;
+  lastValidBlockHeight: number;
+}
+
+export async function buildRedeemOrder(req: RedeemRequest): Promise<RedeemResponse> {
+  const settlementMint = req.settlementMint || USDC_MINT;
+
+  const body = {
+    trader: req.walletPubkey,
+    yesMint: req.yesMint,
+    noMint: req.noMint,
+    settlementMint,
+  };
+
+  const res = await fetch(`${TRADE_API}/api/v1/redeem`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+    signal: AbortSignal.timeout(15000),
+  });
+
+  if (!res.ok) {
+    const errorText = await res.text().catch(() => "Unknown error");
+    throw new Error(`DFlow redeem failed (${res.status}): ${errorText}`);
+  }
+
+  return await res.json();
+}
+
+export interface OrderStatusResponse {
+  status: "pending" | "expired" | "failed" | "open" | "pendingClose" | "closed";
+  outAmount: number;
+  reverts?: { signature: string }[];
+}
+
+export async function getOrderStatus(signature: string): Promise<OrderStatusResponse> {
+  const res = await fetch(`${TRADE_API}/api/v1/order/${signature}`, {
+    signal: AbortSignal.timeout(8000),
+  });
+
+  if (!res.ok) {
+    const errorText = await res.text().catch(() => "Unknown error");
+    throw new Error(`DFlow order status failed (${res.status}): ${errorText}`);
+  }
+
+  return await res.json();
+}
+
+export async function fetchMarketByTicker(marketTicker: string): Promise<NormalizedPredictionMarket | null> {
+  try {
+    const parts = marketTicker.split("-");
+    const seriesTicker = parts.slice(0, 1).join("-");
+
+    const eventTicker = parts.slice(0, -1).join("-");
+
+    const params = new URLSearchParams({
+      seriesTickers: seriesTicker,
+      status: "active",
+      withNestedMarkets: "true",
+    });
+
+    const res = await fetch(`${METADATA_API}/api/v1/events?${params}`, {
+      signal: AbortSignal.timeout(8000),
+    });
+
+    if (!res.ok) return null;
+    const data = await res.json();
+    const events: DFlowEvent[] = data.events || [];
+
+    for (const event of events) {
+      for (const market of event.markets || []) {
+        if (market.ticker === marketTicker) {
+          return normalizeMarket(market, event, "Market");
+        }
+      }
+    }
+
+    return null;
+  } catch (e: any) {
+    console.warn("DFlow market ticker fetch failed:", e.message);
+    return null;
+  }
+}

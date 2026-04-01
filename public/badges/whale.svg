@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <defs>
+    <clipPath id="c"><circle cx="128" cy="128" r="120"/></clipPath>
+    <linearGradient id="wave-g" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#3B82F6"/>
+      <stop offset="100%" stop-color="#1E3A5F"/>
+    </linearGradient>
+    <linearGradient id="whale-g" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#334155"/>
+      <stop offset="100%" stop-color="#1E3A5F"/>
+    </linearGradient>
+  </defs>
+  <circle cx="128" cy="128" r="128" fill="#0E1117"/>
+  <g clip-path="url(#c)">
+    <circle cx="128" cy="128" r="128" fill="#0A1220"/>
+    <!-- Sky/sea background -->
+    <rect x="0" y="0" width="256" height="140" fill="#0A1520"/>
+    <rect x="0" y="140" width="256" height="116" fill="#0E1E35"/>
+    <!-- Classic Hokusai great wave -->
+    <!-- Wave background layer -->
+    <path d="M0 170 Q40 140 80 155 Q120 170 160 140 Q200 110 256 130 L256 256 L0 256Z" fill="url(#wave-g)" opacity="0.5"/>
+    <!-- Main great wave -->
+    <path d="M-10 200 Q20 155 60 140 Q90 130 100 115 Q110 100 140 90 Q160 84 175 95 Q190 106 185 125 Q178 140 160 145 Q145 148 140 160 Q135 170 150 170 Q165 170 175 155 Q185 142 200 145 Q220 150 256 140 L256 256 L-10 256Z" fill="url(#wave-g)">
+      <animate attributeName="d" values="M-10 200 Q20 155 60 140 Q90 130 100 115 Q110 100 140 90 Q160 84 175 95 Q190 106 185 125 Q178 140 160 145 Q145 148 140 160 Q135 170 150 170 Q165 170 175 155 Q185 142 200 145 Q220 150 256 140 L256 256 L-10 256Z;M-10 202 Q22 158 62 143 Q92 133 102 118 Q112 103 142 93 Q162 87 177 98 Q192 109 187 128 Q180 143 162 148 Q147 151 142 163 Q137 173 152 173 Q167 173 177 158 Q187 145 202 148 Q222 153 256 143 L256 256 L-10 256Z;M-10 200 Q20 155 60 140 Q90 130 100 115 Q110 100 140 90 Q160 84 175 95 Q190 106 185 125 Q178 140 160 145 Q145 148 140 160 Q135 170 150 170 Q165 170 175 155 Q185 142 200 145 Q220 150 256 140 L256 256 L-10 256Z" dur="4s" repeatCount="indefinite"/>
+    </path>
+    <!-- Wave foam/crest -->
+    <path d="M95 115 Q108 105 120 110 Q112 95 100 98 Q90 101 95 115Z" fill="white" opacity="0.7"/>
+    <path d="M140 90 Q155 82 165 88 Q157 73 145 77 Q135 80 140 90Z" fill="white" opacity="0.6"/>
+    <!-- Water droplets -->
+    <g fill="#60A5FA" opacity="0.8">
+      <ellipse cx="88" cy="92" rx="3" ry="5" transform="rotate(20, 88, 92)"/>
+      <ellipse cx="105" cy="80" rx="2" ry="4" transform="rotate(-15, 105, 80)"/>
+      <ellipse cx="148" cy="72" rx="3" ry="5" transform="rotate(10, 148, 72)"/>
+      <ellipse cx="168" cy="82" rx="2" ry="4"/>
+    </g>
+    <!-- Whale body (Hokusai-style) -->
+    <ellipse cx="128" cy="138" rx="75" ry="40" fill="url(#whale-g)"/>
+    <!-- Whale tail -->
+    <path d="M200 138 Q220 120 215 148 Q225 130 245 140 Q230 155 215 148Z" fill="#1E3A5F"/>
+    <!-- Whale white underbelly -->
+    <ellipse cx="110" cy="148" rx="55" ry="22" fill="#BFDBFE" opacity="0.6"/>
+    <!-- Whale eye -->
+    <circle cx="70" cy="130" r="8" fill="#0A1220"/>
+    <circle cx="70" cy="130" r="5" fill="#1E3A5F"/>
+    <circle cx="68" cy="128" r="2" fill="#FFFFFF" opacity="0.8"/>
+    <!-- Blowhole spout -->
+    <path d="M95 100 Q88 80 92 60 Q96 80 100 95" fill="none" stroke="#60A5FA" stroke-width="3" stroke-linecap="round" opacity="0.7">
+      <animate attributeName="opacity" values="0.7;0.2;0.7" dur="3s" repeatCount="indefinite"/>
+    </path>
+    <!-- Kanji 鯨 -->
+    <text x="128" y="195" font-family="serif" font-size="22" text-anchor="middle" fill="#60A5FA" opacity="0.8" font-weight="bold">鯨</text>
+  </g>
+  <circle cx="128" cy="128" r="122" fill="none" stroke="#3B82F6" stroke-width="2"/>
+</svg>

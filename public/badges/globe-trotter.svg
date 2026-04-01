@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <defs>
+    <clipPath id="c"><circle cx="128" cy="128" r="120"/></clipPath>
+  </defs>
+  <circle cx="128" cy="128" r="128" fill="#0E1117"/>
+  <g clip-path="url(#c)">
+    <circle cx="128" cy="128" r="128" fill="#111419"/>
+    <!-- Scroll background (partially unrolled emaki) -->
+    <!-- Scroll body -->
+    <rect x="35" y="72" width="186" height="138" rx="4" fill="#F5E6C8"/>
+    <!-- Scroll parchment texture -->
+    <rect x="35" y="72" width="186" height="138" rx="4" fill="#F0DEB0" opacity="0.5"/>
+    <!-- Worn scroll edges (top/bottom rolls) -->
+    <ellipse cx="128" cy="72" rx="93" ry="12" fill="#8B6914"/>
+    <ellipse cx="128" cy="210" rx="93" ry="12" fill="#7A5A10"/>
+    <!-- Scroll rod caps (left) -->
+    <ellipse cx="35" cy="72" rx="8" ry="12" fill="#A0782A"/>
+    <ellipse cx="35" cy="210" rx="8" ry="12" fill="#9A7020"/>
+    <!-- Scroll rod caps (right) -->
+    <ellipse cx="221" cy="72" rx="8" ry="12" fill="#A0782A"/>
+    <ellipse cx="221" cy="210" rx="8" ry="12" fill="#9A7020"/>
+    <!-- Map content on scroll -->
+    <!-- Title 世界 -->
+    <text x="128" y="98" font-family="serif" font-size="18" text-anchor="middle" fill="#8B4513" font-weight="bold" opacity="0.8">世界</text>
+    <!-- Landmass shapes (stylized) -->
+    <g fill="#C8A87A" opacity="0.6">
+      <!-- Asia/continent 1 -->
+      <ellipse cx="155" cy="140" rx="28" ry="20" transform="rotate(-15, 155, 140)"/>
+      <!-- Europe/continent 2 -->
+      <ellipse cx="95" cy="130" rx="18" ry="14" transform="rotate(10, 95, 130)"/>
+      <!-- Americas/continent 3 -->
+      <ellipse cx="70" cy="155" rx="14" ry="22" transform="rotate(-8, 70, 155)"/>
+    </g>
+    <!-- Gold trade route lines -->
+    <g stroke="#FFD700" stroke-width="2" fill="none" opacity="0.9" stroke-dasharray="6 3">
+      <!-- Route 1 - horizontal main route -->
+      <path d="M68 140 Q100 128 128 132 Q155 136 190 140"/>
+      <!-- Route 2 - diagonal -->
+      <path d="M80 160 Q110 148 140 142 Q165 138 185 130"/>
+      <!-- Route 3 - from corner -->
+      <path d="M60 120 Q90 115 120 120 Q145 124 170 118"/>
+    </g>
+    <!-- Market symbols at route endpoints -->
+    <g fill="#3B82F6" opacity="0.8">
+      <!-- Bull (crypto) -->
+      <ellipse cx="72" cy="138" rx="10" ry="7"/>
+      <path d="M64 134 Q68 130 72 132" fill="none" stroke="#3B82F6" stroke-width="2"/>
+      <path d="M80 134 Q76 130 72 132" fill="none" stroke="#3B82F6" stroke-width="2"/>
+      <!-- Mountain (commodity) -->
+      <polygon points="128,125 118,145 138,145"/>
+      <!-- Building (stock) -->
+      <rect x="182" y="130" width="14" height="16" rx="1"/>
+      <rect x="184" y="128" width="10" height="4" rx="1"/>
+    </g>
+    <!-- Scroll aged corner markings -->
+    <g stroke="#8B6914" stroke-width="1" fill="none" opacity="0.3">
+      <rect x="42" y="80" width="12" height="12"/>
+      <rect x="202" y="80" width="12" height="12"/>
+      <rect x="42" y="196" width="12" height="12"/>
+      <rect x="202" y="196" width="12" height="12"/>
+    </g>
+  </g>
+  <circle cx="128" cy="128" r="122" fill="none" stroke="#3B82F6" stroke-width="2"/>
+</svg>

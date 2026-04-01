@@ -1,0 +1,74 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <defs>
+    <clipPath id="c">
+      <circle cx="128" cy="128" r="120"/>
+    </clipPath>
+    <linearGradient id="arc-g" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#FFD700"/>
+      <stop offset="100%" stop-color="#E8751A"/>
+    </linearGradient>
+    <filter id="eglow">
+      <feGaussianBlur stdDeviation="5" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <circle cx="128" cy="128" r="128" fill="#0E1117"/>
+  <g clip-path="url(#c)">
+    <circle cx="128" cy="128" r="128" fill="#0D1117"/>
+    <!-- Enso circle (zen brush stroke) -->
+    <circle cx="128" cy="128" r="90" fill="none" stroke="#FFD700" stroke-width="8" stroke-dasharray="520 40" stroke-linecap="round" opacity="0.25" transform="rotate(-30, 128, 128)"/>
+    <!-- Sakura petals floating -->
+    <g opacity="0.7">
+      <!-- Petal 1 -->
+      <ellipse cx="80" cy="75" rx="8" ry="5" fill="#FFB7C5" transform="rotate(20, 80, 75)">
+        <animateTransform attributeName="transform" type="translate" values="0,0;5,15;0,0" dur="6s" repeatCount="indefinite"/>
+        <animate attributeName="opacity" values="0.7;0.3;0.7" dur="6s" repeatCount="indefinite"/>
+      </ellipse>
+      <!-- Petal 2 -->
+      <ellipse cx="170" cy="90" rx="7" ry="4" fill="#FFB7C5" transform="rotate(-15, 170, 90)">
+        <animateTransform attributeName="transform" type="translate" values="0,0;-8,20;0,0" dur="7s" repeatCount="indefinite"/>
+        <animate attributeName="opacity" values="0.7;0.2;0.7" dur="7s" repeatCount="indefinite"/>
+      </ellipse>
+      <!-- Petal 3 -->
+      <ellipse cx="60" cy="160" rx="6" ry="4" fill="#FFB7C5" transform="rotate(45, 60, 160)">
+        <animateTransform attributeName="transform" type="translate" values="0,0;10,10;0,0" dur="5.5s" repeatCount="indefinite"/>
+      </ellipse>
+      <!-- Petal 4 -->
+      <ellipse cx="195" cy="145" rx="8" ry="5" fill="#FFB7C5" transform="rotate(-30, 195, 145)">
+        <animateTransform attributeName="transform" type="translate" values="0,0;-5,12;0,0" dur="8s" repeatCount="indefinite"/>
+      </ellipse>
+      <!-- Petal 5 -->
+      <ellipse cx="128" cy="65" rx="6" ry="4" fill="#FFB7C5" transform="rotate(10, 128, 65)">
+        <animateTransform attributeName="transform" type="translate" values="0,0;3,18;0,0" dur="6.5s" repeatCount="indefinite"/>
+      </ellipse>
+    </g>
+    <!-- Slash arc -->
+    <path d="M55 175 Q100 80 200 75" fill="none" stroke="url(#arc-g)" stroke-width="5" stroke-linecap="round" filter="url(#eglow)" opacity="0.85"/>
+    <path d="M60 180 Q105 85 205 80" fill="none" stroke="white" stroke-width="1.5" stroke-linecap="round" opacity="0.4"/>
+    <!-- Samurai silhouette in iaijutsu pose -->
+    <g fill="#F0F2F5" opacity="0.95">
+      <!-- Body -->
+      <ellipse cx="128" cy="155" rx="18" ry="30"/>
+      <!-- Head -->
+      <circle cx="128" cy="118" r="14"/>
+      <!-- Helmet crest -->
+      <polygon points="118,106 128,90 138,106" fill="#F0F2F5"/>
+      <!-- Left arm extending with sword -->
+      <rect x="75" y="140" width="58" height="8" rx="4" transform="rotate(-15, 130, 144)"/>
+      <!-- Right arm back -->
+      <rect x="130" y="138" width="40" height="8" rx="4" transform="rotate(20, 130, 142)"/>
+      <!-- Katana blade -->
+      <rect x="40" y="136" width="80" height="4" rx="2" transform="rotate(-15, 80, 138)" fill="#FFFFFF"/>
+      <!-- Legs -->
+      <rect x="118" y="182" width="12" height="28" rx="4" transform="rotate(-10, 124, 196)"/>
+      <rect x="128" y="182" width="12" height="28" rx="4" transform="rotate(5, 134, 196)"/>
+    </g>
+    <!-- Gold edge glow on silhouette -->
+    <ellipse cx="128" cy="155" rx="20" ry="32" fill="none" stroke="#FFD700" stroke-width="1.5" opacity="0.3"/>
+    <!-- Kanji 精 in gold -->
+    <text x="128" y="220" font-family="serif" font-size="24" text-anchor="middle" fill="#FFD700" opacity="0.7" font-weight="bold">精</text>
+  </g>
+  <circle cx="128" cy="128" r="122" fill="none" stroke="#F59E0B" stroke-width="3">
+    <animate attributeName="stroke-dasharray" values="0,800;400,400;800,0;400,400;0,800" dur="3s" repeatCount="indefinite"/>
+  </circle>
+</svg>

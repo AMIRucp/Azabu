@@ -1,0 +1,14 @@
+<svg viewBox="0 0 200 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect x="50" y="32" width="100" height="1" rx="0.5" fill="#4A4A47" class="bar b1" />
+  <rect x="50" y="52" width="76" height="1" rx="0.5" fill="#3D3D3A" class="bar b2" />
+  <rect x="50" y="72" width="54" height="1" rx="0.5" fill="#2A2A2A" class="bar b3" />
+  <rect x="50" y="92" width="36" height="1" rx="0.5" fill="#1E1E1E" class="bar b4" />
+  <style>
+    .bar { opacity:0; }
+    .b1 { animation: slideIn 0.4s ease-out forwards; }
+    .b2 { animation: slideIn 0.4s 0.08s ease-out forwards; }
+    .b3 { animation: slideIn 0.4s 0.16s ease-out forwards; }
+    .b4 { animation: slideIn 0.4s 0.24s ease-out forwards; }
+    @keyframes slideIn { 0%{opacity:0;transform:translateX(-8px)} 100%{opacity:1;transform:translateX(0)} }
+  </style>
+</svg>

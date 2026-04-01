@@ -1,0 +1,11 @@
+<svg viewBox="0 0 200 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <line x1="60" y1="50" x2="140" y2="50" stroke="#4A4A47" stroke-width="1" stroke-linecap="round" class="l1" />
+  <polyline points="132,44 140,50 132,56" stroke="#4A4A47" stroke-width="1" fill="none" stroke-linecap="round" stroke-linejoin="round" class="l1" />
+  <line x1="140" y1="70" x2="60" y2="70" stroke="#6B6A67" stroke-width="1" stroke-linecap="round" class="l2" />
+  <polyline points="68,64 60,70 68,76" stroke="#6B6A67" stroke-width="1" fill="none" stroke-linecap="round" stroke-linejoin="round" class="l2" />
+  <style>
+    .l1 { opacity:0; animation: fadeSlide 0.5s ease-out forwards; }
+    .l2 { opacity:0; animation: fadeSlide 0.5s 0.15s ease-out forwards; }
+    @keyframes fadeSlide { 0%{opacity:0;transform:translateX(-6px)} 100%{opacity:1;transform:translateX(0)} }
+  </style>
+</svg>

@@ -1,0 +1,69 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <defs>
+    <clipPath id="c">
+      <circle cx="128" cy="128" r="120"/>
+    </clipPath>
+    <linearGradient id="coin" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFE066"/>
+      <stop offset="50%" stop-color="#FFD700"/>
+      <stop offset="100%" stop-color="#C8A000"/>
+    </linearGradient>
+    <filter id="shimmer-f">
+      <feGaussianBlur stdDeviation="1.5" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <circle cx="128" cy="128" r="128" fill="#0E1117"/>
+  <g clip-path="url(#c)">
+    <circle cx="128" cy="128" r="128" fill="#111820"/>
+    <!-- Banner (nobori flag) in background -->
+    <rect x="158" y="40" width="36" height="110" rx="4" fill="#E8751A" opacity="0.85"/>
+    <rect x="158" y="40" width="4" height="110" fill="#C05A0A" opacity="0.8"/>
+    <!-- Oni mask silhouette on banner -->
+    <g transform="translate(176, 85)" opacity="0.6" fill="#111820">
+      <ellipse cx="0" cy="0" rx="13" ry="15"/>
+      <ellipse cx="-6" cy="-4" rx="4" ry="3" fill="#111820"/>
+      <ellipse cx="6" cy="-4" rx="4" ry="3" fill="#111820"/>
+      <path d="M-8 6 Q0 12 8 6" stroke="#111820" stroke-width="2" fill="none"/>
+      <rect x="-4" y="-18" width="3" height="8" rx="1"/>
+      <rect x="1" y="-18" width="3" height="8" rx="1"/>
+    </g>
+    <!-- Flag pole -->
+    <rect x="162" y="30" width="3" height="130" rx="1" fill="#5A3A1A"/>
+    <!-- Abacus frame -->
+    <rect x="50" y="80" width="100" height="100" rx="6" fill="#1E293B" stroke="#334155" stroke-width="2"/>
+    <!-- Horizontal divider bar -->
+    <rect x="50" y="124" width="100" height="6" fill="#334155"/>
+    <!-- Abacus rods -->
+    <g stroke="#4A5568" stroke-width="1.5">
+      <line x1="72" y1="82" x2="72" y2="178"/>
+      <line x1="92" y1="82" x2="92" y2="178"/>
+      <line x1="112" y1="82" x2="112" y2="178"/>
+      <line x1="132" y1="82" x2="132" y2="178"/>
+    </g>
+    <!-- Gold coin beads (upper section - heaven beads) -->
+    <g filter="url(#shimmer-f)">
+      <circle cx="72" cy="106" r="9" fill="url(#coin)" stroke="#A07800" stroke-width="1">
+        <animate attributeName="fill" values="url(#coin);#FFE066;url(#coin)" dur="3s" repeatCount="indefinite"/>
+      </circle>
+      <circle cx="92" cy="106" r="9" fill="url(#coin)" stroke="#A07800" stroke-width="1"/>
+      <circle cx="112" cy="110" r="9" fill="url(#coin)" stroke="#A07800" stroke-width="1"/>
+      <circle cx="132" cy="106" r="9" fill="url(#coin)" stroke="#A07800" stroke-width="1"/>
+      <!-- Lower beads -->
+      <circle cx="72" cy="148" r="9" fill="url(#coin)" stroke="#A07800" stroke-width="1"/>
+      <circle cx="72" cy="164" r="9" fill="url(#coin)" stroke="#A07800" stroke-width="1"/>
+      <circle cx="92" cy="142" r="9" fill="url(#coin)" stroke="#A07800" stroke-width="1"/>
+      <circle cx="92" cy="160" r="9" fill="url(#coin)" stroke="#A07800" stroke-width="1"/>
+      <circle cx="112" cy="148" r="9" fill="url(#coin)" stroke="#A07800" stroke-width="1"/>
+      <circle cx="132" cy="148" r="9" fill="url(#coin)" stroke="#A07800" stroke-width="1"/>
+      <circle cx="132" cy="165" r="9" fill="url(#coin)" stroke="#A07800" stroke-width="1"/>
+    </g>
+    <!-- Red hanko stamp for 商 -->
+    <g transform="translate(50, 185)">
+      <rect x="0" y="0" width="40" height="40" rx="4" fill="#EF4444" opacity="0.9"/>
+      <rect x="3" y="3" width="34" height="34" rx="2" fill="none" stroke="#FF6666" stroke-width="1" opacity="0.5"/>
+      <text x="20" y="29" font-family="serif" font-size="28" text-anchor="middle" fill="white" font-weight="bold">商</text>
+    </g>
+  </g>
+  <circle cx="128" cy="128" r="122" fill="none" stroke="#3B82F6" stroke-width="2"/>
+</svg>

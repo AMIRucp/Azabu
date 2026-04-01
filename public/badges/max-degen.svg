@@ -1,0 +1,74 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <defs>
+    <clipPath id="c"><circle cx="128" cy="128" r="120"/></clipPath>
+    <linearGradient id="kintsugi" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFE566"/>
+      <stop offset="100%" stop-color="#FFD700"/>
+    </linearGradient>
+    <filter id="kglow">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <circle cx="128" cy="128" r="128" fill="#0E1117"/>
+  <g clip-path="url(#c)">
+    <circle cx="128" cy="128" r="128" fill="#111419"/>
+    <!-- Daruma body (cracked) -->
+    <ellipse cx="128" cy="135" rx="72" ry="80" fill="#EF4444"/>
+    <!-- Kintsugi crack lines on body -->
+    <g filter="url(#kglow)" stroke="url(#kintsugi)" stroke-width="3" fill="none">
+      <path d="M128 55 Q118 80 122 110 Q126 130 115 155 Q105 175 110 210">
+        <animate attributeName="opacity" values="1;0.5;1" dur="1.5s" repeatCount="indefinite"/>
+      </path>
+      <path d="M128 55 Q138 75 135 100 Q132 125 145 148 Q155 168 150 200">
+        <animate attributeName="opacity" values="1;0.5;1" dur="1.5s" repeatCount="indefinite" begin="0.3s"/>
+      </path>
+      <path d="M80 90 Q100 100 115 115 Q130 130 155 138 Q175 145 195 140">
+        <animate attributeName="opacity" values="1;0.6;1" dur="1.5s" repeatCount="indefinite" begin="0.6s"/>
+      </path>
+      <path d="M60 140 Q85 138 100 148 Q120 158 135 168"/>
+    </g>
+    <!-- Daruma face area (cracked) -->
+    <ellipse cx="128" cy="118" rx="52" ry="50" fill="#F0F2F5"/>
+    <g filter="url(#kglow)" stroke="url(#kintsugi)" stroke-width="2.5" fill="none">
+      <path d="M95 90 Q110 105 108 120 Q106 135 120 145"/>
+      <path d="M162 88 Q150 102 152 116 Q154 132 140 142"/>
+    </g>
+    <!-- Both eyes filled (both wishes done / madness) -->
+    <ellipse cx="108" cy="112" rx="16" ry="14" fill="#1A1A1A"/>
+    <ellipse cx="108" cy="112" rx="10" ry="9" fill="#111419"/>
+    <circle cx="104" cy="108" r="3" fill="#F59E0B" opacity="0.9">
+      <animate attributeName="opacity" values="0.9;0.4;0.9" dur="1.5s" repeatCount="indefinite"/>
+    </circle>
+    <ellipse cx="148" cy="112" rx="16" ry="14" fill="#1A1A1A"/>
+    <ellipse cx="148" cy="112" rx="10" ry="9" fill="#111419"/>
+    <circle cx="144" cy="108" r="3" fill="#F59E0B" opacity="0.9">
+      <animate attributeName="opacity" values="0.9;0.4;0.9" dur="1.5s" repeatCount="indefinite" begin="0.2s"/>
+    </circle>
+    <!-- Eyebrows -->
+    <path d="M92 96 Q108 88 118 96" fill="none" stroke="#111419" stroke-width="3" stroke-linecap="round"/>
+    <path d="M138 96 Q148 88 164 96" fill="none" stroke="#111419" stroke-width="3" stroke-linecap="round"/>
+    <!-- Mustache -->
+    <path d="M105 135 Q128 148 151 135" fill="none" stroke="#111419" stroke-width="2.5" stroke-linecap="round"/>
+    <!-- Kanji 狂気 on belly -->
+    <g transform="translate(128, 168)">
+      <rect x="-30" y="-18" width="60" height="28" rx="3" fill="#CC2222" opacity="0.8"/>
+      <text x="0" y="8" font-family="serif" font-size="20" text-anchor="middle" fill="#FFD700" font-weight="bold">狂気</text>
+    </g>
+    <!-- Blue-white flames -->
+    <g>
+      <path d="M75 212 Q62 182 70 155 Q78 135 65 112 Q82 132 77 158 Q85 178 78 198 Q80 208 75 212Z" fill="#60A5FA" opacity="0.85">
+        <animate attributeName="d" values="M75 212 Q62 182 70 155 Q78 135 65 112 Q82 132 77 158 Q85 178 78 198 Q80 208 75 212Z;M73 212 Q60 182 68 155 Q76 133 63 110 Q80 130 75 158 Q83 176 76 196 Q78 207 73 212Z;M75 212 Q62 182 70 155 Q78 135 65 112 Q82 132 77 158 Q85 178 78 198 Q80 208 75 212Z" dur="1.5s" repeatCount="indefinite"/>
+      </path>
+      <path d="M181 212 Q194 182 186 155 Q178 135 191 112 Q174 132 179 158 Q171 178 178 198 Q176 208 181 212Z" fill="#60A5FA" opacity="0.85">
+        <animate attributeName="d" values="M181 212 Q194 182 186 155 Q178 135 191 112 Q174 132 179 158 Q171 178 178 198 Q176 208 181 212Z;M183 212 Q196 182 188 155 Q180 133 193 110 Q176 130 181 158 Q173 176 180 196 Q178 207 183 212Z;M181 212 Q194 182 186 155 Q178 135 191 112 Q174 132 179 158 Q171 178 178 198 Q176 208 181 212Z" dur="1.5s" repeatCount="indefinite" begin="0.4s"/>
+      </path>
+      <path d="M128 220 Q115 195 120 170 Q126 150 116 130 Q130 150 128 172 Q130 192 124 210 Q125 216 128 220Z" fill="#93C5FD" opacity="0.7">
+        <animate attributeName="d" values="M128 220 Q115 195 120 170 Q126 150 116 130 Q130 150 128 172 Q130 192 124 210 Q125 216 128 220Z;M128 220 Q116 193 121 168 Q127 148 117 128 Q131 148 129 170 Q131 190 125 209 Q126 215 128 220Z;M128 220 Q115 195 120 170 Q126 150 116 130 Q130 150 128 172 Q130 192 124 210 Q125 216 128 220Z" dur="1.2s" repeatCount="indefinite" begin="0.2s"/>
+      </path>
+    </g>
+    <!-- Base -->
+    <ellipse cx="128" cy="212" rx="50" ry="10" fill="#CC2222"/>
+  </g>
+  <circle cx="128" cy="128" r="122" fill="none" stroke="#3B82F6" stroke-width="2"/>
+</svg>

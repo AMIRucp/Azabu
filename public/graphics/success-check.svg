@@ -1,0 +1,12 @@
+<svg viewBox="0 0 200 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <circle cx="100" cy="60" r="28" stroke="#3D3D3A" stroke-width="1" class="ring"
+    stroke-dasharray="176" stroke-dashoffset="176" />
+  <polyline points="86,60 96,70 114,50" stroke="#6B6A67" stroke-width="1.5" fill="none"
+    stroke-linecap="round" stroke-linejoin="round" class="chk" />
+  <style>
+    .ring { animation: drawRing 0.5s ease-out forwards; }
+    @keyframes drawRing { 100%{stroke-dashoffset:0} }
+    .chk { opacity:0; animation: checkIn 0.3s 0.35s ease-out forwards; }
+    @keyframes checkIn { 0%{opacity:0} 100%{opacity:1} }
+  </style>
+</svg>
