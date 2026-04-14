@@ -80,7 +80,7 @@ function intervalToLookbackMs(interval: string): number {
     case '1M':  return now - 1  * 24 * 60 * 60 * 1000;
     case '5M':  return now - 4  * 24 * 60 * 60 * 1000;
     case '15M': return now - 14 * 24 * 60 * 60 * 1000;
-    case '1H':  return now - 90 * 24 * 60 * 60 * 1000;
+    case '1H':  return now - 365 * 24 * 60 * 60 * 1000;
     case '4H':  return now - 365 * 24 * 60 * 60 * 1000;
     case '1D':  return now - 3 * 365 * 24 * 60 * 60 * 1000;
     case '1W':  return now - 5 * 365 * 24 * 60 * 60 * 1000;
@@ -93,12 +93,47 @@ function intervalToCoinGeckoDays(interval: string): number {
     case '1M':  return 1;
     case '5M':  return 4;
     case '15M': return 14;
-    case '1H':  return 30;
-    case '4H':  return 90;
+    case '1H':  return 365;
+    case '4H':  return 365;
     case '1D':  return 365;
     case '1W':  return 365;
     default:    return 30;
   }
+}
+
+function intervalToMinHistoryDays(interval: string): number {
+  switch (interval) {
+    case '1M':  return 1;
+    case '5M':  return 4;
+    case '15M': return 14;
+    case '1H':  return 365;
+    case '4H':  return 365;
+    case '1D':  return 365;
+    case '1W':  return 365;
+    default:    return 365;
+  }
+}
+
+function intervalToAsterLimit(interval: string): number {
+  switch (interval) {
+    case '1M':  return 4320; // ~3 days at 1m (avoids over-heavy payloads)
+    case '5M':  return 3000; // ~10 days
+    case '15M': return 3000; // ~31 days
+    case '1H':  return 3000; // ~125 days
+    case '4H':  return 2000; // ~333 days
+    case '1D':  return 1200; // >3 years
+    case '1W':  return 520;  // ~10 years
+    default:    return 1500;
+  }
+}
+
+function hasMinHistory(candles: CandleData[], minDays: number): boolean {
+  if (!candles.length) return false;
+  const first = candles[0]?.time || 0;
+  const last = candles[candles.length - 1]?.time || 0;
+  if (!first || !last || last <= first) return false;
+  const spanDays = (last - first) / 86400;
+  return spanDays >= minDays;
 }
 
 function stripPerpSuffix(symbol: string): string {
@@ -222,7 +257,8 @@ export async function fetchAsterCandles(symbol: string, interval: string = '1H')
   try {
     const asterInterval = intervalToAster(interval);
     const asterSymbol = symbol.toUpperCase().endsWith('USDT') ? symbol.toUpperCase() : symbol.toUpperCase() + 'USDT';
-    const res = await fetch(`/api/aster/klines?symbol=${asterSymbol}&interval=${asterInterval}&limit=1000`, {
+    const limit = intervalToAsterLimit(interval);
+    const res = await fetch(`/api/aster/klines?symbol=${asterSymbol}&interval=${asterInterval}&limit=${limit}`, {
       signal: AbortSignal.timeout(10000),
     });
     if (!res.ok) return null;
@@ -249,22 +285,38 @@ export async function fetchAsterCandles(symbol: string, interval: string = '1H')
 
 export async function fetchCandles(symbol: string, interval: string = '1H', chain?: string): Promise<CandleResult> {
   const upper = symbol.toUpperCase();
+  const normalized = upper
+    .replace(/-PERP$/i, '')
+    .replace(/-USD$/i, '')
+    .replace(/^1M/i, '');
+  const minDays = intervalToMinHistoryDays(interval);
 
-  if (upper.endsWith('USDT')) {
-    const asterResult = await fetchAsterCandles(upper, interval);
-    if (asterResult && asterResult.candles.length > 5) return asterResult;
+  // Aster pairs are mostly USDT-quoted; also allow explicit Arbitrum routing.
+  const shouldTryAster = upper.endsWith('USDT') || chain === 'Arbitrum';
+  if (shouldTryAster) {
+    const asterSymbol = normalized.endsWith('USDT') ? normalized : `${normalized}USDT`;
+    const asterResult = await fetchAsterCandles(asterSymbol, interval);
+    if (asterResult && asterResult.candles.length > 5 && hasMinHistory(asterResult.candles, minDays)) {
+      return asterResult;
+    }
   }
 
-  const hlResult = await fetchHyperliquidCandles(upper, interval);
-  if (hlResult && hlResult.candles.length > 5) return hlResult;
+  const hlResult = await fetchHyperliquidCandles(normalized, interval);
+  if (hlResult && hlResult.candles.length > 5 && hasMinHistory(hlResult.candles, minDays)) {
+    return hlResult;
+  }
 
-  const cgResult = await fetchCoinGeckoOHLC(upper, interval);
-  if (cgResult && cgResult.candles.length > 5) return cgResult;
+  const cgResult = await fetchCoinGeckoOHLC(normalized, interval);
+  if (cgResult && cgResult.candles.length > 5 && hasMinHistory(cgResult.candles, minDays)) {
+    return cgResult;
+  }
 
-  const basePrice = upper.includes('BTC') ? 95000 : upper.includes('ETH') ? 3500 : upper.includes('SOL') ? 180 : 1;
+  const step = INTERVAL_SECONDS[interval] || 3600;
+  const generatedCount = Math.max(240, Math.ceil((minDays * 86400) / step));
+  const basePrice = normalized.includes('BTC') ? 95000 : normalized.includes('ETH') ? 3500 : normalized.includes('SOL') ? 180 : 1;
   return {
-    symbol: upper,
-    candles: generateCandles(basePrice, 200, interval),
+    symbol: normalized,
+    candles: generateCandles(basePrice, generatedCount, interval),
     source: 'generated',
     interval,
   };
