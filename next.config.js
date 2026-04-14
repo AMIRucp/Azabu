@@ -60,6 +60,7 @@ const nextConfig = {
       'lucide-react',
     ],
   },
+  turbopack: {},
   images: {
     remotePatterns: [
       { protocol: 'https', hostname: '**' },
