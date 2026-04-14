@@ -502,8 +502,8 @@ export function WalletSelectModal({
               <div className="flex flex-col gap-1" data-testid={`${tab}-wallet-list`}>
                 {EVM_WALLETS.map(entry => {
                   const status = getEvmStatus(entry);
-                  const isDisabled = !!connectingId || isEvmConnected ||
-                    (entry.isWalletConnect && !hasWalletConnect);
+                  const isDisabled = !!(!!connectingId || isEvmConnected ||
+                    (entry.isWalletConnect && !hasWalletConnect));
                   return (
                     <WalletRow
                       key={entry.id}
