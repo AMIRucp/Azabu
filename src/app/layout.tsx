@@ -1,5 +1,5 @@
 import '../lib/polyfills';
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { JetBrains_Mono, Outfit, DM_Serif_Display } from "next/font/google";
 import "./globals.css";
 import { Providers } from "./providers";
@@ -27,11 +27,24 @@ const dmSerif = DM_Serif_Display({
   display: "swap",
 });
 
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  viewportFit: "cover",
+};
+
 export const metadata: Metadata = {
   title: "Azabu | Alternative Futures Exchange",
   description: "AFX -- Alternative Futures Exchange. 275+ leveraged markets across crypto, stocks, commodities, and indices.",
   icons: {
     icon: "/favicon.png",
+  },
+  other: {
+    "mobile-web-app-capable": "yes",
+    "apple-mobile-web-app-capable": "yes",
+    "apple-mobile-web-app-status-bar-style": "black-translucent",
   },
 };
 
