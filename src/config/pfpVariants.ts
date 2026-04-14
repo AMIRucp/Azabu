@@ -19,6 +19,13 @@ export const PFP_VARIANTS: PfpVariant[] = [
   { id: 'forge',   name: 'Forge',   era: '1100 AD', helmet: 'Heavy iron kabuto, orange-hot forge glow edges',     palette: ['#1A1A1A', '#D4A574', '#D4A574'] },
 ];
 
+export const ERA_LABELS: string[] = [
+  '1100–1300 AD',
+  '1300–1500 AD',
+  '1500–1700 AD',
+  'Unknown',
+];
+
 export function assignRandomPfp(): string {
   const index = Math.floor(Math.random() * PFP_VARIANTS.length);
   return PFP_VARIANTS[index].id;
