@@ -76,7 +76,7 @@ export default function TerminalHeader({
         <MobileNavDrawer
           open={drawerOpen}
           onClose={() => setDrawerOpen(false)}
-          chain={chain}
+          chain={chain as "arbitrum" | "hyperliquid" | undefined}
           onOpenMarkets={() => { setDrawerOpen(false); onOpenMarketSelector(); }}
           onOpenPortfolio={() => { setDrawerOpen(false); onOpenPortfolio?.(); }}
           onOpenSettings={() => { setDrawerOpen(false); onOpenSettings?.(); }}

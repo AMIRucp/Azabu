@@ -866,7 +866,7 @@ export default function SimpleTradeCard({ selectedAsset, onAssetChange, onVenueC
       {/* Action Button */}
       <button
         data-testid="simple-trade-button"
-        onClick={isEvmConnected ? handleTrade : connectEvm}
+        onClick={isEvmConnected ? handleTrade : () => connectEvm()}
         disabled={isEvmConnected && (!canTrade || txState === "signing")}
         style={{
           width: "100%", padding: "16px 0", borderRadius: 14, border: "none", cursor: "pointer",

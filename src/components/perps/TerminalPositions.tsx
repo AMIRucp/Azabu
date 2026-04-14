@@ -104,7 +104,7 @@ export default function TerminalPositions({ chain, livePrices, asterUserId }: Te
         const data = await res.json();
         if (!res.ok || data.error) throw new Error(data.error || "Failed to close");
       } else if (pos.protocol === "hyperliquid") {
-        const { address: hlAddress } = (window as Record<string, unknown>).__evmWallet as { address?: string } || {};
+        const { address: hlAddress } = ((window as unknown) as Record<string, unknown>).__evmWallet as { address?: string } || {};
         if (!hlAddress) throw new Error("Connect EVM wallet to close Hyperliquid positions");
         const res = await fetch("/api/hyperliquid/order", {
           method: "POST",

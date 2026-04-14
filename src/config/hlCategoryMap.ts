@@ -49,7 +49,7 @@ export const HL_BASE_CATEGORY: Record<string, string> = {
   GMX: 'defi', BANANA: 'defi', SUSHI: 'defi', HYPER: 'defi',
   STBL: 'defi', YGG: 'defi', ENS: 'defi', MAV: 'defi',
   BIO: 'defi', ARK: 'defi', PROVE: 'defi', LIGHTER: 'defi', KHYPE: 'defi', BASED: 'defi', PUMPBTC: 'defi',
-  QNT: 'defi', BUDDY: 'meme', '4': 'meme', OG: 'meme', M: 'defi', FIGHT: 'meme', ESPORTS: 'meme', URA: 'defi', ZBT: 'defi', MAGS: 'meme', FEUSD: 'defi',
+  BUDDY: 'meme', '4': 'meme', OG: 'meme', M: 'defi', FIGHT: 'meme', ESPORTS: 'meme', URA: 'defi', ZBT: 'defi', MAGS: 'meme', FEUSD: 'defi',
 
   // ── L1/L2 (70 assets) ───────────────────────────────────────────────────
   TAO: 'l1l2', ZEC: 'l1l2', PAXG: 'l1l2', ZRO: 'l1l2',
