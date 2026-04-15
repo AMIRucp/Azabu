@@ -330,14 +330,8 @@ export function WalletSelectModal({ open, onClose }: { open: boolean; onClose: (
     const isMobileBrowser = typeof window !== "undefined" && /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
     const isDetected = entry.isWalletConnect || entry.detect();
 
-    // On mobile: wallet not injected + has deep link → redirect straight to wallet app
-    if (isMobileBrowser && !isDetected && entry.deepLinkWallet && !entry.isWalletConnect) {
-      window.location.href = buildDeepLink(entry.deepLinkWallet, window.location.href);
-      return;
-    }
-
     if (entry.isWalletConnect && !hasWalletConnect) {
-      setConnectError("WalletConnect not configured — set a WC Project ID in env");
+      setConnectError("WalletConnect not configured — set NEXT_PUBLIC_WC_PROJECT_ID");
       return;
     }
 
@@ -359,6 +353,28 @@ export function WalletSelectModal({ open, onClose }: { open: boolean; onClose: (
       : null;
 
     const targetConnector = connector || eip6963Match || injectedFallback;
+
+    // On mobile browser: wallet not injected → use WalletConnect if available
+    // WalletConnect will show a deep link that opens the wallet app for approval only
+    if (isMobileBrowser && !isDetected && !entry.isWalletConnect) {
+      const wcConnector = evmConnectors.find(c => c.id === "walletConnect");
+      if (wcConnector) {
+        setConnectingId(entry.id);
+        try {
+          await connectAsync({ connector: wcConnector, chainId: targetChainId });
+        } catch (err: unknown) {
+          const msg = err instanceof Error ? err.message : String(err);
+          if (!msg.includes("User rejected") && !msg.includes("user rejected")) {
+            setConnectError(`Open ${entry.name} and approve the connection request.`);
+          }
+          setConnectingId(null);
+        }
+        return;
+      }
+      // No WalletConnect configured — show download view
+      setDownloadView({ name: entry.name, icon: entry.icon, url: entry.downloadUrl, deepLinkWallet: entry.deepLinkWallet });
+      return;
+    }
 
     if (!isDetected && !targetConnector) {
       setDownloadView({ name: entry.name, icon: entry.icon, url: entry.downloadUrl, deepLinkWallet: entry.deepLinkWallet });
@@ -404,9 +420,9 @@ export function WalletSelectModal({ open, onClose }: { open: boolean; onClose: (
              (lid === "phantom" && rdns.includes("phantom"));
     });
     if (eip6963) return { text: "Available", color: "#22C55E" };
-    // On mobile, show "Open app" instead of "Not installed"
-    const isMobile = typeof window !== "undefined" && /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
-    if (isMobile && entry.deepLinkWallet) return { text: "Tap to open app", color: "#D4A574" };
+    // On mobile, show "Connect via WalletConnect" for non-injected wallets
+    const isMobileBrowser = typeof window !== "undefined" && /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
+    if (isMobileBrowser && entry.deepLinkWallet) return { text: "Tap to connect via WalletConnect", color: "#D4A574" };
     return { text: "Not installed", color: "#6B7280" };
   }, [findEvmConnector, hasWalletConnect, evmConnectors]);
 
