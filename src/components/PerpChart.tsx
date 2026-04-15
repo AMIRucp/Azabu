@@ -112,11 +112,12 @@ function PerpChartInner({ symbol, currentPrice, entryPrice, liquidationPrice, si
 
     fetchCandles(symbol, timeframe).then(result => {
       if (cancelled) return;
+      if (!result) return;
 
       const candles = toChartCandles(result.candles);
       const volumes: HistogramData<Time>[] = result.candles.map(c => ({
         time: c.time as Time,
-        value: c.volume || Math.random() * 1000000 + 100000,
+        value: c.volume || 0,
         color: c.close >= c.open ? 'rgba(34,197,94,0.12)' : 'rgba(239,68,68,0.12)',
       }));
 
@@ -129,7 +130,6 @@ function PerpChartInner({ symbol, currentPrice, entryPrice, liquidationPrice, si
       chart.timeScale().fitContent();
     }).catch(() => {
       if (cancelled) return;
-      setDataSource('generated');
     });
 
     if (onCrosshairMove) {
