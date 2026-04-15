@@ -327,6 +327,15 @@ export function WalletSelectModal({ open, onClose }: { open: boolean; onClose: (
     if (isEvmConnected) return;
     setConnectError(null);
 
+    const isMobileBrowser = typeof window !== "undefined" && /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
+    const isDetected = entry.isWalletConnect || entry.detect();
+
+    // On mobile: wallet not injected + has deep link → redirect straight to wallet app
+    if (isMobileBrowser && !isDetected && entry.deepLinkWallet && !entry.isWalletConnect) {
+      window.location.href = buildDeepLink(entry.deepLinkWallet, window.location.href);
+      return;
+    }
+
     if (entry.isWalletConnect && !hasWalletConnect) {
       setConnectError("WalletConnect not configured — set a WC Project ID in env");
       return;
@@ -350,7 +359,6 @@ export function WalletSelectModal({ open, onClose }: { open: boolean; onClose: (
       : null;
 
     const targetConnector = connector || eip6963Match || injectedFallback;
-    const isDetected = entry.isWalletConnect || entry.detect();
 
     if (!isDetected && !targetConnector) {
       setDownloadView({ name: entry.name, icon: entry.icon, url: entry.downloadUrl, deepLinkWallet: entry.deepLinkWallet });
@@ -380,8 +388,8 @@ export function WalletSelectModal({ open, onClose }: { open: boolean; onClose: (
 
   const getEvmStatus = useCallback((entry: EvmWalletEntry): { text: string; color: string } => {
     if (entry.isWalletConnect) {
-      if (!hasWalletConnect) return { text: "Not configured", color: "#6B7280" };
-      return { text: "Scan QR to connect", color: "#22C55E" };
+      if (!hasWalletConnect) return { text: "Requires WC Project ID — see docs", color: "#EF4444" };
+      return { text: "MetaMask · Trust · Phantom · any wallet", color: "#22C55E" };
     }
     if (entry.detect()) return { text: "Available", color: "#22C55E" };
     const connector = findEvmConnector(entry);
@@ -546,8 +554,7 @@ export function WalletSelectModal({ open, onClose }: { open: boolean; onClose: (
               <div className="flex flex-col gap-1.5" data-testid={`${tab}-wallet-list`}>
                 {sortedWallets.map(entry => {
                   const status = getEvmStatus(entry);
-                  const isDisabled = !!(!!connectingId || isEvmConnected ||
-                    (entry.isWalletConnect && !hasWalletConnect));
+                  const isDisabled = !!(!!connectingId || isEvmConnected);
                   return (
                     <WalletRow
                       key={entry.id}

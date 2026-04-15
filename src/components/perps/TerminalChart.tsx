@@ -7,11 +7,22 @@ import { fetchCandles } from '@/services/candleService';
 import type { CandleData } from '@/services/candleService';
 import { T, mono } from './terminalTheme';
 
-const TIMEFRAMES = ['1m', '5m', '15m', '1h', '4h', '1d'] as const;
+const TIMEFRAMES = ['1m', '5m', '15m', '1h', '4h', '1d', '1w'] as const;
 type Timeframe = typeof TIMEFRAMES[number];
 
 const TF_TO_SERVICE: Record<Timeframe, string> = {
-  '1m': '1M', '5m': '5M', '15m': '15M', '1h': '1H', '4h': '4H', '1d': '1D',
+  '1m': '1M', '5m': '5M', '15m': '15M', '1h': '1H', '4h': '4H', '1d': '1D', '1w': '1W',
+};
+
+// How often to poll for the latest candle (ms)
+const TF_POLL_INTERVAL: Record<Timeframe, number> = {
+  '1m': 5000,
+  '5m': 10000,
+  '15m': 15000,
+  '1h': 30000,
+  '4h': 60000,
+  '1d': 120000,
+  '1w': 300000,
 };
 
 function toChartCandles(candles: CandleData[]): CandlestickData<Time>[] {
@@ -34,9 +45,11 @@ function TerminalChartInner({ symbol, currentPrice, onTimeframeChange, chain }: 
   const volumeSeriesRef = useRef<ISeriesApi<'Histogram'> | null>(null);
   const priceLineRef = useRef<IPriceLine | null>(null);
   const chartReadyRef = useRef(false);
+  const dataSourceRef = useRef<string>('');
   const [tf, setTf] = useState<Timeframe>('1h');
   const [loading, setLoading] = useState(true);
   const [dataSource, setDataSource] = useState<string>('');
+  const [isLive, setIsLive] = useState(false);
 
   useEffect(() => {
     if (!chartContainerRef.current) return;
@@ -89,8 +102,17 @@ function TerminalChartInner({ symbol, currentPrice, onTimeframeChange, chain }: 
         barSpacing: 8,
         minBarSpacing: 3,
       },
-      handleScroll: { vertTouchDrag: false },
-      handleScale: { axisPressedMouseMove: true },
+      handleScroll: {
+        mouseWheel: true,
+        pressedMouseMove: true,
+        horzTouchDrag: true,
+        vertTouchDrag: false,
+      },
+      handleScale: {
+        axisPressedMouseMove: true,
+        mouseWheel: true,
+        pinch: true,
+      },
     });
 
     const candleSeries = chart.addSeries(CandlestickSeries, {
@@ -123,6 +145,13 @@ function TerminalChartInner({ symbol, currentPrice, onTimeframeChange, chain }: 
     fetchCandles(rawSymbol, TF_TO_SERVICE[tf], chain).then(result => {
       if (cancelled) return;
 
+      if (!result) {
+        setLoading(false);
+        setDataSource('');
+        setIsLive(false);
+        return;
+      }
+
       const chartCandles = toChartCandles(result.candles);
       const volumes: HistogramData<Time>[] = result.candles.map(c => ({
         time: c.time as Time,
@@ -132,7 +161,9 @@ function TerminalChartInner({ symbol, currentPrice, onTimeframeChange, chain }: 
 
       candleSeries.setData(chartCandles);
       volumeSeries.setData(volumes);
+      dataSourceRef.current = result.source;
       setDataSource(result.source);
+      setIsLive(true);
       setLoading(false);
       chartReadyRef.current = true;
 
@@ -140,7 +171,8 @@ function TerminalChartInner({ symbol, currentPrice, onTimeframeChange, chain }: 
     }).catch(() => {
       if (cancelled) return;
       setLoading(false);
-      setDataSource('generated');
+      setDataSource('');
+      setIsLive(false);
     });
 
     const resizeObserver = new ResizeObserver(entries => {
@@ -183,6 +215,40 @@ function TerminalChartInner({ symbol, currentPrice, onTimeframeChange, chain }: 
     }
   }, [currentPrice, loading]);
 
+  // Live polling — fetch latest candle and update the last bar
+  useEffect(() => {
+    if (!isLive) return;
+    const isAsterSym = symbol.toUpperCase().endsWith('USDT');
+    const rawSymbol = isAsterSym
+      ? symbol.replace(/USDT$/i, '')
+      : symbol.replace(/-PERP$/i, '').replace(/-USD$/i, '').replace(/^1M/i, '');
+
+    const poll = async () => {
+      if (!chartReadyRef.current || !candleSeriesRef.current || !volumeSeriesRef.current) return;
+      try {
+        const result = await fetchCandles(rawSymbol, TF_TO_SERVICE[tf], chain);
+        if (!result || result.candles.length === 0) return;
+        // Only update the last candle to avoid re-rendering the whole chart
+        const last = result.candles[result.candles.length - 1];
+        candleSeriesRef.current.update({
+          time: last.time as Time,
+          open: last.open,
+          high: last.high,
+          low: last.low,
+          close: last.close,
+        });
+        volumeSeriesRef.current.update({
+          time: last.time as Time,
+          value: last.volume || 0,
+          color: last.close >= last.open ? 'rgba(14,203,129,0.25)' : 'rgba(246,70,93,0.25)',
+        });
+      } catch { /* silent */ }
+    };
+
+    const interval = setInterval(poll, TF_POLL_INTERVAL[tf]);
+    return () => clearInterval(interval);
+  }, [isLive, symbol, tf, chain]);
+
   const handleTfChange = (t: Timeframe) => {
     setTf(t);
     onTimeframeChange?.(t);
@@ -193,6 +259,12 @@ function TerminalChartInner({ symbol, currentPrice, onTimeframeChange, chain }: 
       data-testid="terminal-chart-container"
       style={{ background: T.bg, height: '100%', display: 'flex', flexDirection: 'column' }}
     >
+      <style>{`
+        @keyframes livePulse {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.3; }
+        }
+      `}</style>
       <div style={{
         display: 'flex',
         alignItems: 'center',
@@ -262,9 +334,19 @@ function TerminalChartInner({ symbol, currentPrice, onTimeframeChange, chain }: 
                 fontSize: 9, color: '#2A2F3A', fontFamily: mono, marginLeft: 4,
                 padding: '1px 5px', borderRadius: 3,
                 background: 'rgba(255,255,255,0.03)',
+                display: 'inline-flex', alignItems: 'center', gap: 4,
               }}
             >
-              {dataSource === 'coingecko' ? 'CoinGecko' : dataSource === 'aster' ? 'Aster' : 'Sim'}
+              {isLive && (
+                <span style={{
+                  width: 5, height: 5, borderRadius: '50%',
+                  background: '#0ECB81',
+                  boxShadow: '0 0 4px #0ECB81',
+                  display: 'inline-block',
+                  animation: 'livePulse 2s ease-in-out infinite',
+                }} />
+              )}
+              {dataSource === 'coingecko' ? 'CoinGecko' : dataSource === 'aster' ? 'Aster' : dataSource === 'hyperliquid' ? 'Hyperliquid' : 'Sim'}
             </span>
           )}
         </div>
@@ -278,19 +360,29 @@ function TerminalChartInner({ symbol, currentPrice, onTimeframeChange, chain }: 
           <div
             data-testid="terminal-chart-loading"
             style={{
-              position: 'absolute',
-              inset: 0,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: '#4A5060',
-              fontFamily: mono,
-              fontSize: 11,
-              zIndex: 2,
-              background: T.bg,
+              position: 'absolute', inset: 0,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              color: '#4A5060', fontFamily: mono, fontSize: 11,
+              zIndex: 2, background: T.bg,
             }}
           >
             Loading chart...
+          </div>
+        )}
+        {!loading && !dataSource && (
+          <div
+            data-testid="terminal-chart-no-data"
+            style={{
+              position: 'absolute', inset: 0,
+              display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+              color: '#4A5060', fontFamily: mono, fontSize: 11,
+              zIndex: 2, background: T.bg, gap: 6,
+            }}
+          >
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#2A2F3A" strokeWidth="1.5" strokeLinecap="round">
+              <path d="M3 3l18 18M9 9v6m6-6v6M3 17V7a2 2 0 012-2h4m4 0h4a2 2 0 012 2v10a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+            </svg>
+            <span>No chart data available</span>
           </div>
         )}
       </div>

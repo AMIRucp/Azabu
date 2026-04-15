@@ -236,45 +236,52 @@ function ExchangeShell() {
         style={{
           background: '#000000', borderBottom: '1px solid #1C1C1C',
           height: 44, padding: '0 12px',
-          fontFamily: "'JetBrains Mono', 'SF Mono', monospace",
         }}
         data-testid="exchange-header"
       >
-        <div className="flex items-center" style={{ gap: 10 }}>
+        {/* Logo */}
+        <div className="flex items-center" style={{ gap: 10, flexShrink: 0 }}>
           <img
             src="/azabu-logo.png"
             alt="Azabu"
             style={{ width: 28, height: 28, objectFit: "contain" }}
             data-testid="img-logo-desktop"
           />
-
-          <div style={{ width: 1, height: 18, background: 'rgba(255,255,255,0.08)', margin: '0 2px' }} />
-
-          <button
-            onClick={() => setDrawerOpen(true)}
-            data-testid="nav-drawer-trigger"
-            style={{
-              display: 'flex', alignItems: 'center',
-              padding: '7px 14px', borderRadius: 10,
-              background: 'linear-gradient(to bottom, rgba(255,255,255,0.05), rgba(255,255,255,0.015) 30%)',
-              border: '1px solid rgba(255,255,255,0.06)',
-              backdropFilter: 'blur(8px)',
-              WebkitBackdropFilter: 'blur(8px)',
-              cursor: 'pointer',
-              transition: 'background 0.15s, border-color 0.15s, transform 0.1s',
-              color: 'rgba(255,255,255,0.88)', fontSize: 14, fontWeight: 500,
-              letterSpacing: '0.2px',
-              fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif",
-              boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.04), 0 6px 20px rgba(0,0,0,0.35)',
-            }}
-            onMouseEnter={e => { e.currentTarget.style.background = 'linear-gradient(to bottom, rgba(255,255,255,0.07), rgba(255,255,255,0.03) 30%)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.10)'; }}
-            onMouseLeave={e => { e.currentTarget.style.background = 'linear-gradient(to bottom, rgba(255,255,255,0.05), rgba(255,255,255,0.015) 30%)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.06)'; }}
-            onMouseDown={e => { e.currentTarget.style.transform = 'scale(0.98)'; }}
-            onMouseUp={e => { e.currentTarget.style.transform = 'scale(1)'; }}
-          >
-            {activePage === 'settings' ? 'Settings' : [...PRIMARY_NAV, ...SECONDARY_NAV].find(n => n.id === activePage)?.label || 'Home'}
-          </button>
         </div>
+
+        {/* Desktop inline nav */}
+        <nav className="flex items-center" style={{ gap: 2 }}>
+          {[...PRIMARY_NAV, ...SECONDARY_NAV].map(({ id, label }) => {
+            const active = activePage === id;
+            return (
+              <button
+                key={id}
+                onClick={() => {
+                  if (id === "trade") setTradeFromMarkets(false);
+                  setActivePage(id);
+                }}
+                data-testid={`desktop-nav-${id}`}
+                style={{
+                  padding: '5px 12px',
+                  borderRadius: 8,
+                  border: 'none',
+                  cursor: 'pointer',
+                  fontSize: 13,
+                  fontWeight: active ? 600 : 400,
+                  fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif",
+                  color: active ? '#D4A574' : 'rgba(255,255,255,0.5)',
+                  background: active ? 'rgba(212,165,116,0.08)' : 'transparent',
+                  transition: 'all 0.15s',
+                  letterSpacing: '0.01em',
+                }}
+                onMouseEnter={e => { if (!active) e.currentTarget.style.color = 'rgba(255,255,255,0.8)'; }}
+                onMouseLeave={e => { if (!active) e.currentTarget.style.color = 'rgba(255,255,255,0.5)'; }}
+              >
+                {label}
+              </button>
+            );
+          })}
+        </nav>
 
         <div className="flex items-center shrink-0" style={{ gap: 6 }}>
           <UserHeader
@@ -333,7 +340,7 @@ function ExchangeShell() {
         <MarketTicker />
       </div>
 
-      <main className="flex-1 min-h-0 overflow-hidden pb-[72px]">
+      <main className="flex-1 min-h-0 overflow-hidden sm:pb-0 pb-[72px]">
         <ErrorBoundary>
           {activePage === "home" && (
             <div className="afx-page-enter h-full overflow-y-auto" data-testid="page-home">

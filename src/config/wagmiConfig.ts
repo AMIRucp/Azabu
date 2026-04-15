@@ -20,18 +20,26 @@ export const hyperliquidEvm = defineChain({
 function buildConnectors(): CreateConnectorFn[] {
   const list: CreateConnectorFn[] = [
     injected({ shimDisconnect: true }),
-    coinbaseWallet({ appName: "AFX", darkMode: true }),
+    coinbaseWallet({ appName: "Azabu", darkMode: true }),
   ];
 
   const wcProjectId = typeof process !== "undefined"
     ? process.env.NEXT_PUBLIC_WC_PROJECT_ID
     : undefined;
 
+  // WalletConnect is required for mobile wallet connections.
+  // Always add it — falls back gracefully if no project ID is set.
   if (wcProjectId) {
     list.push(
       walletConnect({
         projectId: wcProjectId,
         showQrModal: true,
+        metadata: {
+          name: "Azabu",
+          description: "Alternative Futures Exchange — 275+ leveraged markets",
+          url: typeof window !== "undefined" ? window.location.origin : "https://azabu.fi",
+          icons: ["https://azabu.fi/favicon.png"],
+        },
       }),
     );
   }

@@ -10,7 +10,7 @@ export interface CandleData {
 export interface CandleResult {
   symbol: string;
   candles: CandleData[];
-  source: 'hyperliquid' | 'coingecko' | 'aster' | 'generated';
+  source: 'hyperliquid' | 'coingecko' | 'aster';
   interval: string;
 }
 
@@ -76,24 +76,26 @@ function intervalToHLInterval(interval: string): string {
 
 function intervalToLookbackMs(interval: string): number {
   const now = Date.now();
+  const Y = 365 * 24 * 60 * 60 * 1000;
+  const D = 24 * 60 * 60 * 1000;
   switch (interval) {
-    case '1M':  return now - 1  * 24 * 60 * 60 * 1000;
-    case '5M':  return now - 4  * 24 * 60 * 60 * 1000;
-    case '15M': return now - 14 * 24 * 60 * 60 * 1000;
-    case '1H':  return now - 365 * 24 * 60 * 60 * 1000;
-    case '4H':  return now - 365 * 24 * 60 * 60 * 1000;
-    case '1D':  return now - 3 * 365 * 24 * 60 * 60 * 1000;
-    case '1W':  return now - 5 * 365 * 24 * 60 * 60 * 1000;
-    default:    return now - 90 * 24 * 60 * 60 * 1000;
+    case '1M':  return now - 3   * D;      // 3 days (API limit ~4320 candles)
+    case '5M':  return now - 15  * D;      // 15 days
+    case '15M': return now - 45  * D;      // 45 days
+    case '1H':  return now - 180 * D;      // 6 months
+    case '4H':  return now - 2   * Y;      // 2 years
+    case '1D':  return now - 4   * Y;      // 4 years
+    case '1W':  return now - 6   * Y;      // 6 years
+    default:    return now - 30  * D;
   }
 }
 
 function intervalToCoinGeckoDays(interval: string): number {
   switch (interval) {
     case '1M':  return 1;
-    case '5M':  return 4;
+    case '5M':  return 5;
     case '15M': return 14;
-    case '1H':  return 365;
+    case '1H':  return 90;
     case '4H':  return 365;
     case '1D':  return 365;
     case '1W':  return 365;
@@ -103,27 +105,27 @@ function intervalToCoinGeckoDays(interval: string): number {
 
 function intervalToMinHistoryDays(interval: string): number {
   switch (interval) {
-    case '1M':  return 1;
-    case '5M':  return 4;
-    case '15M': return 14;
-    case '1H':  return 365;
-    case '4H':  return 365;
-    case '1D':  return 365;
+    case '1M':  return 0.1;
+    case '5M':  return 1;
+    case '15M': return 3;
+    case '1H':  return 14;
+    case '4H':  return 60;
+    case '1D':  return 180;
     case '1W':  return 365;
-    default:    return 365;
+    default:    return 1;
   }
 }
 
 function intervalToAsterLimit(interval: string): number {
   switch (interval) {
-    case '1M':  return 4320; // ~3 days at 1m (avoids over-heavy payloads)
-    case '5M':  return 3000; // ~10 days
-    case '15M': return 3000; // ~31 days
-    case '1H':  return 3000; // ~125 days
-    case '4H':  return 2000; // ~333 days
-    case '1D':  return 1200; // >3 years
-    case '1W':  return 520;  // ~10 years
-    default:    return 1500;
+    case '1M':  return 4320;  // 3 days
+    case '5M':  return 4320;  // 15 days
+    case '15M': return 4320;  // 45 days
+    case '1H':  return 4320;  // 6 months
+    case '4H':  return 4380;  // 2 years
+    case '1D':  return 1460;  // 4 years
+    case '1W':  return 312;   // 6 years
+    default:    return 2000;
   }
 }
 
@@ -283,7 +285,7 @@ export async function fetchAsterCandles(symbol: string, interval: string = '1H')
   }
 }
 
-export async function fetchCandles(symbol: string, interval: string = '1H', chain?: string): Promise<CandleResult> {
+export async function fetchCandles(symbol: string, interval: string = '1H', chain?: string): Promise<CandleResult | null> {
   const upper = symbol.toUpperCase();
   const normalized = upper
     .replace(/-PERP$/i, '')
@@ -291,7 +293,6 @@ export async function fetchCandles(symbol: string, interval: string = '1H', chai
     .replace(/^1M/i, '');
   const minDays = intervalToMinHistoryDays(interval);
 
-  // Aster pairs are mostly USDT-quoted; also allow explicit Arbitrum routing.
   const shouldTryAster = upper.endsWith('USDT') || chain === 'Arbitrum';
   if (shouldTryAster) {
     const asterSymbol = normalized.endsWith('USDT') ? normalized : `${normalized}USDT`;
@@ -311,13 +312,5 @@ export async function fetchCandles(symbol: string, interval: string = '1H', chai
     return cgResult;
   }
 
-  const step = INTERVAL_SECONDS[interval] || 3600;
-  const generatedCount = Math.max(240, Math.ceil((minDays * 86400) / step));
-  const basePrice = normalized.includes('BTC') ? 95000 : normalized.includes('ETH') ? 3500 : normalized.includes('SOL') ? 180 : 1;
-  return {
-    symbol: normalized,
-    candles: generateCandles(basePrice, generatedCount, interval),
-    source: 'generated',
-    interval,
-  };
+  return null;
 }
