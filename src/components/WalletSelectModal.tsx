@@ -304,8 +304,15 @@ export function WalletSelectModal({ open, onClose }: { open: boolean; onClose: (
   }, [connectingId]);
 
   useEffect(() => {
-    if (isEvmConnected && connectingId) { setConnectingId(null); onClose(); }
-  }, [isEvmConnected, connectingId, onClose]);
+    if (connectingId && !isEvmConnected) {
+      // Close modal immediately when connecting starts so WalletConnect popup can appear
+      onClose();
+    }
+  }, [connectingId, isEvmConnected, onClose]);
+
+  useEffect(() => {
+    if (isEvmConnected && connectingId) { setConnectingId(null); }
+  }, [isEvmConnected, connectingId]);
 
   useEffect(() => {
     if (!open) { setDownloadView(null); setConnectingId(null); setConnectError(null); }
