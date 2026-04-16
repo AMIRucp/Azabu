@@ -464,7 +464,7 @@ img[src*="azabu-logo"] {
 }
 
 .wallet-adapter-modal-wrapper {
-  z-index: 9999 !important;
+  z-index: 999999 !important;
   background: #000000 !important;
   border: 1px solid #1C1C1C !important;
   border-radius: 16px !important;
@@ -473,9 +473,22 @@ img[src*="azabu-logo"] {
 }
 
 .wallet-adapter-modal-overlay {
-  z-index: 9998 !important;
+  z-index: 999998 !important;
   background: rgba(0, 0, 0, 0.7) !important;
   backdrop-filter: blur(4px);
+}
+
+/* WalletConnect modal z-index override */
+[role="dialog"] {
+  z-index: 999999 !important;
+}
+
+.wcm-modal {
+  z-index: 999999 !important;
+}
+
+.wcm-overlay {
+  z-index: 999998 !important;
 }
 
 .wallet-adapter-modal-container {

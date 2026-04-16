@@ -442,7 +442,7 @@ export function WalletSelectModal({ open, onClose }: { open: boolean; onClose: (
   return (
     <div
       className="fixed inset-0 flex items-end sm:items-center justify-center"
-      style={{ zIndex: 9999 }}
+      style={{ zIndex: 99999 }}
       data-testid="wallet-select-modal"
     >
       {/* Backdrop */}
