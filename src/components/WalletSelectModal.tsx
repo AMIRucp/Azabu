@@ -274,6 +274,8 @@ export function WalletSelectModal({ open, onClose }: { open: boolean; onClose: (
   const [connectingId, setConnectingId] = useState<string | null>(null);
   const [connectError, setConnectError] = useState<string | null>(null);
 
+  const isMobile = typeof window !== "undefined" && /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
+
   // Detect mobile wallet browser and auto-prioritise that wallet
   const mobileWalletBrowser = useMemo(() => detectMobileWalletBrowser(), []);
 
@@ -567,27 +569,67 @@ export function WalletSelectModal({ open, onClose }: { open: boolean; onClose: (
                   {evmTabLabel} Wallets
                 </span>
               </div>
-              <div className="flex flex-col gap-1.5" data-testid={`${tab}-wallet-list`}>
-                {sortedWallets.map(entry => {
-                  const status = getEvmStatus(entry);
-                  const isDisabled = !!(!!connectingId || isEvmConnected);
-                  return (
-                    <WalletRow
-                      key={entry.id}
-                      name={entry.name}
-                      icon={entry.icon}
-                      statusText={status.text}
-                      statusColor={status.color}
-                      isConnecting={connectingId === entry.id}
-                      onClick={() => handleEvmClick(entry, evmChainId)}
-                      disabled={isDisabled}
-                      testId={`button-wallet-${entry.id}`}
-                      recommended={entry.recommended}
-                      badge={entry.multiChain ? "Multi-chain" : undefined}
-                    />
-                  );
-                })}
-              </div>
+
+              {/* Mobile: single WalletConnect button — opens wallet chooser directly */}
+              {isMobile && hasWalletConnect && !isEvmConnected && (
+                <div className="flex flex-col gap-2 mb-3">
+                  <button
+                    onClick={() => {
+                      const wcConnector = evmConnectors.find(c => c.id === "walletConnect");
+                      if (!wcConnector) return;
+                      setConnectingId("walletconnect");
+                      connectAsync({ connector: wcConnector, chainId: evmChainId })
+                        .catch(() => setConnectingId(null));
+                    }}
+                    disabled={!!connectingId}
+                    data-testid="button-walletconnect-mobile"
+                    style={{
+                      display: "flex", alignItems: "center", justifyContent: "center", gap: 10,
+                      width: "100%", minHeight: 56, borderRadius: 14, cursor: "pointer",
+                      background: "linear-gradient(135deg, rgba(212,165,116,0.15), rgba(212,165,116,0.08))",
+                      border: "1px solid rgba(212,165,116,0.3)",
+                      color: "#D4A574", fontSize: 15, fontWeight: 600,
+                      WebkitTapHighlightColor: "transparent",
+                    }}
+                  >
+                    {connectingId === "walletconnect" ? (
+                      <div className="w-5 h-5 rounded-full border-2 animate-spin"
+                        style={{ borderColor: "rgba(212,165,116,0.3)", borderTopColor: "#D4A574" }} />
+                    ) : (
+                      <img src={walletConnectIcon} alt="WalletConnect" style={{ width: 24, height: 24, borderRadius: 6 }} />
+                    )}
+                    {connectingId === "walletconnect" ? "Opening wallet..." : "Connect Wallet"}
+                  </button>
+                  <p className="text-center text-[10px]" style={{ color: "#4A5568" }}>
+                    Opens MetaMask, Trust, Phantom or any wallet app
+                  </p>
+                </div>
+              )}
+
+              {/* Desktop: full wallet list */}
+              {!isMobile && (
+                <div className="flex flex-col gap-1.5" data-testid={`${tab}-wallet-list`}>
+                  {sortedWallets.map(entry => {
+                    const status = getEvmStatus(entry);
+                    const isDisabled = !!(!!connectingId || isEvmConnected);
+                    return (
+                      <WalletRow
+                        key={entry.id}
+                        name={entry.name}
+                        icon={entry.icon}
+                        statusText={status.text}
+                        statusColor={status.color}
+                        isConnecting={connectingId === entry.id}
+                        onClick={() => handleEvmClick(entry, evmChainId)}
+                        disabled={isDisabled}
+                        testId={`button-wallet-${entry.id}`}
+                        recommended={entry.recommended}
+                        badge={entry.multiChain ? "Multi-chain" : undefined}
+                      />
+                    );
+                  })}
+                </div>
+              )}
             </>
           )}
 
