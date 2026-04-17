@@ -4,12 +4,12 @@ import { useConnect, useAccount, useDisconnect } from "wagmi";
 import { ARBITRUM_CHAIN_ID, HYPERLIQUID_CHAIN_ID } from "@/config/wagmiConfig";
 import { X, Download, ExternalLink, ArrowLeft, ChevronRight } from "lucide-react";
 
-const coinbaseIcon = "https://altcoinsbox.com/wp-content/uploads/2023/01/coinbase-wallet-logo.webp";
+const coinbaseIcon = "https://images.ctfassets.net/c5bd0wqwq5v7/5kq5tKJZWI8gVGVlNDlD5X/b13a3bbc66e9b0e0e3e3e3e3e3e3e3e3/coinbase-logo.png";
 const metamaskIcon = "https://upload.wikimedia.org/wikipedia/commons/3/36/MetaMask_Fox.svg";
 const walletConnectIcon = "https://avatars.githubusercontent.com/u/37784886?s=200&v=4";
 const rabbyIcon = "https://rabby.io/assets/images/logo-128.png";
 const trustIcon = "https://trustwallet.com/assets/images/media/assets/TWT.png";
-const phantomIcon = "https://phantom.app/img/phantom-logo.png";
+const phantomIcon = "https://arweave.net/hQiPv0XQRAf0O8u0E6u5o15HrDDwsKTHzNnKpVmYntQ";
 
 interface BrowserWindow {
   coinbaseWalletExtension?: unknown;

@@ -79,8 +79,8 @@ function intervalToLookbackMs(interval: string): number {
   const Y = 365 * 24 * 60 * 60 * 1000;
   const D = 24 * 60 * 60 * 1000;
   switch (interval) {
-    case '1M':  return now - 3   * D;      // 3 days (API limit ~4320 candles)
-    case '5M':  return now - 15  * D;      // 15 days
+    case '1M':  return now - 15  * D;      // 15 days (API limit ~4320 candles)
+    case '5M':  return now - 30  * D;      // 30 days
     case '15M': return now - 45  * D;      // 45 days
     case '1H':  return now - 180 * D;      // 6 months
     case '4H':  return now - 2   * Y;      // 2 years

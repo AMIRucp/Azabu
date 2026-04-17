@@ -998,7 +998,7 @@ export default function HomePage() {
         padding: isMobile ? "32px 16px 100px" : "48px 48px 80px",
       }}
     >
-      <div style={{ maxWidth: isMobile ? 600 : 900, width: "100%" }}>
+      <div style={{ maxWidth: isMobile ? 600 : "100%", width: "100%" }}>
 
         <div style={{ marginBottom: isMobile ? 20 : 28 }}>
           <div style={{
