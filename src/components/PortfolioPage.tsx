@@ -104,7 +104,7 @@ function TabButton({ label, value, count, current, onClick }: {
       onClick={() => onClick(value)}
       data-testid={`tab-${value}`}
       style={{
-        padding: "10px 18px", fontSize: 12, fontWeight: active ? 600 : 400,
+        padding: "8px 14px", fontSize: 11, fontWeight: active ? 600 : 400,
         fontFamily: SANS, letterSpacing: "0.01em",
         color: active ? BRIGHT : DIM,
         background: "transparent", border: "none",
@@ -114,8 +114,8 @@ function TabButton({ label, value, count, current, onClick }: {
       }}
     >
       {label}{count !== undefined && count > 0 ? <span style={{
-        marginLeft: 6, fontSize: 9, fontWeight: 700, fontFamily: MONO,
-        background: ORANGE, color: "#fff", borderRadius: 10, padding: "1px 5px",
+        marginLeft: 4, fontSize: 8, fontWeight: 700, fontFamily: MONO,
+        background: ORANGE, color: "#fff", borderRadius: 8, padding: "0px 4px",
       }}>{count}</span> : null}
     </button>
   );
@@ -149,9 +149,9 @@ function ChainPill({ label, value, current, logo, onClick }: {
 /* Stat pill inside the portfolio card */
 function StatPill({ label, value, valueColor = MID }: { label: string; value: string; valueColor?: string }) {
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-      <span style={{ fontSize: 9, fontWeight: 600, color: DIM, fontFamily: SANS, letterSpacing: "0.08em", textTransform: "uppercase" }}>{label}</span>
-      <span style={{ fontSize: 12, fontWeight: 700, color: valueColor, fontFamily: MONO }}>{value}</span>
+    <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+      <span style={{ fontSize: 8, fontWeight: 600, color: DIM, fontFamily: SANS, letterSpacing: "0.08em", textTransform: "uppercase" }}>{label}</span>
+      <span style={{ fontSize: 11, fontWeight: 700, color: valueColor, fontFamily: MONO, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{value}</span>
     </div>
   );
 }
@@ -166,17 +166,18 @@ function ActionBtn({ label, icon, onClick, testId }: { label: string; icon: Reac
       onMouseEnter={() => setHov(true)}
       onMouseLeave={() => setHov(false)}
       style={{
-        display: "flex", alignItems: "center", justifyContent: "center", gap: 7,
-        padding: "11px 8px",
+        display: "flex", alignItems: "center", justifyContent: "center", gap: 5,
+        padding: "9px 6px",
         background: hov ? "#161616" : CARD,
         border: `1px solid ${hov ? BORDER2 : BORDER}`,
-        borderRadius: 10, cursor: "pointer",
+        borderRadius: 8, cursor: "pointer",
         transition: "all 0.12s",
         flex: 1,
+        minWidth: 0,
       }}
     >
-      <span style={{ color: hov ? BRIGHT : MID, display: "flex", alignItems: "center", transition: "color 0.12s" }}>{icon}</span>
-      <span style={{ fontSize: 11, fontWeight: 600, color: hov ? BRIGHT : MID, fontFamily: SANS, transition: "color 0.12s" }}>{label}</span>
+      <span style={{ color: hov ? BRIGHT : MID, display: "flex", alignItems: "center", transition: "color 0.12s", flexShrink: 0 }}>{icon}</span>
+      <span style={{ fontSize: 10, fontWeight: 600, color: hov ? BRIGHT : MID, fontFamily: SANS, transition: "color 0.12s", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{label}</span>
     </button>
   );
 }
@@ -187,22 +188,22 @@ function OverviewTab({ positions, unrealizedPnl, freeMargin, usedCollateral }: {
 }) {
   if (positions.length === 0) {
     return (
-      <div style={{ padding: "40px 24px", textAlign: "center" }}>
-        <div style={{ fontSize: 11, color: DIM, fontFamily: SANS, letterSpacing: "0.04em" }}>No open positions</div>
+      <div style={{ padding: "24px 12px", textAlign: "center" }}>
+        <div style={{ fontSize: 10, color: DIM, fontFamily: SANS, letterSpacing: "0.04em" }}>No open positions</div>
       </div>
     );
   }
   return (
-    <div style={{ padding: "16px 20px" }}>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8 }}>
+    <div style={{ padding: "12px" }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(100px, 1fr))", gap: 6 }}>
         {[
           { label: "Unrealized PnL",   value: unrealizedPnl, color: unrealizedPnl >= 0 ? "#22C55E" : "#EF4444" },
           { label: "Free Margin",      value: freeMargin,    color: BRIGHT },
           { label: "Used Collateral",  value: usedCollateral, color: "#EF4444" },
         ].map((s) => (
-          <div key={s.label} style={{ background: "#0A0A0A", border: `1px solid ${BORDER}`, borderRadius: 8, padding: "12px 14px" }}>
-            <div style={{ fontSize: 8, color: DIM, fontFamily: SANS, letterSpacing: "0.07em", textTransform: "uppercase", marginBottom: 6 }}>{s.label}</div>
-            <div style={{ fontSize: 14, fontWeight: 700, color: s.color, fontFamily: MONO }}>{formatBigUsd(s.value)}</div>
+          <div key={s.label} style={{ background: "#0A0A0A", border: `1px solid ${BORDER}`, borderRadius: 6, padding: "10px 12px" }}>
+            <div style={{ fontSize: 7, color: DIM, fontFamily: SANS, letterSpacing: "0.07em", textTransform: "uppercase", marginBottom: 4 }}>{s.label}</div>
+            <div style={{ fontSize: 12, fontWeight: 700, color: s.color, fontFamily: MONO }}>{formatBigUsd(s.value)}</div>
           </div>
         ))}
       </div>
@@ -255,23 +256,23 @@ export default function PortfolioPage() {
   /* ─── NO WALLET STATE ───────────────────────────────────────────────── */
   if (noWallet) {
     return (
-      <div style={{ maxWidth: 860, margin: "0 auto", padding: mobile ? "20px 16px" : "32px 28px", display: "flex", flexDirection: "column", gap: 10 }}>
+      <div style={{ maxWidth: 860, margin: "0 auto", padding: mobile ? "12px 12px" : "32px 28px", display: "flex", flexDirection: "column", gap: 8 }}>
 
         {/* Top row: portfolio card + watch */}
-        <div style={{ display: "grid", gridTemplateColumns: mobile ? "1fr" : "3fr 2fr", gap: 10 }}>
+        <div style={{ display: "grid", gridTemplateColumns: mobile ? "1fr" : "3fr 2fr", gap: 8 }}>
 
           {/* Portfolio card */}
           <div data-testid="card-portfolio-hero" style={{
-            background: CARD, border: `1px solid ${BORDER}`, borderRadius: 14, padding: "24px 24px 20px",
+            background: CARD, border: `1px solid ${BORDER}`, borderRadius: 14, padding: mobile ? "12px 12px 10px" : "24px 24px 20px",
           }}>
-            <div style={{ fontSize: 9, fontWeight: 700, color: DIM, fontFamily: SANS, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 20 }}>
+            <div style={{ fontSize: 8, fontWeight: 700, color: DIM, fontFamily: SANS, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 12 }}>
               Total Portfolio Value
             </div>
-            <div style={{ fontSize: 44, fontWeight: 200, color: "#333", fontFamily: MONO, letterSpacing: "-0.04em", lineHeight: 1, marginBottom: 24 }}>
+            <div style={{ fontSize: mobile ? 28 : 44, fontWeight: 200, color: "#333", fontFamily: MONO, letterSpacing: "-0.04em", lineHeight: 1, marginBottom: 12 }}>
               $0.00
             </div>
-            <div style={{ height: 1, background: BORDER, marginBottom: 16 }} />
-            <span style={{ fontSize: 11, color: DIM, fontFamily: SANS }}>Connect wallet to view portfolio</span>
+            <div style={{ height: 1, background: BORDER, marginBottom: 10 }} />
+            <span style={{ fontSize: 10, color: DIM, fontFamily: SANS }}>Connect wallet to view portfolio</span>
           </div>
 
           {/* Watch */}
@@ -308,14 +309,14 @@ export default function PortfolioPage() {
         </div>
 
         {/* Action buttons */}
-        <div style={{ display: "flex", gap: 8 }}>
+        <div style={{ display: "flex", gap: 6 }}>
           {actionButtons.map((btn) => (
             <ActionBtn key={btn.label} label={btn.label} icon={btn.icon} onClick={btn.action} testId={btn.testId} />
           ))}
         </div>
 
         {/* Connect CTA */}
-        <div style={{ display: "flex", justifyContent: "center", paddingTop: 8, paddingBottom: 8 }}>
+        <div style={{ display: "flex", justifyContent: "center", paddingTop: 6, paddingBottom: 6 }}>
           <ConnectWalletEmblem
             variant="full"
             onClick={() => setWalletModalOpen(true)}
@@ -329,7 +330,7 @@ export default function PortfolioPage() {
 
   /* ─── CONNECTED STATE ───────────────────────────────────────────────── */
   return (
-    <div style={{ maxWidth: 860, margin: "0 auto", padding: mobile ? "0" : "32px 28px", display: "flex", flexDirection: "column", gap: mobile ? 0 : 10 }}>
+    <div style={{ maxWidth: 860, margin: "0 auto", padding: mobile ? "0" : "32px 28px", display: "flex", flexDirection: "column", gap: mobile ? 0 : 8 }}>
 
       {/* ── PORTFOLIO VALUE CARD ─────────────────────────────────────── */}
       <div
@@ -338,44 +339,44 @@ export default function PortfolioPage() {
           background: "#14161A",
           border: `1px solid ${BORDER}`,
           borderRadius: mobile ? 14 : 16,
-          padding: mobile ? "20px 20px 18px" : "24px 24px 20px",
+          padding: mobile ? "12px 12px 10px" : "24px 24px 20px",
           margin: mobile ? "12px 12px 0" : "0",
         }}
       >
         {/* Header row */}
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <Wallet size={15} color={ORANGE} />
-            <span style={{ fontSize: 14, fontWeight: 600, color: ORANGE, fontFamily: SANS }}>Portfolio</span>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            <Wallet size={13} color={ORANGE} />
+            <span style={{ fontSize: mobile ? 12 : 14, fontWeight: 600, color: ORANGE, fontFamily: SANS }}>Portfolio</span>
           </div>
           {/* Refresh */}
           <button
             onClick={handleRefresh}
             data-testid="button-refresh-portfolio"
             style={{
-              width: 26, height: 26, borderRadius: 6, background: "transparent",
+              width: 24, height: 24, borderRadius: 6, background: "transparent",
               border: `1px solid ${BORDER}`, cursor: "pointer",
               display: "flex", alignItems: "center", justifyContent: "center",
             }}
           >
-            <RefreshCw size={11} color={DIM} style={{ transition: "transform 0.6s", transform: refreshing ? "rotate(360deg)" : "none" }} />
+            <RefreshCw size={10} color={DIM} style={{ transition: "transform 0.6s", transform: refreshing ? "rotate(360deg)" : "none" }} />
           </button>
         </div>
 
         {/* Big value */}
-        <div style={{ marginBottom: 20 }}>
+        <div style={{ marginBottom: 12 }}>
           {loading ? (
-            <div style={{ width: 200, height: 44, background: "#1A1A1A", borderRadius: 8 }} />
+            <div style={{ width: 160, height: 32, background: "#1A1A1A", borderRadius: 6 }} />
           ) : (
-            <div style={{ fontSize: mobile ? 38 : 48, fontWeight: 200, color: BRIGHT, fontFamily: MONO, letterSpacing: "-0.04em", lineHeight: 1 }}>
+            <div style={{ fontSize: mobile ? 28 : 48, fontWeight: 200, color: BRIGHT, fontFamily: MONO, letterSpacing: "-0.04em", lineHeight: 1 }}>
               {formatBigUsd(totalNetWorth)}
             </div>
           )}
         </div>
 
         {/* Stats row */}
-        <div style={{ height: 1, background: BORDER, marginBottom: 16 }} />
-        <div style={{ display: "flex", gap: mobile ? 24 : 36, flexWrap: "wrap" }}>
+        <div style={{ height: 1, background: BORDER, marginBottom: 10 }} />
+        <div style={{ display: "grid", gridTemplateColumns: mobile ? "1fr 1fr" : "repeat(3, 1fr)", gap: mobile ? 8 : 12 }}>
           <StatPill label="Wallet" value={loading ? "—" : formatBigUsd(walletBalance)} />
           <StatPill label="Free Margin" value={loading ? "—" : formatBigUsd(freeMargin)} />
           <StatPill label="Collateral" value={loading ? "—" : formatBigUsd(usedCollateral)} />
@@ -383,7 +384,7 @@ export default function PortfolioPage() {
       </div>
 
       {/* ── ACTION BUTTONS ───────────────────────────────────────────── */}
-      <div style={{ display: "flex", gap: 8, padding: mobile ? "12px 16px" : "0" }}>
+      <div style={{ display: "flex", gap: 6, padding: mobile ? "8px 12px" : "0" }}>
         {actionButtons.map((btn, i) => (
           <ActionBtn
             key={btn.label}
@@ -439,17 +440,17 @@ export default function PortfolioPage() {
 
       {/* ── HOLDINGS GRID ────────────────────────────────────────────── */}
       {walletTokens.filter((t) => (t.valueUsd || 0) > 0.01).length > 0 && (
-        <div style={{ padding: mobile ? "8px 16px" : "0" }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
-            <span style={{ fontSize: 11, fontWeight: 600, color: MID, fontFamily: SANS }}>Holdings</span>
+        <div style={{ padding: mobile ? "4px 12px" : "0" }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+            <span style={{ fontSize: 10, fontWeight: 600, color: MID, fontFamily: SANS }}>Holdings</span>
             <button
               onClick={() => setActiveTab("balances")}
-              style={{ background: "none", border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: 3, color: ORANGE, fontSize: 11, fontWeight: 600, fontFamily: SANS }}
+              style={{ background: "none", border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: 2, color: ORANGE, fontSize: 10, fontWeight: 600, fontFamily: SANS }}
             >
-              View all <ChevronRight size={12} />
+              View all <ChevronRight size={10} />
             </button>
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: `repeat(${mobile ? 2 : 3}, 1fr)`, gap: 8 }}>
+          <div style={{ display: "grid", gridTemplateColumns: `repeat(${mobile ? 2 : 3}, 1fr)`, gap: 6 }}>
             {walletTokens.filter((t) => (t.valueUsd || 0) > 0.01).slice(0, 6).map((t) => {
               const sym = t.asset;
               return (
@@ -458,22 +459,22 @@ export default function PortfolioPage() {
                   data-testid={`card-holding-${sym.toLowerCase()}`}
                   style={{
                     background: CARD, border: `1px solid ${BORDER}`,
-                    borderRadius: 12, padding: "14px 16px",
+                    borderRadius: 10, padding: mobile ? "10px 12px" : "14px 16px",
                     display: "flex", alignItems: "center", justifyContent: "space-between",
                   }}
                 >
-                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                    <TokenIcon symbol={sym} size={26} />
-                    <div>
-                      <div style={{ fontSize: 12, fontWeight: 700, color: BRIGHT, fontFamily: SANS }}>{sym}</div>
-                      <div style={{ fontSize: 10, color: DIM, fontFamily: MONO, marginTop: 2 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
+                    <TokenIcon symbol={sym} size={mobile ? 22 : 26} />
+                    <div style={{ minWidth: 0 }}>
+                      <div style={{ fontSize: mobile ? 11 : 12, fontWeight: 700, color: BRIGHT, fontFamily: SANS, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{sym}</div>
+                      <div style={{ fontSize: 9, color: DIM, fontFamily: MONO, marginTop: 1 }}>
                         {t.amount !== undefined ? t.amount.toFixed(4) : "—"}
                       </div>
                     </div>
                   </div>
-                  <div style={{ textAlign: "right" }}>
-                    <div style={{ fontSize: 12, fontWeight: 700, color: BRIGHT, fontFamily: MONO }}>{formatBigUsd(t.valueUsd || 0)}</div>
-                    <div style={{ fontSize: 9, color: DIM, fontFamily: SANS, marginTop: 2 }}>{t.chain}</div>
+                  <div style={{ textAlign: "right", flexShrink: 0 }}>
+                    <div style={{ fontSize: mobile ? 11 : 12, fontWeight: 700, color: BRIGHT, fontFamily: MONO }}>{formatBigUsd(t.valueUsd || 0)}</div>
+                    <div style={{ fontSize: 8, color: DIM, fontFamily: SANS, marginTop: 1 }}>{t.chain}</div>
                   </div>
                 </div>
               );
@@ -486,7 +487,7 @@ export default function PortfolioPage() {
       <div style={{
         display: "flex", borderBottom: `1px solid ${BORDER}`,
         overflowX: "auto", background: "transparent",
-        padding: mobile ? "0 8px" : "0",
+        padding: mobile ? "0 6px" : "0",
       }}>
         <TabButton label="Overview"  value="overview"  current={activeTab} onClick={setActiveTab} />
         <TabButton label="Positions" value="positions" count={perpPositionCount} current={activeTab} onClick={setActiveTab} />

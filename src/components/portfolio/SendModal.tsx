@@ -186,12 +186,13 @@ export function SendModal({ open, onClose, walletTokens, defaultChain, defaultTo
         position: "fixed", inset: 0, zIndex: 1000,
         background: "rgba(0,0,0,0.75)", backdropFilter: "blur(4px)",
         display: "flex", alignItems: "center", justifyContent: "center",
-        padding: 16,
-      }}
+        padding: "12px",
+        "@media (max-width: 375px)": { padding: "8px" },
+      } as any}
       onClick={(e) => { if (e.target === e.currentTarget && !busy) onClose(); }}
     >
       <div style={{
-        width: "100%", maxWidth: 440,
+        width: "100%", maxWidth: "calc(100vw - 24px)",
         background: "#111820",
         border: "1px solid #1B2030",
         borderRadius: 14,
@@ -200,11 +201,11 @@ export function SendModal({ open, onClose, walletTokens, defaultChain, defaultTo
       }}>
         <div style={{
           display: "flex", alignItems: "center", justifyContent: "space-between",
-          padding: "16px 20px", borderBottom: "1px solid #1B2030",
+          padding: "12px 16px", borderBottom: "1px solid #1B2030",
         }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <Send size={15} color="#E6EDF3" />
-            <span style={{ fontSize: 14, fontWeight: 700, color: "#E6EDF3", fontFamily: SANS }}>Send</span>
+          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            <Send size={14} color="#E6EDF3" />
+            <span style={{ fontSize: 13, fontWeight: 700, color: "#E6EDF3", fontFamily: SANS }}>Send</span>
           </div>
           <button
             onClick={onClose}
@@ -217,23 +218,23 @@ export function SendModal({ open, onClose, walletTokens, defaultChain, defaultTo
         </div>
 
         {availableChains.length === 0 ? (
-          <div style={{ padding: 32, textAlign: "center", color: "#6B7280", fontSize: 13, fontFamily: SANS }}>
+          <div style={{ padding: "20px 12px", textAlign: "center", color: "#6B7280", fontSize: 12, fontFamily: SANS }}>
             Connect a wallet to send funds.
           </div>
         ) : status === "success" && txHash ? (
-          <div style={{ padding: 32, textAlign: "center" }}>
+          <div style={{ padding: "20px 12px", textAlign: "center" }}>
             <div style={{
-              width: 48, height: 48, borderRadius: "50%",
+              width: 40, height: 40, borderRadius: "50%",
               background: "rgba(34,197,94,0.12)", border: "1px solid rgba(34,197,94,0.3)",
               display: "flex", alignItems: "center", justifyContent: "center",
-              margin: "0 auto 16px",
+              margin: "0 auto 12px",
             }}>
-              <Check size={24} color="#22C55E" />
+              <Check size={20} color="#22C55E" />
             </div>
-            <div style={{ fontSize: 15, fontWeight: 700, color: "#E6EDF3", fontFamily: SANS, marginBottom: 6 }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: "#E6EDF3", fontFamily: SANS, marginBottom: 4 }}>
               {amount} {selectedToken} sent
             </div>
-            <div style={{ fontSize: 11, color: "#6B7280", fontFamily: MONO, marginBottom: 20 }}>
+            <div style={{ fontSize: 10, color: "#6B7280", fontFamily: MONO, marginBottom: 16, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
               to {recipient.slice(0, 6)}...{recipient.slice(-4)}
             </div>
             <a
@@ -241,18 +242,18 @@ export function SendModal({ open, onClose, walletTokens, defaultChain, defaultTo
               target="_blank"
               rel="noopener noreferrer"
               data-testid="link-send-explorer"
-              style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11, color: "#E6EDF3", fontFamily: SANS }}
+              style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 10, color: "#E6EDF3", fontFamily: SANS }}
             >
-              View on Explorer <ExternalLink size={11} />
+              View on Explorer <ExternalLink size={10} />
             </a>
-            <div style={{ marginTop: 20 }}>
+            <div style={{ marginTop: 16 }}>
               <button
                 onClick={reset}
                 data-testid="button-send-again"
                 style={{
-                  padding: "8px 20px", borderRadius: 8,
+                  padding: "8px 16px", borderRadius: 6,
                   background: "rgba(255,255,255,0.06)", border: "1px solid #1B2030",
-                  color: "#E6EDF3", fontFamily: SANS, fontSize: 12, fontWeight: 600, cursor: "pointer",
+                  color: "#E6EDF3", fontFamily: SANS, fontSize: 11, fontWeight: 600, cursor: "pointer",
                 }}
               >
                 Send again
@@ -260,8 +261,8 @@ export function SendModal({ open, onClose, walletTokens, defaultChain, defaultTo
             </div>
           </div>
         ) : (
-          <div style={{ padding: 20 }}>
-            <div style={{ display: "flex", gap: 6, marginBottom: 20 }}>
+          <div style={{ padding: "12px" }}>
+            <div style={{ display: "flex", gap: 4, marginBottom: 16 }}>
               {availableChains.map((c) => {
                 const active = c === selectedChain;
                 const ci = CHAIN_INFO[c];
@@ -272,25 +273,26 @@ export function SendModal({ open, onClose, walletTokens, defaultChain, defaultTo
                     disabled={busy}
                     data-testid={`tab-send-${c.toLowerCase()}`}
                     style={{
-                      display: "flex", alignItems: "center", gap: 5,
-                      padding: "5px 10px", border: "none", borderRadius: 6,
+                      display: "flex", alignItems: "center", gap: 4,
+                      padding: "4px 8px", border: "none", borderRadius: 6,
                       cursor: busy ? "not-allowed" : "pointer",
-                      fontFamily: SANS, fontSize: 11, fontWeight: 600,
+                      fontFamily: SANS, fontSize: 10, fontWeight: 600,
                       background: active ? "rgba(255,255,255,0.08)" : "transparent",
                       color: active ? "#E6EDF3" : "#6B7280",
                       transition: "all 0.15s",
+                      minWidth: 0,
                     }}
                   >
-                    <img src={ci.logo} alt={c} width={14} height={14} style={{ borderRadius: "50%" }} />
-                    {ci.label}
+                    <img src={ci.logo} alt={c} width={12} height={12} style={{ borderRadius: "50%", flexShrink: 0 }} />
+                    <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{ci.label}</span>
                   </button>
                 );
               })}
             </div>
 
-            <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
               <div>
-                <div style={{ fontSize: 10, color: "#6B7280", fontFamily: SANS, fontWeight: 600, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 6 }}>
+                <div style={{ fontSize: 9, color: "#6B7280", fontFamily: SANS, fontWeight: 600, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 4 }}>
                   Token
                 </div>
                 <div style={{ position: "relative" }}>
@@ -300,28 +302,29 @@ export function SendModal({ open, onClose, walletTokens, defaultChain, defaultTo
                     data-testid="button-select-token"
                     style={{
                       width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between",
-                      padding: "10px 12px",
+                      padding: "8px 10px",
                       background: "#000000", border: "1px solid #1B2030",
-                      borderRadius: 8, cursor: busy ? "not-allowed" : "pointer",
-                      color: "#E6EDF3", fontFamily: MONO, fontSize: 12,
+                      borderRadius: 6, cursor: busy ? "not-allowed" : "pointer",
+                      color: "#E6EDF3", fontFamily: MONO, fontSize: 11,
+                      minWidth: 0,
                     }}
                   >
-                    <span>
+                    <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                       {selectedToken
                         ? <TokenOption symbol={selectedToken} />
                         : <span style={{ color: "#6B7280" }}>Select token</span>}
                     </span>
-                    <ChevronDown size={14} color="#6B7280" style={{ transform: dropdownOpen ? "rotate(180deg)" : "none", transition: "transform 0.15s" }} />
+                    <ChevronDown size={12} color="#6B7280" style={{ transform: dropdownOpen ? "rotate(180deg)" : "none", transition: "transform 0.15s", flexShrink: 0 }} />
                   </button>
                   {dropdownOpen && (
                     <div style={{
                       position: "absolute", top: "calc(100% + 4px)", left: 0, right: 0, zIndex: 10,
-                      background: "#111820", border: "1px solid #1B2030", borderRadius: 8,
+                      background: "#111820", border: "1px solid #1B2030", borderRadius: 6,
                       boxShadow: "0 8px 24px rgba(0,0,0,0.5)",
-                      maxHeight: 200, overflowY: "auto",
+                      maxHeight: 160, overflowY: "auto",
                     }}>
                       {sendableTokens.length === 0 && (
-                        <div style={{ padding: "12px 14px", fontSize: 11, color: "#6B7280", fontFamily: SANS }}>
+                        <div style={{ padding: "10px 12px", fontSize: 10, color: "#6B7280", fontFamily: SANS }}>
                           No sendable tokens found for this chain.
                         </div>
                       )}
@@ -332,14 +335,15 @@ export function SendModal({ open, onClose, walletTokens, defaultChain, defaultTo
                           data-testid={`option-token-${t.asset.toLowerCase()}`}
                           style={{
                             width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between",
-                            padding: "10px 14px", background: "none", border: "none",
+                            padding: "8px 12px", background: "none", border: "none",
                             cursor: "pointer", transition: "background 0.15s",
+                            minWidth: 0,
                           }}
                           onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.04)")}
                           onMouseLeave={(e) => (e.currentTarget.style.background = "none")}
                         >
                           <TokenOption symbol={t.asset} />
-                          <span style={{ fontSize: 11, color: "#9BA4AE", fontFamily: MONO }}>
+                          <span style={{ fontSize: 10, color: "#9BA4AE", fontFamily: MONO, flexShrink: 0 }}>
                             {t.amount.toFixed(4)}
                           </span>
                         </button>
@@ -348,17 +352,17 @@ export function SendModal({ open, onClose, walletTokens, defaultChain, defaultTo
                   )}
                 </div>
                 {selectedTokenData && (
-                  <div style={{ fontSize: 10, color: "#6B7280", fontFamily: MONO, marginTop: 4 }}>
+                  <div style={{ fontSize: 9, color: "#6B7280", fontFamily: MONO, marginTop: 3 }}>
                     Balance: {selectedTokenData.amount.toFixed(selectedToken === "SOL" || ARBITRUM_TOKEN_ADDRESSES[selectedToken]?.native ? 6 : 4)} {selectedToken}
                   </div>
                 )}
               </div>
 
               <div>
-                <div style={{ fontSize: 10, color: "#6B7280", fontFamily: SANS, fontWeight: 600, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 6 }}>
+                <div style={{ fontSize: 9, color: "#6B7280", fontFamily: SANS, fontWeight: 600, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 4 }}>
                   Amount
                 </div>
-                <div style={{ display: "flex", gap: 8 }}>
+                <div style={{ display: "flex", gap: 6 }}>
                   <input
                     type="number"
                     value={amount}
@@ -367,11 +371,12 @@ export function SendModal({ open, onClose, walletTokens, defaultChain, defaultTo
                     disabled={busy || !selectedToken}
                     data-testid="input-send-amount"
                     style={{
-                      flex: 1, padding: "10px 12px",
+                      flex: 1, padding: "8px 10px",
                       background: "#000000", border: "1px solid #1B2030",
-                      borderRadius: 8, color: "#E6EDF3",
-                      fontFamily: MONO, fontSize: 14,
+                      borderRadius: 6, color: "#E6EDF3",
+                      fontFamily: MONO, fontSize: 12,
                       outline: "none",
+                      minWidth: 0,
                     }}
                   />
                   <button
@@ -379,10 +384,11 @@ export function SendModal({ open, onClose, walletTokens, defaultChain, defaultTo
                     disabled={busy || !selectedToken}
                     data-testid="button-send-max"
                     style={{
-                      padding: "10px 14px",
+                      padding: "8px 12px",
                       background: "rgba(212,165,116,0.1)", border: "1px solid rgba(212,165,116,0.25)",
-                      borderRadius: 8, color: "#D4A574",
-                      fontFamily: SANS, fontSize: 11, fontWeight: 700, cursor: "pointer",
+                      borderRadius: 6, color: "#D4A574",
+                      fontFamily: SANS, fontSize: 10, fontWeight: 700, cursor: "pointer",
+                      flexShrink: 0,
                     }}
                   >
                     MAX
@@ -391,7 +397,7 @@ export function SendModal({ open, onClose, walletTokens, defaultChain, defaultTo
               </div>
 
               <div>
-                <div style={{ fontSize: 10, color: "#6B7280", fontFamily: SANS, fontWeight: 600, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 6 }}>
+                <div style={{ fontSize: 9, color: "#6B7280", fontFamily: SANS, fontWeight: 600, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 4 }}>
                   Recipient Address
                 </div>
                 <input
@@ -402,32 +408,33 @@ export function SendModal({ open, onClose, walletTokens, defaultChain, defaultTo
                   disabled={busy}
                   data-testid="input-send-recipient"
                   style={{
-                    width: "100%", padding: "10px 12px",
+                    width: "100%", padding: "8px 10px",
                     background: "#000000", border: "1px solid #1B2030",
-                    borderRadius: 8, color: "#E6EDF3",
-                    fontFamily: MONO, fontSize: 12,
+                    borderRadius: 6, color: "#E6EDF3",
+                    fontFamily: MONO, fontSize: 11,
                     outline: "none", boxSizing: "border-box",
+                    overflow: "hidden", textOverflow: "ellipsis",
                   }}
                 />
               </div>
 
               {errorMsg && (
                 <div style={{
-                  display: "flex", alignItems: "flex-start", gap: 8,
-                  padding: "10px 12px",
+                  display: "flex", alignItems: "flex-start", gap: 6,
+                  padding: "8px 10px",
                   background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)",
-                  borderRadius: 8,
+                  borderRadius: 6,
                 }}>
-                  <AlertTriangle size={14} color="#EF4444" style={{ flexShrink: 0, marginTop: 1 }} />
-                  <span style={{ fontSize: 11, color: "#EF4444", fontFamily: SANS }} data-testid="text-send-error">{errorMsg}</span>
+                  <AlertTriangle size={12} color="#EF4444" style={{ flexShrink: 0, marginTop: 2 }} />
+                  <span style={{ fontSize: 10, color: "#EF4444", fontFamily: SANS, overflow: "hidden", textOverflow: "ellipsis" }} data-testid="text-send-error">{errorMsg}</span>
                 </div>
               )}
 
               <div style={{
-                padding: "10px 12px",
+                padding: "8px 10px",
                 background: "rgba(255,255,255,0.02)", border: "1px solid #1B2030",
-                borderRadius: 8,
-                fontSize: 10, color: "#6B7280", fontFamily: SANS, lineHeight: 1.6,
+                borderRadius: 6,
+                fontSize: 9, color: "#6B7280", fontFamily: SANS, lineHeight: 1.5,
               }}>
                 <div style={{ display: "flex", justifyContent: "space-between" }}>
                   <span>Network fee</span>
@@ -439,16 +446,16 @@ export function SendModal({ open, onClose, walletTokens, defaultChain, defaultTo
                 </div>
               </div>
 
-              <div style={{ display: "flex", gap: 10, marginTop: 4 }}>
+              <div style={{ display: "flex", gap: 8, marginTop: 2 }}>
                 <button
                   onClick={() => { if (!busy) onClose(); }}
                   disabled={busy}
                   data-testid="button-send-cancel"
                   style={{
-                    flex: 1, padding: "12px",
+                    flex: 1, padding: "10px",
                     background: "transparent", border: "1px solid #1B2030",
-                    borderRadius: 8, color: "#6B7280",
-                    fontFamily: SANS, fontSize: 12, fontWeight: 600, cursor: busy ? "not-allowed" : "pointer",
+                    borderRadius: 6, color: "#6B7280",
+                    fontFamily: SANS, fontSize: 11, fontWeight: 600, cursor: busy ? "not-allowed" : "pointer",
                     opacity: busy ? 0.5 : 1,
                   }}
                 >
@@ -459,17 +466,17 @@ export function SendModal({ open, onClose, walletTokens, defaultChain, defaultTo
                   disabled={busy}
                   data-testid="button-send-submit"
                   style={{
-                    flex: 2, padding: "12px",
+                    flex: 2, padding: "10px",
                     background: busy ? "#1C1C1C" : "linear-gradient(135deg, #D4A574, #D4551F)",
-                    border: "none", borderRadius: 8,
+                    border: "none", borderRadius: 6,
                     color: busy ? "#6B7280" : "#fff",
-                    fontFamily: SANS, fontSize: 12, fontWeight: 700,
+                    fontFamily: SANS, fontSize: 11, fontWeight: 700,
                     cursor: busy ? "not-allowed" : "pointer",
-                    display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+                    display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
                     transition: "all 0.15s",
                   }}
                 >
-                  {busy && <Loader2 size={14} style={{ animation: "spin 1s linear infinite" }} />}
+                  {busy && <Loader2 size={12} style={{ animation: "spin 1s linear infinite", flexShrink: 0 }} />}
                   {status === "confirming" && "Building transaction..."}
                   {status === "signing" && "Sign in wallet..."}
                   {status === "submitting" && "Submitting..."}

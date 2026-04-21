@@ -19,8 +19,8 @@ function Card({ children }: { children: ReactNode }) {
   return (
     <div style={{
       background: CARD, border: `1px solid ${BORDER}`,
-      borderRadius: 16, padding: "20px 22px",
-      marginBottom: 12,
+      borderRadius: 14, padding: "12px 14px",
+      marginBottom: 10,
     }}>
       {children}
     </div>
@@ -30,9 +30,9 @@ function Card({ children }: { children: ReactNode }) {
 /* ─── Card title row ─────────────────────────────────────── */
 function CardTitle({ label, value }: { label: string; value?: string }) {
   return (
-    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
-      <span style={{ fontSize: 15, fontWeight: 700, color: TEXT, fontFamily: SANS }}>{label}</span>
-      {value && <span style={{ fontSize: 13, fontWeight: 600, color: ORANGE, fontFamily: MONO }}>{value}</span>}
+    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+      <span style={{ fontSize: 13, fontWeight: 700, color: TEXT, fontFamily: SANS, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{label}</span>
+      {value && <span style={{ fontSize: 11, fontWeight: 600, color: ORANGE, fontFamily: MONO, flexShrink: 0 }}>{value}</span>}
     </div>
   );
 }
@@ -47,7 +47,7 @@ function PillGroup<T extends string | number>({
   testIdPrefix?: string;
 }) {
   return (
-    <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+    <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
       {options.map(o => {
         const active = o.value === value;
         return (
@@ -56,12 +56,13 @@ function PillGroup<T extends string | number>({
             onClick={() => onChange(o.value)}
             data-testid={`${testIdPrefix ?? "pill"}-${String(o.value)}`}
             style={{
-              flex: 1, minWidth: 56,
-              padding: "10px 12px", borderRadius: 10, border: "none",
+              flex: 1, minWidth: 48,
+              padding: "8px 10px", borderRadius: 8, border: "none",
               background: active ? ORANGE : "rgba(255,255,255,0.05)",
               color: active ? "#fff" : DIM,
-              fontSize: 13, fontWeight: active ? 700 : 500, fontFamily: SANS,
+              fontSize: 11, fontWeight: active ? 700 : 500, fontFamily: SANS,
               cursor: "pointer", transition: "all 0.15s",
+              overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
             }}
             onMouseEnter={e => { if (!active) e.currentTarget.style.background = "rgba(255,255,255,0.09)"; }}
             onMouseLeave={e => { if (!active) e.currentTarget.style.background = "rgba(255,255,255,0.05)"; }}
@@ -89,20 +90,21 @@ function ToggleRow({
       onMouseLeave={() => setHov(false)}
       style={{
         display: "flex", alignItems: "center", justifyContent: "space-between",
-        padding: "14px 0", cursor: "pointer",
+        padding: "10px 0", cursor: "pointer",
         borderTop: `1px solid ${BORDER}`,
+        gap: 8,
       }}
       data-testid={testId ?? `settings-toggle-${label.toLowerCase().replace(/\s+/g, "-")}`}
     >
-      <div style={{ flex: 1, paddingRight: 20 }}>
-        <div style={{ fontSize: 14, fontWeight: 600, color: hov ? TEXT : "#C9D1D9", fontFamily: SANS, transition: "color 0.12s" }}>{label}</div>
-        {desc && <div style={{ fontSize: 12, color: DIM, fontFamily: SANS, marginTop: 3 }}>{desc}</div>}
-        {warning && <div style={{ fontSize: 11, color: ORANGE, fontFamily: SANS, marginTop: 3 }}>{warning}</div>}
+      <div style={{ flex: 1, paddingRight: 12, minWidth: 0 }}>
+        <div style={{ fontSize: 12, fontWeight: 600, color: hov ? TEXT : "#C9D1D9", fontFamily: SANS, transition: "color 0.12s", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{label}</div>
+        {desc && <div style={{ fontSize: 10, color: DIM, fontFamily: SANS, marginTop: 2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{desc}</div>}
+        {warning && <div style={{ fontSize: 10, color: ORANGE, fontFamily: SANS, marginTop: 2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{warning}</div>}
       </div>
       {/* Toggle switch */}
       <div
         style={{
-          width: 46, height: 26, borderRadius: 13, flexShrink: 0,
+          width: 40, height: 22, borderRadius: 11, flexShrink: 0,
           background: value ? ORANGE : "rgba(255,255,255,0.08)",
           position: "relative", transition: "background 0.2s",
           boxShadow: value ? `0 0 10px ${ORANGE}40` : "none",
@@ -110,10 +112,10 @@ function ToggleRow({
         data-testid={`button-toggle-${label.toLowerCase().replace(/\s+/g, "-")}`}
       >
         <div style={{
-          width: 20, height: 20, borderRadius: "50%",
+          width: 18, height: 18, borderRadius: "50%",
           background: value ? "#fff" : "rgba(255,255,255,0.4)",
-          position: "absolute", top: 3,
-          left: value ? 23 : 3,
+          position: "absolute", top: 2,
+          left: value ? 20 : 2,
           transition: "left 0.2s, background 0.2s",
           boxShadow: "0 1px 4px rgba(0,0,0,0.4)",
         }} />
@@ -132,21 +134,21 @@ function NumberRow({
   return (
     <div style={{
       display: "flex", alignItems: "center", justifyContent: "space-between",
-      borderTop: `1px solid ${BORDER}`, padding: "14px 0",
+      borderTop: `1px solid ${BORDER}`, padding: "10px 0", gap: 8,
     }}>
-      <span style={{ fontSize: 14, fontWeight: 600, color: "#C9D1D9", fontFamily: SANS }}>{label}</span>
-      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+      <span style={{ fontSize: 12, fontWeight: 600, color: "#C9D1D9", fontFamily: SANS, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{label}</span>
+      <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
         <input
           type="number" value={value} min={min} max={max}
           onChange={e => { const v = parseFloat(e.target.value); if (!isNaN(v)) onChange(v); }}
           style={{
-            width: 64, background: "rgba(255,255,255,0.05)",
-            border: `1px solid ${BORDER}`, borderRadius: 8,
-            color: TEXT, fontSize: 16, fontWeight: 700, fontFamily: MONO,
-            padding: "6px 10px", textAlign: "center", outline: "none",
+            width: 56, background: "rgba(255,255,255,0.05)",
+            border: `1px solid ${BORDER}`, borderRadius: 6,
+            color: TEXT, fontSize: 13, fontWeight: 700, fontFamily: MONO,
+            padding: "4px 8px", textAlign: "center", outline: "none",
           }}
         />
-        {suffix && <span style={{ fontSize: 13, color: DIM, fontFamily: SANS }}>{suffix}</span>}
+        {suffix && <span style={{ fontSize: 11, color: DIM, fontFamily: SANS }}>{suffix}</span>}
       </div>
     </div>
   );
@@ -167,15 +169,15 @@ export default function SettingsPage() {
 
   return (
     <div
-      style={{ maxWidth: 600, margin: "0 auto", padding: isMobile ? "24px 16px 100px" : "36px 28px 80px" }}
+      style={{ maxWidth: 600, margin: "0 auto", padding: isMobile ? "12px 12px 100px" : "36px 28px 80px" }}
       data-testid="page-settings"
     >
       {/* Page header */}
-      <div style={{ marginBottom: 28 }}>
-        <h1 style={{ fontSize: 24, fontWeight: 700, color: TEXT, fontFamily: SANS, margin: "0 0 6px", letterSpacing: "-0.02em" }}>
+      <div style={{ marginBottom: 20 }}>
+        <h1 style={{ fontSize: isMobile ? 20 : 24, fontWeight: 700, color: TEXT, fontFamily: SANS, margin: "0 0 4px", letterSpacing: "-0.02em" }}>
           Settings
         </h1>
-        <p style={{ fontSize: 13, color: DIM, fontFamily: SANS, margin: 0 }}>
+        <p style={{ fontSize: 11, color: DIM, fontFamily: SANS, margin: 0 }}>
           Configure your trading preferences
         </p>
       </div>
@@ -402,54 +404,55 @@ export default function SettingsPage() {
             display: "flex", alignItems: "center", justifyContent: "space-between",
             width: "100%", background: "none", border: "none", cursor: "pointer",
             padding: 0,
+            gap: 8,
           }}
         >
-          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <HelpCircle size={18} color={ORANGE} strokeWidth={1.8} />
-            <div style={{ textAlign: "left" }}>
-              <div style={{ fontSize: 14, fontWeight: 600, color: TEXT, fontFamily: SANS }}>Getting Started Guide</div>
-              <div style={{ fontSize: 12, color: DIM, fontFamily: SANS, marginTop: 3 }}>Step-by-step walkthrough for new users</div>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
+            <HelpCircle size={16} color={ORANGE} strokeWidth={1.8} style={{ flexShrink: 0 }} />
+            <div style={{ textAlign: "left", minWidth: 0 }}>
+              <div style={{ fontSize: 12, fontWeight: 600, color: TEXT, fontFamily: SANS, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>Getting Started Guide</div>
+              <div style={{ fontSize: 10, color: DIM, fontFamily: SANS, marginTop: 2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>Step-by-step walkthrough for new users</div>
             </div>
           </div>
-          <ChevronRight size={16} color={MUTED} />
+          <ChevronRight size={14} color={MUTED} style={{ flexShrink: 0 }} />
         </button>
       </Card>
 
       {/* ── Reset ─────────────────────────────────────── */}
-      <div style={{ marginTop: 4, marginBottom: 32 }}>
+      <div style={{ marginTop: 2, marginBottom: 24 }}>
         {!showResetConfirm ? (
           <button
             onClick={() => setShowResetConfirm(true)}
             style={{
-              width: "100%", padding: "15px 18px", borderRadius: 16,
+              width: "100%", padding: "12px 14px", borderRadius: 12,
               background: "transparent", border: `1px solid ${BORDER}`,
-              color: DIM, fontSize: 13, fontFamily: SANS,
+              color: DIM, fontSize: 11, fontFamily: SANS,
               fontWeight: 500, cursor: "pointer",
-              display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+              display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
               transition: "border-color 0.15s, color 0.15s",
             }}
             onMouseEnter={e => { e.currentTarget.style.borderColor = "#3A4050"; e.currentTarget.style.color = TEXT; }}
             onMouseLeave={e => { e.currentTarget.style.borderColor = BORDER; e.currentTarget.style.color = DIM; }}
             data-testid="button-reset-settings"
           >
-            <RotateCcw size={14} />
+            <RotateCcw size={12} />
             Reset all settings to defaults
           </button>
         ) : (
           <div style={{
-            padding: "20px", borderRadius: 16,
+            padding: "12px", borderRadius: 12,
             background: "rgba(212,165,116,0.07)", border: "1px solid rgba(212,165,116,0.2)",
           }}>
-            <div style={{ fontSize: 14, color: TEXT, fontFamily: SANS, fontWeight: 600, marginBottom: 14 }}>
+            <div style={{ fontSize: 12, color: TEXT, fontFamily: SANS, fontWeight: 600, marginBottom: 10 }}>
               Reset all settings to defaults?
             </div>
-            <div style={{ display: "flex", gap: 8 }}>
+            <div style={{ display: "flex", gap: 6 }}>
               <button
                 onClick={handleReset}
                 style={{
-                  flex: 1, padding: "12px 16px", borderRadius: 10,
+                  flex: 1, padding: "10px 12px", borderRadius: 8,
                   background: ORANGE, border: "none",
-                  color: "#fff", fontSize: 13, fontWeight: 700, fontFamily: SANS, cursor: "pointer",
+                  color: "#fff", fontSize: 11, fontWeight: 700, fontFamily: SANS, cursor: "pointer",
                 }}
                 data-testid="button-confirm-reset"
               >
@@ -458,9 +461,9 @@ export default function SettingsPage() {
               <button
                 onClick={() => setShowResetConfirm(false)}
                 style={{
-                  flex: 1, padding: "12px 16px", borderRadius: 10,
+                  flex: 1, padding: "10px 12px", borderRadius: 8,
                   background: "rgba(255,255,255,0.05)", border: `1px solid ${BORDER}`,
-                  color: DIM, fontSize: 13, fontFamily: SANS, cursor: "pointer",
+                  color: DIM, fontSize: 11, fontFamily: SANS, cursor: "pointer",
                 }}
                 data-testid="button-cancel-reset"
               >
@@ -471,7 +474,7 @@ export default function SettingsPage() {
         )}
       </div>
 
-      <div style={{ textAlign: "center", fontSize: 11, color: MUTED, fontFamily: MONO, paddingBottom: 20 }}>
+      <div style={{ textAlign: "center", fontSize: 9, color: MUTED, fontFamily: MONO, paddingBottom: 16 }}>
         Azabu v1.0 — Settings saved locally on this device
       </div>
     </div>

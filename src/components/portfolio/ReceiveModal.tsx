@@ -79,12 +79,12 @@ export function ReceiveModal({ open, onClose, defaultChain }: ReceiveModalProps)
         position: "fixed", inset: 0, zIndex: 1000,
         background: "rgba(0,0,0,0.75)", backdropFilter: "blur(4px)",
         display: "flex", alignItems: "center", justifyContent: "center",
-        padding: 16,
+        padding: "12px",
       }}
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
       <div style={{
-        width: "100%", maxWidth: 420,
+        width: "100%", maxWidth: "calc(100vw - 24px)",
         background: "#111820",
         border: "1px solid #1B2030",
         borderRadius: 14,
@@ -93,11 +93,11 @@ export function ReceiveModal({ open, onClose, defaultChain }: ReceiveModalProps)
       }}>
         <div style={{
           display: "flex", alignItems: "center", justifyContent: "space-between",
-          padding: "16px 20px", borderBottom: "1px solid #1B2030",
+          padding: "12px 16px", borderBottom: "1px solid #1B2030",
         }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <QrCode size={15} color="#E6EDF3" />
-            <span style={{ fontSize: 14, fontWeight: 700, color: "#E6EDF3", fontFamily: SANS }}>Receive</span>
+          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            <QrCode size={14} color="#E6EDF3" />
+            <span style={{ fontSize: 13, fontWeight: 700, color: "#E6EDF3", fontFamily: SANS }}>Receive</span>
           </div>
           <button
             onClick={onClose}
@@ -109,12 +109,12 @@ export function ReceiveModal({ open, onClose, defaultChain }: ReceiveModalProps)
         </div>
 
         {chains.length === 0 ? (
-          <div style={{ padding: 32, textAlign: "center", color: "#6B7280", fontSize: 13, fontFamily: SANS }}>
+          <div style={{ padding: "20px 12px", textAlign: "center", color: "#6B7280", fontSize: 12, fontFamily: SANS }}>
             Connect a wallet to see your receive address.
           </div>
         ) : (
           <>
-            <div style={{ display: "flex", gap: 6, padding: "14px 20px 0" }}>
+            <div style={{ display: "flex", gap: 4, padding: "12px 12px 0" }}>
               {chains.map((c) => {
                 const active = c === selectedChain;
                 const ci = CHAIN_INFO[c];
@@ -124,53 +124,55 @@ export function ReceiveModal({ open, onClose, defaultChain }: ReceiveModalProps)
                     onClick={() => setSelectedChain(c)}
                     data-testid={`tab-receive-${c.toLowerCase()}`}
                     style={{
-                      display: "flex", alignItems: "center", gap: 5,
-                      padding: "5px 10px", border: "none", borderRadius: 6,
-                      cursor: "pointer", fontFamily: SANS, fontSize: 11, fontWeight: 600,
+                      display: "flex", alignItems: "center", gap: 4,
+                      padding: "4px 8px", border: "none", borderRadius: 6,
+                      cursor: "pointer", fontFamily: SANS, fontSize: 10, fontWeight: 600,
                       background: active ? "rgba(255,255,255,0.08)" : "transparent",
                       color: active ? "#E6EDF3" : "#6B7280",
                       transition: "all 0.15s",
+                      minWidth: 0,
                     }}
                   >
-                    <img src={ci.logo} alt={c} width={14} height={14} style={{ borderRadius: "50%" }} />
-                    {ci.label}
+                    <img src={ci.logo} alt={c} width={12} height={12} style={{ borderRadius: "50%", flexShrink: 0 }} />
+                    <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{ci.label}</span>
                   </button>
                 );
               })}
             </div>
 
-            <div style={{ padding: "20px", display: "flex", flexDirection: "column", alignItems: "center", gap: 20 }}>
+            <div style={{ padding: "12px", display: "flex", flexDirection: "column", alignItems: "center", gap: 12 }}>
               {address ? (
                 <div style={{
-                  background: "#000000", borderRadius: 12,
-                  padding: 16, display: "inline-block",
+                  background: "#000000", borderRadius: 10,
+                  padding: 12, display: "inline-block",
                 }}>
-                  <QrImage data={address} size={180} />
+                  <QrImage data={address} size={140} />
                 </div>
               ) : (
-                <div style={{ width: 180, height: 180, background: "#000000", borderRadius: 12, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <span style={{ fontSize: 11, color: "#6B7280", fontFamily: SANS }}>No address</span>
+                <div style={{ width: 140, height: 140, background: "#000000", borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <span style={{ fontSize: 10, color: "#6B7280", fontFamily: SANS }}>No address</span>
                 </div>
               )}
 
               <div style={{
                 width: "100%",
-                background: "#000000", borderRadius: 8,
+                background: "#000000", borderRadius: 6,
                 border: "1px solid #1B2030",
-                padding: "10px 14px",
+                padding: "8px 10px",
               }}>
                 <div style={{
-                  fontSize: 9, color: "#6B7280", fontFamily: SANS,
-                  letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 6, fontWeight: 600,
+                  fontSize: 8, color: "#6B7280", fontFamily: SANS,
+                  letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 4, fontWeight: 600,
                 }}>
                   {info.network} Address
                 </div>
                 <div style={{
-                  display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8,
+                  display: "flex", alignItems: "center", justifyContent: "space-between", gap: 6,
                 }}>
                   <span style={{
-                    fontSize: 11, color: "#E6EDF3", fontFamily: MONO,
+                    fontSize: 10, color: "#E6EDF3", fontFamily: MONO,
                     wordBreak: "break-all", flex: 1,
+                    overflow: "hidden", textOverflow: "ellipsis",
                   }} data-testid="text-receive-address">
                     {address || "—"}
                   </span>
@@ -184,8 +186,8 @@ export function ReceiveModal({ open, onClose, defaultChain }: ReceiveModalProps)
                       }}
                     >
                       {copied
-                        ? <Check size={15} color="#22C55E" />
-                        : <Copy size={15} color="#6B7280" />}
+                        ? <Check size={13} color="#22C55E" />
+                        : <Copy size={13} color="#6B7280" />}
                     </button>
                   )}
                 </div>
@@ -193,11 +195,11 @@ export function ReceiveModal({ open, onClose, defaultChain }: ReceiveModalProps)
 
               <div style={{
                 width: "100%",
-                padding: "10px 14px",
+                padding: "8px 10px",
                 background: "rgba(212,165,116,0.06)",
                 border: "1px solid rgba(212,165,116,0.15)",
-                borderRadius: 8,
-                fontSize: 11, color: "#9BA4AE", fontFamily: SANS, lineHeight: 1.6,
+                borderRadius: 6,
+                fontSize: 9, color: "#9BA4AE", fontFamily: SANS, lineHeight: 1.5,
               }}>
                 <span style={{ color: "#D4A574", fontWeight: 700 }}>Only send {selectedChain === "Arbitrum" ? "Arbitrum One" : "Hyperliquid EVM"} assets</span>{" "}
                 to this address. Sending assets from the wrong network may result in permanent loss.

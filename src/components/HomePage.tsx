@@ -8,7 +8,7 @@ import { SECTORS, getSector, type SectorKey } from "@/config/equitySectors";
 import { useJupiterLogos } from "@/hooks/useJupiterLogos";
 import { usePortfolioData } from "@/hooks/usePortfolioData";
 import { useEvmWallet } from "@/hooks/useEvmWallet";
-import { Wallet } from "lucide-react";
+import { Wallet, ChevronLeft, ChevronRight } from "lucide-react";
 import { MarketsIcon, TradeIcon, SwapIcon, PortfolioIcon, LeaderboardIcon, SettingsIcon } from "./navIcons";
 
 const MONO = "'JetBrains Mono', 'SF Mono', 'Fira Code', monospace";
@@ -995,16 +995,16 @@ export default function HomePage() {
       style={{
         height: "100%", overflowY: "auto",
         display: "flex", flexDirection: "column", alignItems: isMobile ? "center" : "flex-start",
-        padding: isMobile ? "32px 16px 100px" : "48px 48px 80px",
+        padding: isMobile ? "12px 12px 100px" : "48px 48px 80px",
       }}
     >
       <div style={{ maxWidth: isMobile ? 600 : "100%", width: "100%" }}>
 
-        <div style={{ marginBottom: isMobile ? 20 : 28 }}>
+        <div style={{ marginBottom: isMobile ? 12 : 28 }}>
           <div style={{
             display: "grid",
             gridTemplateColumns: isMobile ? "repeat(3, 1fr)" : "repeat(6, 1fr)",
-            gap: isMobile ? 8 : 10,
+            gap: isMobile ? 6 : 10,
           }}>
             {[
               { id: "swap",        label: "Swap",        page: "swap",        icon: <SwapIcon active={true} size={22} /> },
@@ -1024,7 +1024,7 @@ export default function HomePage() {
                   }}
                   style={{
                     display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
-                    gap: 8, padding: "16px 8px", borderRadius: 12,
+                    gap: 6, padding: isMobile ? "12px 6px" : "16px 8px", borderRadius: 10,
                     background: isHighlight ? "rgba(212,165,116,0.07)" : "rgba(255,255,255,0.025)",
                     border: isHighlight ? "1px solid rgba(212,165,116,0.22)" : "1px solid rgba(255,255,255,0.06)",
                     cursor: "pointer", transition: "all 0.15s",
@@ -1043,9 +1043,10 @@ export default function HomePage() {
                 >
                   {btn.icon}
                   <span style={{
-                    fontSize: 10, fontWeight: isHighlight ? 700 : 500,
+                    fontSize: isMobile ? 8 : 10, fontWeight: isHighlight ? 700 : 500,
                     color: isHighlight ? "#E8C4A0" : "rgba(255,255,255,0.55)",
                     fontFamily: MONO, letterSpacing: "0.04em",
+                    overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
                   }}>
                     {btn.label}
                   </span>
@@ -1059,16 +1060,16 @@ export default function HomePage() {
           data-testid="home-portfolio-card"
           style={{
             marginBottom: 28,
-            padding: "20px 20px 18px",
-            borderRadius: 16,
+            padding: isMobile ? "12px 12px 10px" : "20px 20px 18px",
+            borderRadius: 14,
             background: "linear-gradient(145deg, rgba(17,22,28,0.95), rgba(13,17,23,0.95))",
             border: "1px solid rgba(255,255,255,0.06)",
           }}
         >
-          <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 16 }}>
-            <Wallet size={14} style={{ color: "#D4A574" }} />
+          <div style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 12 }}>
+            <Wallet size={12} style={{ color: "#D4A574" }} />
             <span style={{
-              fontSize: 13, fontWeight: 700, color: "#D4A574",
+              fontSize: 11, fontWeight: 700, color: "#D4A574",
               fontFamily: SANS,
             }}>
               Portfolio
@@ -1078,15 +1079,15 @@ export default function HomePage() {
           {!anyWalletConnected ? (
             <div>
               <div style={{
-                fontSize: isMobile ? 28 : 34, fontWeight: 800, color: "#E6EDF3",
+                fontSize: isMobile ? 24 : 34, fontWeight: 800, color: "#E6EDF3",
                 fontFamily: SANS, letterSpacing: "-0.03em",
-                marginBottom: 6, lineHeight: 1,
+                marginBottom: 4, lineHeight: 1,
               }}>
                 $0.00
               </div>
               <div style={{
-                fontSize: 12, color: "#6B7280", fontFamily: SANS,
-                marginBottom: 14, lineHeight: 1.5,
+                fontSize: 10, color: "#6B7280", fontFamily: SANS,
+                marginBottom: 10, lineHeight: 1.4,
               }}>
                 Connect a wallet to view your balance.
               </div>
@@ -1096,10 +1097,10 @@ export default function HomePage() {
                   window.dispatchEvent(new CustomEvent("afx-open-wallet-modal"));
                 }}
                 style={{
-                  padding: "9px 20px", borderRadius: 8,
+                  padding: "8px 16px", borderRadius: 6,
                   background: "rgba(255,255,255,0.04)",
                   border: "1px solid rgba(255,255,255,0.08)",
-                  color: "#E6EDF3", fontSize: 12, fontWeight: 600,
+                  color: "#E6EDF3", fontSize: 10, fontWeight: 600,
                   fontFamily: SANS, cursor: "pointer",
                   transition: "background 0.15s, border-color 0.15s",
                 }}
@@ -1112,13 +1113,13 @@ export default function HomePage() {
           ) : portfolioLoading ? (
             <div>
               <div style={{
-                fontSize: isMobile ? 32 : 40, fontWeight: 300, color: "#3A3F4E",
+                fontSize: isMobile ? 24 : 40, fontWeight: 300, color: "#3A3F4E",
                 fontFamily: MONO, letterSpacing: "-0.03em",
                 lineHeight: 1,
               }}>
                 --
               </div>
-              <div style={{ fontSize: 12, color: "#484F58", fontFamily: SANS, marginTop: 8 }}>
+              <div style={{ fontSize: 10, color: "#484F58", fontFamily: SANS, marginTop: 6 }}>
                 Loading balances...
               </div>
             </div>
@@ -1127,14 +1128,14 @@ export default function HomePage() {
               <div
                 data-testid="text-home-net-worth"
                 style={{
-                  fontSize: isMobile ? 32 : 40, fontWeight: 300, color: "#E6EDF3",
+                  fontSize: isMobile ? 24 : 40, fontWeight: 300, color: "#E6EDF3",
                   fontFamily: MONO, letterSpacing: "-0.03em",
-                  marginBottom: 12, lineHeight: 1,
+                  marginBottom: 10, lineHeight: 1,
                 }}
               >
                 ${(portfolio?.totalNetWorth ?? 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </div>
-              <div style={{ display: "flex", gap: 20, flexWrap: "wrap" }}>
+              <div style={{ display: "flex", gap: isMobile ? 12 : 20, flexWrap: "wrap" }}>
                 <BalanceStat label="Wallet" value={portfolio?.walletBalance ?? 0} />
                 <BalanceStat label="Free Margin" value={portfolio?.freeMargin ?? 0} />
                 <BalanceStat label="Collateral" value={portfolio?.usedCollateral ?? 0} />
@@ -1146,28 +1147,46 @@ export default function HomePage() {
         <div style={{ marginBottom: 28 }}>
           <div style={{
             display: "flex", alignItems: "center", justifyContent: "space-between",
-            marginBottom: 12,
+            marginBottom: 10,
           }}>
             <div style={{
-              fontSize: 10, fontWeight: 600, color: "#4A5060",
+              fontSize: 9, fontWeight: 600, color: "#4A5060",
               fontFamily: MONO, letterSpacing: "0.08em",
               textTransform: "uppercase",
             }}>
               Trending Perpetuals
             </div>
-            <div style={{ display: "flex", gap: 4 }}>
-              {TRENDING_PERPS.map((_, i) => (
-                <div
-                  key={i}
-                  onClick={() => setActiveIndex(i)}
-                  style={{
-                    width: 6, height: 6, borderRadius: "50%",
-                    background: visibleIndices.includes(i) ? "#E6EDF3" : "rgba(255,255,255,0.12)",
-                    cursor: "pointer",
-                    transition: "background 0.3s",
-                  }}
-                />
-              ))}
+            <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
+              <button
+                onClick={() => setActiveIndex(prev => (prev - 1 + TRENDING_PERPS.length) % TRENDING_PERPS.length)}
+                style={{
+                  width: 24, height: 24, borderRadius: 6,
+                  background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)",
+                  color: "rgba(255,255,255,0.5)", cursor: "pointer",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  transition: "all 0.15s",
+                  padding: 0,
+                }}
+                onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.1)"; e.currentTarget.style.color = "#E6EDF3"; }}
+                onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.05)"; e.currentTarget.style.color = "rgba(255,255,255,0.5)"; }}
+              >
+                <ChevronLeft size={16} />
+              </button>
+              <button
+                onClick={() => setActiveIndex(prev => (prev + 1) % TRENDING_PERPS.length)}
+                style={{
+                  width: 24, height: 24, borderRadius: 6,
+                  background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)",
+                  color: "rgba(255,255,255,0.5)", cursor: "pointer",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  transition: "all 0.15s",
+                  padding: 0,
+                }}
+                onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.1)"; e.currentTarget.style.color = "#E6EDF3"; }}
+                onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.05)"; e.currentTarget.style.color = "rgba(255,255,255,0.5)"; }}
+              >
+                <ChevronRight size={16} />
+              </button>
             </div>
           </div>
 
@@ -1177,7 +1196,7 @@ export default function HomePage() {
             style={{
               display: "grid",
               gridTemplateColumns: isMobile ? "1fr 1fr" : "1fr 1fr 1fr",
-              gap: 10,
+              gap: isMobile ? 6 : 10,
             }}
           >
             {visibleIndices.map(idx => {
@@ -1197,14 +1216,14 @@ export default function HomePage() {
 
         <div style={{ marginBottom: 28 }}>
           <div style={{
-            fontSize: 10, fontWeight: 600, color: "#4A5060",
+            fontSize: 9, fontWeight: 600, color: "#4A5060",
             fontFamily: MONO, letterSpacing: "0.08em",
-            textTransform: "uppercase", marginBottom: 12,
+            textTransform: "uppercase", marginBottom: 10,
           }}>
             Supported Networks
           </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 16 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 16 }}>
             <NetworkCard
               name="Ethereum"
               icon="https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/info/logo.png"
@@ -1222,16 +1241,16 @@ export default function HomePage() {
 
         <div style={{ marginBottom: 28 }}>
           <div style={{
-            fontSize: 10, fontWeight: 600, color: "#4A5060",
+            fontSize: 9, fontWeight: 600, color: "#4A5060",
             fontFamily: MONO, letterSpacing: "0.08em",
-            textTransform: "uppercase", marginBottom: 10,
+            textTransform: "uppercase", marginBottom: 8,
           }}>
             Equity Perpetuals
           </div>
           <div style={{
             display: "grid",
             gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr 1fr 1fr",
-            gap: 6,
+            gap: 4,
           }}>
             {RWA_CATALOGUE.map(r => (
               <RwaItem key={r.symbol} {...r} />
@@ -1241,16 +1260,16 @@ export default function HomePage() {
 
         <div style={{ marginBottom: 28 }}>
           <div style={{
-            fontSize: 10, fontWeight: 600, color: "#4A5060",
+            fontSize: 9, fontWeight: 600, color: "#4A5060",
             fontFamily: MONO, letterSpacing: "0.08em",
-            textTransform: "uppercase", marginBottom: 10,
+            textTransform: "uppercase", marginBottom: 8,
           }}>
             DeFi Perpetuals
           </div>
           <div style={{
             display: "grid",
             gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr 1fr 1fr",
-            gap: 6,
+            gap: 4,
           }}>
             {DEFI_PERPS_CATALOGUE.map(d => (
               <DefiPerpItem key={d.symbol} {...d} />
@@ -1260,16 +1279,16 @@ export default function HomePage() {
 
         <div style={{ marginBottom: 28 }}>
           <div style={{
-            fontSize: 10, fontWeight: 600, color: "#4A5060",
+            fontSize: 9, fontWeight: 600, color: "#4A5060",
             fontFamily: MONO, letterSpacing: "0.08em",
-            textTransform: "uppercase", marginBottom: 10,
+            textTransform: "uppercase", marginBottom: 8,
           }}>
             Tokenized Commodities
           </div>
           <div style={{
             display: "grid",
             gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr 1fr 1fr",
-            gap: 6,
+            gap: 4,
           }}>
             {COMMODITIES_CATALOGUE.map(d => (
               <DefiPerpItem key={d.symbol} {...d} />
@@ -1279,16 +1298,16 @@ export default function HomePage() {
 
         <div style={{ marginBottom: 28 }}>
           <div style={{
-            fontSize: 10, fontWeight: 600, color: "#4A5060",
+            fontSize: 9, fontWeight: 600, color: "#4A5060",
             fontFamily: MONO, letterSpacing: "0.08em",
-            textTransform: "uppercase", marginBottom: 10,
+            textTransform: "uppercase", marginBottom: 8,
           }}>
             Meme Perpetuals
           </div>
           <div style={{
             display: "grid",
             gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr 1fr 1fr",
-            gap: 6,
+            gap: 4,
           }}>
             {MEME_CATALOGUE.map(d => (
               <DefiPerpItem key={d.symbol} {...d} />
