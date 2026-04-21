@@ -917,7 +917,7 @@ function XStocksModal({ onClose, isMobile, jupiterLogos }: { onClose: () => void
             background: "#0D1219",
           }}>
             <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
-              <img src="/assets/aster-logo.png" alt="Aster" style={{ width: 12, height: 12, borderRadius: 2 }} />
+              <div style={{ width: 12, height: 12, borderRadius: 2, background: "#FF6B35", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 8, fontWeight: 700, color: "#FFF" }}>A</div>
               <span style={{ fontSize: 8, color: "#4A5060", fontFamily: MONO }}>Equity perps on Aster &amp; Hyperliquid</span>
             </div>
             <button
@@ -1207,12 +1207,12 @@ export default function HomePage() {
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 16 }}>
             <NetworkCard
               name="Ethereum"
-              icon="/tokens/ethereum.png"
+              icon="https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/info/logo.png"
               color="#627EEA"
             />
             <NetworkCard
               name="Arbitrum"
-              icon="/tokens/arb-chain.png"
+              icon="https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/arbitrum/info/logo.png"
               color="#28A0F0"
             />
           </div>

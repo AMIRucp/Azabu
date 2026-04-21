@@ -232,15 +232,15 @@ function ExchangeShell() {
       />
 
       <header
-        className="shrink-0 hidden sm:flex items-center justify-between"
+        className="shrink-0 hidden sm:flex items-center justify-center"
         style={{
           background: '#000000', borderBottom: '1px solid #1C1C1C',
-          height: 44, padding: '0 12px',
+          height: 44, padding: '0 16px', position: 'relative',
         }}
         data-testid="exchange-header"
       >
-        {/* Logo */}
-        <div className="flex items-center" style={{ gap: 10, flexShrink: 0 }}>
+        {/* Logo - positioned absolutely on left */}
+        <div className="absolute left-4 flex items-center" style={{ gap: 10, flexShrink: 0 }}>
           <img
             src="/azabu-logo.png"
             alt="Azabu"
@@ -249,7 +249,7 @@ function ExchangeShell() {
           />
         </div>
 
-        {/* Desktop inline nav */}
+        {/* Desktop inline nav - truly centered */}
         <nav className="flex items-center" style={{ gap: 2 }}>
           {[...PRIMARY_NAV, ...SECONDARY_NAV].map(({ id, label }) => {
             const active = activePage === id;
@@ -262,7 +262,7 @@ function ExchangeShell() {
                 }}
                 data-testid={`desktop-nav-${id}`}
                 style={{
-                  padding: '5px 12px',
+                  padding: '6px 14px',
                   borderRadius: 8,
                   border: 'none',
                   cursor: 'pointer',
@@ -273,6 +273,7 @@ function ExchangeShell() {
                   background: active ? 'rgba(212,165,116,0.08)' : 'transparent',
                   transition: 'all 0.15s',
                   letterSpacing: '0.01em',
+                  whiteSpace: 'nowrap',
                 }}
                 onMouseEnter={e => { if (!active) e.currentTarget.style.color = 'rgba(255,255,255,0.8)'; }}
                 onMouseLeave={e => { if (!active) e.currentTarget.style.color = 'rgba(255,255,255,0.5)'; }}
@@ -283,7 +284,8 @@ function ExchangeShell() {
           })}
         </nav>
 
-        <div className="flex items-center shrink-0" style={{ gap: 6 }}>
+        {/* User header + Wallet - positioned absolutely on right */}
+        <div className="absolute right-4 flex items-center shrink-0" style={{ gap: 6 }}>
           <UserHeader
             onDisconnect={() => {
               resetUser();
