@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { X } from "lucide-react";
-import { BridgeContent } from "@/components/swap/BridgeContent";
 
 const mono = "'JetBrains Mono', 'SF Mono', 'Fira Code', monospace";
 
@@ -111,14 +110,13 @@ export default function CollateralDrawer({ open, onClose, token, chainLabel, amo
           flex: 1,
           overflowY: "auto",
           padding: "20px 20px 40px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          color: "#7a7a90",
+          fontSize: 13,
         }}>
-          <BridgeContent
-            defaultAmount={defaultAmount}
-            defaultDstToken={defaultDstToken as "USDC" | "USDT"}
-            defaultArbDst={defaultArbDst}
-            preferredSrcChain={effectiveSrcChain}
-            onComplete={onClose}
-          />
+          Bridge feature coming soon
         </div>
       </div>
     </div>

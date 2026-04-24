@@ -45,7 +45,6 @@ function buildAssetsFromMarkets(markets: UnifiedMarket[]): TopAsset[] {
 const FALLBACK_ASSETS: TopAsset[] = [
   { sym: "BTC", label: "Bitcoin",  icon: "" },
   { sym: "ETH", label: "Ethereum", icon: "" },
-  { sym: "SOL", label: "Solana",   icon: "" },
 ];
 
 const SIZE_PRESETS: { label: string; value: number; exposure: string }[] = [

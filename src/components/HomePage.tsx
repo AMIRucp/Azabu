@@ -1156,37 +1156,19 @@ export default function HomePage() {
             }}>
               Trending Perpetuals
             </div>
-            <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
-              <button
-                onClick={() => setActiveIndex(prev => (prev - 1 + TRENDING_PERPS.length) % TRENDING_PERPS.length)}
-                style={{
-                  width: 24, height: 24, borderRadius: 6,
-                  background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)",
-                  color: "rgba(255,255,255,0.5)", cursor: "pointer",
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  transition: "all 0.15s",
-                  padding: 0,
-                }}
-                onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.1)"; e.currentTarget.style.color = "#E6EDF3"; }}
-                onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.05)"; e.currentTarget.style.color = "rgba(255,255,255,0.5)"; }}
-              >
-                <ChevronLeft size={16} />
-              </button>
-              <button
-                onClick={() => setActiveIndex(prev => (prev + 1) % TRENDING_PERPS.length)}
-                style={{
-                  width: 24, height: 24, borderRadius: 6,
-                  background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)",
-                  color: "rgba(255,255,255,0.5)", cursor: "pointer",
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  transition: "all 0.15s",
-                  padding: 0,
-                }}
-                onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.1)"; e.currentTarget.style.color = "#E6EDF3"; }}
-                onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.05)"; e.currentTarget.style.color = "rgba(255,255,255,0.5)"; }}
-              >
-                <ChevronRight size={16} />
-              </button>
+            <div style={{ display: "flex", gap: 3 }}>
+              {TRENDING_PERPS.map((_, i) => (
+                <div
+                  key={i}
+                  onClick={() => setActiveIndex(i)}
+                  style={{
+                    width: 5, height: 5, borderRadius: "50%",
+                    background: visibleIndices.includes(i) ? "#E6EDF3" : "rgba(255,255,255,0.12)",
+                    cursor: "pointer",
+                    transition: "background 0.3s",
+                  }}
+                />
+              ))}
             </div>
           </div>
 

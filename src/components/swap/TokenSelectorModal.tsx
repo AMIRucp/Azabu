@@ -1,9 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useMemo } from "react";
-import { Loader2 } from "lucide-react";
-import { jupLoadTokenMap, type JupToken } from "@/lib/jupiterClient";
-import { MONO, SANS, POPULAR_TOKENS } from "./swapConstants";
+import { MONO, SANS } from "./swapConstants";
 
 export interface TokenOption {
   symbol: string;
@@ -14,64 +12,27 @@ export interface TokenOption {
 }
 
 export default function TokenSelectorModal({
-  onSelect, onClose, tokens: tokenList, balances, excludeMint, isEvm,
+  onSelect, onClose, tokens: tokenList, excludeMint,
 }: {
   onSelect: (t: TokenOption) => void;
   onClose: () => void;
   tokens?: TokenOption[];
-  balances?: { sol: number; tokens: Record<string, number> } | null;
   excludeMint?: string;
-  isEvm?: boolean;
 }) {
   const [search, setSearch] = useState("");
-  const [results, setResults] = useState<JupToken[]>([]);
-  const [searching, setSearching] = useState(false);
   const searchRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => { setTimeout(() => searchRef.current?.focus(), 100); }, []);
 
-  useEffect(() => {
-    if (isEvm || !search.trim()) { setResults([]); return; }
-    const q = search.toUpperCase().trim();
-    setSearching(true);
-    let cancelled = false;
-    (async () => {
-      try {
-        const map = await jupLoadTokenMap();
-        const matches: (JupToken & { _exact?: boolean })[] = [];
-        for (const [sym, t] of map) {
-          if (t.address === excludeMint) continue;
-          const nameMatch = (t.name || "").toUpperCase().includes(q);
-          const symMatch = sym.startsWith(q);
-          if (symMatch || nameMatch) {
-            matches.push({ ...t, symbol: t.symbol || sym, _exact: sym === q });
-          }
-          if (matches.length >= 50) break;
-        }
-        matches.sort((a, b) => {
-          if (a._exact && !b._exact) return -1;
-          if (!a._exact && b._exact) return 1;
-          return (b.daily_volume || 0) - (a.daily_volume || 0);
-        });
-        if (!cancelled) setResults(matches.slice(0, 20));
-      } catch { if (!cancelled) setResults([]); }
-      if (!cancelled) setSearching(false);
-    })();
-    return () => { cancelled = true; };
-  }, [search, excludeMint, isEvm]);
-
   const displayList = useMemo(() => {
-    if (isEvm && tokenList) {
-      const q = search.toLowerCase();
-      return q ? tokenList.filter((t) => t.symbol.toLowerCase().includes(q)) : tokenList;
-    }
-    if (search.trim()) {
-      return results.map((t) => ({ symbol: t.symbol, name: t.name, address: t.address, decimals: t.decimals, logoURI: t.logoURI }));
-    }
-    return POPULAR_TOKENS.filter((t) => t.address !== excludeMint);
-  }, [isEvm, tokenList, search, results, excludeMint]);
+    if (!tokenList) return [];
+    const q = search.toLowerCase();
+    return q ? tokenList.filter((t) => 
+      t.symbol.toLowerCase().includes(q) || (t.name && t.name.toLowerCase().includes(q))
+    ) : tokenList;
+  }, [tokenList, search]);
 
-  const popular = isEvm && tokenList ? tokenList.slice(0, 7) : POPULAR_TOKENS.slice(0, 6);
+  const popular = tokenList ? tokenList.slice(0, 7) : [];
 
   return (
     <>
@@ -106,7 +67,7 @@ export default function TokenSelectorModal({
             ref={searchRef}
             value={search}
             onChange={e => setSearch(e.target.value)}
-            placeholder={isEvm ? "Search name or symbol..." : "Search name or paste address..."}
+            placeholder="Search name or symbol..."
             style={{ flex: 1, background: "transparent", border: "none", outline: "none", color: "#E6EDF3", fontSize: 13, fontFamily: SANS }}
             autoComplete="off"
             data-testid="input-token-search"
@@ -130,13 +91,7 @@ export default function TokenSelectorModal({
         <div style={{ height: 1, background: "#0E1014", margin: "0 16px" }} />
 
         <div style={{ overflowY: "auto", flex: 1, padding: "6px 8px", maxHeight: 320 }}>
-          {searching && (
-            <div style={{ padding: "16px 0", textAlign: "center", color: "#6B7280", fontSize: 12, display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
-              <Loader2 style={{ width: 12, height: 12, animation: "spin 1s linear infinite" }} /> Searching...
-            </div>
-          )}
           {displayList.map((t, i) => {
-            const bal = !isEvm && balances ? (t.symbol === "SOL" ? balances.sol : balances.tokens?.[t.address] ?? null) : null;
             return (
               <button key={`${t.symbol}-${t.address || i}`} onClick={() => { onSelect(t); onClose(); }} style={{
                 display: "flex", alignItems: "center", gap: 10, padding: "8px 10px",
@@ -155,18 +110,13 @@ export default function TokenSelectorModal({
                   )}
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 1, flex: 1, minWidth: 0 }}>
-                  <span style={{ fontSize: 14, fontWeight: 500, color: "#E4E4E7" }}>{t.symbol}</span>
-                  <span style={{ fontSize: 11, color: "#6B7280" }}>{t.name}</span>
+                  <span style={{ fontSize: 14, fontWeight: 500, color: "#E4E4E7" }}>{t.name}</span>
+                  <span style={{ fontSize: 11, color: "#6B7280" }}>{t.symbol}</span>
                 </div>
-                {bal != null && bal > 0 && (
-                  <span style={{ fontSize: 12, color: "#9BA4AE", fontFamily: MONO }}>
-                    {bal.toLocaleString(undefined, { maximumFractionDigits: 4 })}
-                  </span>
-                )}
               </button>
             );
           })}
-          {!searching && displayList.length === 0 && (
+          {displayList.length === 0 && (
             <div style={{ padding: "24px 0", textAlign: "center", color: "#2A3340", fontSize: 13 }}>No tokens found</div>
           )}
         </div>

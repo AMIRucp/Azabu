@@ -5,6 +5,22 @@ export const SANS = "'Inter', system-ui, sans-serif";
 
 export const SLIPPAGE_PRESETS = [0.1, 0.3, 0.5, 1.0, 2.0];
 
+export type FusionPreset = "fast" | "medium" | "slow";
+
+export const FUSION_PRESET_OPTIONS: Array<{ key: FusionPreset; label: string; description: string }> = [
+  { key: "fast", label: "Fast", description: "~3 min, best price" },
+  { key: "medium", label: "Medium", description: "~6 min, better price" },
+  { key: "slow", label: "Slow", description: "~10 min, optimal price" },
+];
+
+export const CARD = "#0E1014";
+export const BORDER = "#1A1D24";
+export const LABEL = "#555B6A";
+export const DIM = "#373D4A";
+export const BRIGHT = "#E6EDF3";
+export const ORANGE = "#D4A574";
+export const CARD_SHADOW = "0 4px 24px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.025)";
+
 export interface TokenState {
   symbol: string;
   name: string;
@@ -35,18 +51,40 @@ export const SWAP_CHAINS = [
     logo: "/tokens/arb.webp",
     explorer: "https://arbiscan.io",
   },
-  {
-    key: "base" as const,
-    label: "Base",
-    shortLabel: "BASE",
-    chainId: 8453,
-    color: "#0052FF",
-    logo: "/chains/base.svg",
-    explorer: "https://basescan.org",
-  },
 ] as const;
 
 export type SwapChainKey = typeof SWAP_CHAINS[number]["key"];
+
+export function getFallbackTokens(chainId: number): TokenState[] {
+  switch (chainId) {
+    case 1:
+      return ETH_TOKENS;
+    case 42161:
+      return ARB_TOKENS;
+    default:
+      return ETH_TOKENS;
+  }
+}
+
+export async function fetchTokenList(chainId: number): Promise<TokenState[]> {
+  try {
+    const { tokenCacheManager } = await import("@/utils/tokenCacheManager");
+    return await tokenCacheManager.fetchTokens(chainId);
+  } catch (error) {
+    console.error(`Failed to fetch token list for chain ${chainId}:`, error);
+    return getFallbackTokens(chainId);
+  }
+}
+
+export async function preloadAllTokens(): Promise<void> {
+  try {
+    const { tokenCacheManager } = await import("@/utils/tokenCacheManager");
+    const chainIds = SWAP_CHAINS.map(c => c.chainId);
+    await tokenCacheManager.preloadTokens(chainIds);
+  } catch (error) {
+    console.warn("Failed to preload tokens:", error);
+  }
+}
 
 export const CHAINS = [
   { key: "arbitrum", label: "Arbitrum", color: "#28A0F0", engine: "1inch" },
@@ -95,25 +133,4 @@ export const ARB_TOKENS: TokenState[] = [
   { symbol: "LDO",    name: "Lido DAO",          address: "0x13Ad51ed4F1B7e9Dc168d8a00cB3f4dDD85EfA60",    decimals: 18, logoURI: CMC_ICON_EVM(8000)  },
   { symbol: "GRT",    name: "The Graph",         address: "0x9623063377AD1B27544C965cCd7342f7EA7e88C7",    decimals: 18, logoURI: CMC_ICON_EVM(6719)  },
   { symbol: "MKR",    name: "Maker",             address: "0x2e9a6Df78E42a30712c10a9Dc4b1C8656f8F2879",    decimals: 18, logoURI: CMC_ICON_EVM(1518)  },
-];
-
-export const BASE_TOKENS: TokenState[] = [
-  { symbol: "ETH",   name: "Ethereum",        address: NATIVE_ETH,                                        decimals: 18, logoURI: CMC_ICON_EVM(1027) },
-  { symbol: "USDC",  name: "USD Coin",         address: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",    decimals: 6,  logoURI: CMC_ICON_EVM(3408) },
-  { symbol: "WETH",  name: "Wrapped Ether",    address: "0x4200000000000000000000000000000000000006",    decimals: 18, logoURI: CMC_ICON_EVM(1027) },
-  { symbol: "DAI",   name: "Dai",              address: "0x50c5725949A6F0c72E6C4a641F24049A917DB0Cb",    decimals: 18, logoURI: CMC_ICON_EVM(4943) },
-  { symbol: "cbETH", name: "Coinbase Staked ETH", address: "0x2Ae3F1Ec7F1F5012CFEab0185bfc7aa3cf0DEc22", decimals: 18, logoURI: CMC_ICON_EVM(21535) },
-  { symbol: "AERO",  name: "Aerodrome",        address: "0x940181a94A35A4569E4529A3CDfB74e38FD98631",    decimals: 18, logoURI: CMC_ICON_EVM(29270) },
-  { symbol: "DEGEN", name: "Degen",            address: "0x4ed4E862860beD51a9570b96d89aF5E1B0Efefed",    decimals: 18, logoURI: CMC_ICON_EVM(30096) },
-  { symbol: "BRETT", name: "Brett",             address: "0x532f27101965dd16442E59d40670FaF5eBB142E4",    decimals: 18, logoURI: CMC_ICON_EVM(31407) },
-  { symbol: "TOSHI", name: "Toshi",            address: "0xAC1Bd2486aAf3B5C0fc3Fd868558b082a531B2B4",    decimals: 18, logoURI: CMC_ICON_EVM(29559) },
-];
-
-export const POPULAR_TOKENS: TokenState[] = [
-  { symbol: "ETH",  name: "Ethereum",        address: NATIVE_ETH,                                             decimals: 18, logoURI: CMC_ICON_EVM(1027) },
-  { symbol: "USDC", name: "USD Coin",         address: "0xaf88d065e77c8cC2239327C5EDb3A432268e5831",          decimals: 6,  logoURI: CMC_ICON_EVM(3408) },
-  { symbol: "USDT", name: "Tether",           address: "0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9",          decimals: 6,  logoURI: CMC_ICON_EVM(825)  },
-  { symbol: "ARB",  name: "Arbitrum",         address: "0x912CE59144191C1204E64559FE8253a0e49E6548",          decimals: 18, logoURI: CMC_ICON_EVM(11841) },
-  { symbol: "WBTC", name: "Wrapped Bitcoin",  address: "0x2f2a2543B76A4166549F7aaB2e75Bef0aefC5B0f",          decimals: 8,  logoURI: CMC_ICON_EVM(1) },
-  { symbol: "WETH", name: "Wrapped Ether",    address: "0x82aF49447D8a07e3bd95BD0d56f35241523fBab1",          decimals: 18, logoURI: CMC_ICON_EVM(1027) },
 ];

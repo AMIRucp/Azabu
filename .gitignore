@@ -14,3 +14,4 @@ public/afx-ad.mp4
 public/apriciti-ad.mp4
 attached_assets/*.mp4
 attached_assets/
+.cache/

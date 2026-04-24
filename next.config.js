@@ -73,9 +73,7 @@ const nextConfig = {
     'pg',
     'drizzle-orm',
   ],
-  allowedDevOrigins: [
-    '63d45039-de61-4e5a-9e5c-b9e553066f6f-00-226cs3a0szjcb.kirk.replit.dev',
-  ],
+  allowedDevOrigins: [],
   transpilePackages: [
     '@solana/wallet-adapter-base',
     '@solana/wallet-adapter-react',
