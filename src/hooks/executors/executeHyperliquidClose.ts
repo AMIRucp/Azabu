@@ -1,5 +1,4 @@
-import type { TxCallbacks, HyperliquidTradeParams } from "./shared";
-import { recordTradeToDb } from "./shared";
+import type { TxCallbacks } from "./shared";
 import { getWalletClient } from "@wagmi/core";
 import { wagmiConfig } from "@/config/wagmiConfig";
 import { toAccount } from "viem/accounts";
@@ -49,22 +48,25 @@ function createWagmiAccount(walletClient: any, address: Address) {
   });
 }
 
-export async function executeHyperliquidTrade(
-  params: HyperliquidTradeParams,
+interface ClosePositionParams {
+  assetId: number;
+  size: number;
+  side: "long" | "short";
+  coin: string;
+  markPrice?: number;
+  onSuccess?: () => void;
+}
+
+export async function executeHyperliquidClose(
+  params: ClosePositionParams,
   callbacks: TxCallbacks,
 ) {
   const { setTxState, setTxMsg, setTxSig } = callbacks;
-  const { market, side, sizeNum, lev, otype, evmAddress, assetId, onTradeSuccess } = params;
+  const { assetId, size, side, coin, markPrice, onSuccess } = params;
 
   try {
     setTxState("signing");
-
-    const coin = market.sym
-      .replace(/-USDC$/i, "")
-      .replace(/-USDT$/i, "")
-      .replace(/-PERP$/i, "")
-      .replace(/USDT$/i, "")
-      .replace(/USDC$/i, "");
+    setTxMsg("Preparing to close position...");
 
     const { ExchangeClient, HttpTransport } = await import("@nktkas/hyperliquid");
 
@@ -87,57 +89,48 @@ export async function executeHyperliquidTrade(
     const transport = new HttpTransport();
     const exchange = new ExchangeClient({ transport, wallet: customAccount });
 
-    const asset = assetId !== undefined ? assetId : 0;
-    const isMarket = otype === "market";
+    if (!markPrice || markPrice <= 0) throw new Error("Invalid mark price for close order");
+    if (size <= 0) throw new Error("Invalid size for close order");
 
-    if (sizeNum <= 0) {
-      setTxMsg("Order size must be greater than zero");
-      setTxState("error");
-      return;
-    }
+    setTxMsg("Please sign close order in your wallet...");
 
-    setTxMsg("Please sign order in your wallet...");
+    const isBuy = side === "short";
+    const aggressivePrice = isBuy
+      ? (markPrice * 1.10).toFixed(2)
+      : (markPrice * 0.90).toFixed(2);
 
     const result = await exchange.order({
       orders: [{
-        a: asset,
-        b: side === "long",
-        p: market.price.toString(),
-        s: sizeNum.toString(),
-        r: false,
-        t: isMarket ? { limit: { tif: "Ioc" } } : { limit: { tif: "Gtc" } },
+        a: assetId,
+        b: isBuy,
+        p: aggressivePrice,
+        s: size.toString(),
+        r: true,
+        t: { limit: { tif: "Ioc" } },
       }],
       grouping: "na",
     });
 
     if (result.status === "ok") {
-      setTxMsg("Order placed on Hyperliquid");
+      setTxMsg(`Position closed: ${coin}`);
       setTxSig(null);
       setTxState("success");
-
-      recordTradeToDb({
-        wallet: evmAddress,
-        protocol: "hyperliquid",
-        chain: "hyperliquid",
-        market: coin,
-        side,
-        sizeUsd: sizeNum * market.price,
-        entryPrice: market.price,
-        leverage: lev,
-        txSignature: "hl-" + Date.now(),
-      });
-
-      onTradeSuccess?.();
+      onSuccess?.();
     } else {
-      setTxMsg(`Order failed: ${JSON.stringify(result)}`);
+      const errorMsg = JSON.stringify(result);
+      setTxMsg(`Close failed: ${errorMsg}`);
       setTxState("error");
+      throw new Error(`Close failed: ${errorMsg}`);
     }
   } catch (e: any) {
     if (e?.code === 4001 || e?.code === "ACTION_REJECTED") {
       setTxMsg("Transaction rejected");
+      setTxState("error");
+      throw new Error("Transaction rejected");
     } else {
-      setTxMsg(e.message || "Hyperliquid trade failed");
+      setTxMsg(e.message || "Failed to close position");
+      setTxState("error");
+      throw e;
     }
-    setTxState("error");
   }
 }

@@ -18,8 +18,8 @@ export class ErrorBoundary extends Component<Props, State> {
     return { hasError: true, error };
   }
 
-  componentDidCatch(error: Error) {
-    console.error("Component crashed:", error);
+  componentDidCatch(_error: Error) {
+    // error captured by getDerivedStateFromError
   }
 
   render() {

@@ -22,4 +22,5 @@ export interface UnifiedMarket {
   isDayTradingClosed?: boolean;
   overnightMaxLeverage?: number | null;
   closingFee?: number;
+  assetId?: number;
 }

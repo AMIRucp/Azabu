@@ -50,7 +50,7 @@ function ProtocolBadge({ protocol }: { protocol: Protocol }) {
 interface TerminalMarketListProps {
   chain: "arbitrum" | "hyperliquid" | "lighter";
   selectedSymbol: string;
-  onSelect: (symbol: string, protocol?: string, meta?: { category?: string; baseAsset?: string }) => void;
+  onSelect: (symbol: string, protocol?: string, meta?: { category?: string; baseAsset?: string; assetId?: number }) => void;
   livePrices?: Record<string, { price: number; change24h: number; vol24h?: number; openInterest?: number; fundingRate?: number }>;
   unifiedMarkets?: UnifiedMarket[];
 }
@@ -309,7 +309,7 @@ function TerminalMarketListInner({ chain, selectedSymbol, onSelect, livePrices, 
             <div
               key={dedupKey}
               data-testid={`market-row-${dedupKey}`}
-              onClick={() => onSelect(m.symbol, m.protocol, { category: m.category, baseAsset: m.baseAsset })}
+              onClick={() => onSelect(m.symbol, m.protocol, { category: m.category, baseAsset: m.baseAsset, assetId: m.assetId })}
               ref={isKbHighlighted ? (el) => el?.scrollIntoView({ block: 'nearest' }) : undefined}
               style={{
                 display: "flex", alignItems: "center", justifyContent: "space-between",
@@ -339,7 +339,7 @@ function TerminalMarketListInner({ chain, selectedSymbol, onSelect, livePrices, 
                       fontWeight: isSelected ? 700 : 600, fontSize: 11, color: isSelected ? "#D4A574" : T.text, fontFamily: sans,
                       whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
                     }}>
-                      {d.normalizedBase.replace(/^spot:/, '').split('/')[0]}
+                      {m.symbol}
                     </span>
                     <ProtocolBadge protocol={m.protocol} />
                     {m.type === "spot" && (

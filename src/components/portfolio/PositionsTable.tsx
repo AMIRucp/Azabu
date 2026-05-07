@@ -8,6 +8,7 @@ import PositionDetail from "./PositionDetail";
 import { Loader2 } from "lucide-react";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { crossedThreshold } from "@/lib/tradeAnimations";
+import { executeHyperliquidClose } from "@/hooks/executors/executeHyperliquidClose";
 
 const SANS = "Inter, -apple-system, sans-serif";
 const MONO = "'IBM Plex Mono', 'SF Mono', monospace";
@@ -261,11 +262,55 @@ export default function PositionsTable({
         if (fraction === 1) {
           removePosition(pos.id);
         }
+      } else if (pos.protocol === "hyperliquid") {
+        const marketsRes = await fetch("/api/markets/unified");
+        const marketsData = await marketsRes.json();
+        
+        const market = marketsData.markets?.find(
+          (m: any) => m.protocol === "hyperliquid" && 
+                      m.type === "perp" && 
+                      m.baseAsset === pos.baseAsset
+        );
+
+        if (!market || market.assetId === undefined) {
+          throw new Error(`Could not find market for ${pos.baseAsset}`);
+        }
+
+        const closeSize = pos.sizeBase * fraction;
+        
+        let closeSuccess = false;
+        
+        await executeHyperliquidClose(
+          {
+            assetId: market.assetId,
+            size: closeSize,
+            side: pos.side.toLowerCase() as "long" | "short",
+            coin: pos.baseAsset,
+            markPrice: market.price,
+            onSuccess: () => {
+              closeSuccess = true;
+            },
+          },
+          {
+            setTxState: () => {},
+            setTxMsg: () => {},
+            setTxSig: () => {},
+          }
+        );
+
+        if (!closeSuccess) {
+          throw new Error("Failed to close position");
+        }
+
+        const estPnl = (pos.unrealizedPnl * fraction).toFixed(2);
+        setCloseResult({ posId: pos.id, success: true, message: `Position closed. ${pos.unrealizedPnl >= 0 ? "+" : ""}${estPnl} realized.` });
+        if (fraction === 1) {
+          removePosition(pos.id);
+        }
       } else {
         throw new Error(`Close not supported for ${pos.protocol}`);
       }
     } catch (err) {
-      console.error("[Positions] Close error:", err);
       const msg = err instanceof Error ? err.message : "Failed to close position";
       setCloseResult({ posId: pos.id, success: false, message: msg });
     }

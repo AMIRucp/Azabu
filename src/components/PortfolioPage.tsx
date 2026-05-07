@@ -75,20 +75,25 @@ function useTokenPrices() {
         const data = await res.json();
         const markets: any[] = data?.markets || [];
         const updated: Record<string, { price: number; change: number }> = {};
+        
         for (const t of WATCH_TOKENS) {
           const match = markets.find((m: any) => {
-            const base = (m.baseAsset || "").replace(/-PERP$/, "").replace(/1000|1M|1K/g, "");
+            const base = m.baseAsset || "";
             return base === t.symbol;
           });
+          
           updated[t.symbol] = match
-            ? { price: parseFloat(match.price || match.lastPrice || "0"), change: parseFloat(match.change24h || match.priceChangePercent || "0") }
+            ? { 
+                price: parseFloat(match.price || match.markPrice || "0"), 
+                change: parseFloat(match.change24h || "0") 
+              }
             : prices[t.symbol] || { price: 0, change: 0 };
         }
         setPrices(updated);
       } catch { }
     }
     fetchPrices();
-    const iv = setInterval(fetchPrices, 30000);
+    const iv = setInterval(fetchPrices, 2000);
     return () => clearInterval(iv);
   }, []);
 
@@ -216,7 +221,7 @@ export default function PortfolioPage() {
   const {
     loading, noWallet, chainFilter, setChainFilter, fetchPortfolio,
     walletBalance, protocolDeposits, freeMargin, usedCollateral,
-    totalNetWorth, totalPnl,
+    totalNetWorth, totalPnl, unrealizedPnl,
     walletTokens, deposits, positions, data,
     perpPositionCount,
   } = usePortfolioData();
@@ -508,7 +513,7 @@ export default function PortfolioPage() {
         {activeTab === "overview" && (
           <OverviewTab
             positions={positions}
-            unrealizedPnl={0}
+            unrealizedPnl={unrealizedPnl}
             freeMargin={freeMargin}
             usedCollateral={usedCollateral}
           />

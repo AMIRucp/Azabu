@@ -90,9 +90,8 @@ export default function ActivePositionCard({ assetSym }: ActivePositionCardProps
         if (!res.ok || data.error) throw new Error(data.error || "Failed to close");
       }
     } catch (err) {
-      console.error("[ActivePositionCard] Close error:", err);
+      setClosing(false);
     }
-    setClosing(false);
   }, [position, closing, evmAddress, positionProtocol]);
 
   const handleAdd = useCallback(async () => {
@@ -147,8 +146,7 @@ export default function ActivePositionCard({ assetSym }: ActivePositionCardProps
         const data = await res.json();
         if (!res.ok || data.error) throw new Error(data.error || "Failed to reduce");
         setPanel("none");
-      } catch (err) {
-        console.error("[ActivePositionCard] Reduce (Aster) error:", err);
+      } catch {
       }
     } else {
       await execute({

@@ -3,26 +3,11 @@
 import { useState, useCallback, useEffect } from "react";
 import { useEvmWallet } from "@/hooks/useEvmWallet";
 
-interface EthereumWindow extends Window {
-  ethereum?: {
-    request(args: { method: string; params?: unknown[] }): Promise<unknown>;
-    isMetaMask?: boolean;
-  };
-}
-
 const MONO = "'IBM Plex Mono', 'SF Mono', monospace";
 const SANS = "Inter, -apple-system, sans-serif";
 
 type Protocol = "aster" | "hyperliquid";
 type WithdrawStep = "amount" | "confirm" | "processing" | "success" | "error";
-
-interface Eip712TypedDataField { name: string; type: string; }
-interface Eip712Payload {
-  domain: { name?: string; version?: string; chainId?: number; verifyingContract?: string };
-  types: Record<string, Eip712TypedDataField[]>;
-  message: Record<string, unknown>;
-  primaryType?: string;
-}
 
 const PROTOCOLS: {
   id: Protocol; name: string; chain: string; asset: string;
@@ -84,15 +69,21 @@ export function WithdrawModal({
           const bal = usdt ? parseFloat(usdt.crossWalletBalance || usdt.balance || "0") : 0;
           if (!cancelled) setPlatformBalance(bal);
         } else if (protocol === "hyperliquid" && evmAddress) {
-          const res = await fetch(`/api/hyperliquid/account?address=${evmAddress}`);
-          if (!res.ok) return;
+          const res = await fetch(`/api/portfolio/hyperliquid?address=${evmAddress}`);
+          if (!res.ok) {
+            if (!cancelled) setPlatformBalance(0);
+            return;
+          }
           const data = await res.json();
-          const acctVal = parseFloat(data.crossBalance?.accountValue || data.balance?.accountValue || "0");
-          const marginUsed = parseFloat(data.crossBalance?.totalMarginUsed || data.balance?.totalMarginUsed || "0");
-          if (!cancelled) setPlatformBalance(Math.max(0, acctVal - marginUsed));
+          if (data.success && data.account) {
+            const availableBalance = parseFloat(data.account.availableBalance || "0");
+            if (!cancelled) setPlatformBalance(availableBalance);
+          } else {
+            if (!cancelled) setPlatformBalance(0);
+          }
         }
       } catch {
-        if (!cancelled) setPlatformBalance(null);
+        if (!cancelled) setPlatformBalance(0);
       }
     };
 
@@ -122,7 +113,6 @@ export function WithdrawModal({
       if (protocol === "aster")            await handleAsterWithdraw();
       else if (protocol === "hyperliquid") await handleHlWithdraw();
     } catch (e: unknown) {
-      console.error("[withdraw]", e);
       setErrorMsg(e instanceof Error ? e.message : "Withdrawal failed");
       setStep("error");
     }
@@ -168,67 +158,25 @@ export function WithdrawModal({
   const handleHlWithdraw = async () => {
     if (!evmAddress) throw new Error("EVM wallet not connected");
 
-    setStatus("Building withdrawal payload...");
-    const res = await fetch(
-      `/api/hyperliquid/withdraw?destination=${encodeURIComponent(evmAddress)}&amount=${encodeURIComponent(amount)}`,
+    const { executeHyperliquidWithdraw } = await import("@/hooks/executors/executeHyperliquidWithdraw");
+
+    await executeHyperliquidWithdraw(
+      {
+        destination: evmAddress,
+        amount: amount,
+        onSuccess: () => {
+          setTxHash("HL:" + Date.now());
+          setStep("success");
+        },
+      },
+      {
+        setTxState: (state) => {
+          if (state === "error") setStep("error");
+        },
+        setTxMsg: (msg) => setStatus(msg),
+        setTxSig: () => {},
+      }
     );
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || "Failed to prepare withdrawal");
-
-    const payload = data as { eip712Payload: Eip712Payload; nonce: number; amountStr: string };
-    const { eip712Payload, nonce, amountStr } = payload;
-
-    setStatus("Please sign the withdrawal request in your wallet...");
-
-    // Sign via MetaMask eth_signTypedData_v4
-    const provider = (window as EthereumWindow).ethereum;
-    if (!provider) throw new Error("No Ethereum provider found. Please install MetaMask.");
-
-    const { ethers } = await import("ethers");
-
-    let signature: string;
-    try {
-      // Try ethers v6 wallet signing
-      const browserProvider = new ethers.BrowserProvider(provider);
-      const signer = await browserProvider.getSigner();
-      const { domain, types, message } = eip712Payload;
-      // Remove EIP-712 domain type if present (ethers v6 doesn't want it)
-      const { EIP712Domain: _omit, ...filteredTypes } = types;
-      signature = await signer.signTypedData(domain, filteredTypes, message as Record<string, unknown>);
-    } catch {
-      // Fallback: raw eth_signTypedData_v4
-      signature = (await provider.request({
-        method: "eth_signTypedData_v4",
-        params: [evmAddress, JSON.stringify(eip712Payload)],
-      })) as string;
-    }
-
-    // Parse signature into r, s, v
-    const sig = ethers.Signature.from(signature);
-    const hlSig = { r: sig.r, s: sig.s, v: sig.v };
-
-    setStatus("Submitting withdrawal to Hyperliquid...");
-    const action = {
-      type: "withdraw3",
-      signatureChainId: "0xa4b1", // Arbitrum
-      hyperliquidChain: "Mainnet",
-      destination: evmAddress,
-      amount: amountStr,
-      time: nonce,
-    };
-
-    const submitRes = await fetch("/api/hyperliquid/withdraw", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action, nonce, signature: hlSig }),
-    });
-    const submitData = await submitRes.json();
-    if (!submitRes.ok || submitData.status === "err") {
-      throw new Error(submitData.response || submitData.error || "HL withdrawal rejected");
-    }
-
-    setTxHash("HL:" + nonce);
-    setStep("success");
   };
 
   if (!open) return null;

@@ -8,7 +8,8 @@ import { SECTORS, getSector, type SectorKey } from "@/config/equitySectors";
 import { useJupiterLogos } from "@/hooks/useJupiterLogos";
 import { usePortfolioData } from "@/hooks/usePortfolioData";
 import { useEvmWallet } from "@/hooks/useEvmWallet";
-import { Wallet, ChevronLeft, ChevronRight } from "lucide-react";
+import { useHyperliquidPortfolio } from "@/hooks/useHyperliquidPortfolio";
+import { Wallet } from "lucide-react";
 import { MarketsIcon, TradeIcon, SwapIcon, PortfolioIcon, LeaderboardIcon, SettingsIcon } from "./navIcons";
 
 const MONO = "'JetBrains Mono', 'SF Mono', 'Fira Code', monospace";
@@ -386,7 +387,7 @@ function RwaItem({ symbol, name, category, leverage }: { symbol: string; name: s
   );
 }
 
-function DefiPerpItem({ symbol, name, leverage, vol, venues, price, change }: { symbol: string; name: string; leverage: string; vol: string; venues: number; price: string; change: string }) {
+function DefiPerpItem({ symbol, name, leverage, vol, price, change }: { symbol: string; name: string; leverage: string; vol: string; price: string; change: string }) {
   const jupLogos = useJupiterLogos();
   const icon = getIconWithJupiter(symbol, jupLogos);
   const isPositive = change.startsWith("+");
@@ -943,13 +944,13 @@ function XStocksModal({ onClose, isMobile, jupiterLogos }: { onClose: () => void
 }
 
 
-function BalanceStat({ label, value }: { label: string; value: number }) {
+function BalanceStat({ label, value, highlight }: { label: string; value: number; highlight?: boolean }) {
   return (
     <div>
-      <div style={{ fontSize: 10, color: "#6B7280", fontFamily: MONO, letterSpacing: "0.04em", marginBottom: 2 }}>
+      <div style={{ fontSize: 10, color: highlight ? "#33FF88" : "#6B7280", fontFamily: MONO, letterSpacing: "0.04em", marginBottom: 2 }}>
         {label}
       </div>
-      <div style={{ fontSize: 13, fontWeight: 600, color: "#8B949E", fontFamily: MONO }}>
+      <div style={{ fontSize: 13, fontWeight: 600, color: highlight ? "#33FF88" : "#8B949E", fontFamily: MONO }}>
         ${value.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
       </div>
     </div>
@@ -962,6 +963,11 @@ export default function HomePage() {
   const { evmAddress } = useEvmWallet();
   const anyWalletConnected = !!evmAddress;
   const jupiterLogos = useJupiterLogos();
+  const { account: hlAccount } = useHyperliquidPortfolio({
+    address: evmAddress || undefined,
+    enabled: !!evmAddress,
+    pollInterval: 30000,
+  });
 
   const [activeIndex, setActiveIndex] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
@@ -1139,6 +1145,9 @@ export default function HomePage() {
                 <BalanceStat label="Wallet" value={portfolio?.walletBalance ?? 0} />
                 <BalanceStat label="Free Margin" value={portfolio?.freeMargin ?? 0} />
                 <BalanceStat label="Collateral" value={portfolio?.usedCollateral ?? 0} />
+                {hlAccount && hlAccount.accountValue > 0 && (
+                  <BalanceStat label="Hyperliquid" value={hlAccount.accountValue} highlight />
+                )}
               </div>
             </div>
           )}

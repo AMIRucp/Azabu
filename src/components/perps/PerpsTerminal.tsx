@@ -250,9 +250,10 @@ export default function PerpsTerminal() {
     price: currentPrice,
   }), [rawSym, currentPrice]);
 
-  const handleSelectMarket = useCallback((symbol: string, protocol?: string, meta?: { category?: string; baseAsset?: string }) => {
+  const handleSelectMarket = useCallback((symbol: string, protocol?: string, meta?: { category?: string; baseAsset?: string; assetId?: number }) => {
     const category = meta?.category;
     const baseAsset = (meta?.baseAsset ?? symbol.replace(/USDT?$/, "").replace(/-PERP$/i, "").replace(/\/[A-Z]+$/, "")).toUpperCase();
+    const assetId = meta?.assetId;
 
     if (category === "stock") {
       const swapSymbol = getStockSwapSymbol(baseAsset);
@@ -266,7 +267,11 @@ export default function PerpsTerminal() {
 
     if (isMobile) {
       const resolvedProto = protocol || "hyperliquid";
-      localStorage.setItem("afx_trade_market", JSON.stringify({ sym: baseAsset, protocol: resolvedProto }));
+      localStorage.setItem("afx_trade_market", JSON.stringify({ 
+        sym: baseAsset, 
+        protocol: resolvedProto,
+        assetId: assetId 
+      }));
       localStorage.setItem("afx_perps_asset", baseAsset);
       localStorage.setItem("afx_last_market", baseAsset);
       const chainVal = resolvedProto === "aster" ? "arbitrum" : resolvedProto;

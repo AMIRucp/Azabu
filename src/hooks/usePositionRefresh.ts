@@ -27,7 +27,6 @@ export function usePositionRefresh(intervalMs = 30000) {
       const positions = await fetchAllPositions(undefined, evmAddress);
       setPositions(positions);
     } catch (err) {
-      console.error("[POSITIONS] Refresh error:", err);
       setError(err instanceof Error ? err.message : "Failed to load positions");
     } finally {
       setLoading(false);

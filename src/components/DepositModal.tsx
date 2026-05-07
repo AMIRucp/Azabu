@@ -88,7 +88,6 @@ export function DepositModal({ open, onClose, defaultProtocol }: { open: boolean
         await handleHyperliquidDeposit();
       }
     } catch (e: unknown) {
-      console.error("[deposit]", e);
       setErrorMsg(e instanceof Error ? e.message : "Transaction failed");
       setStep("error");
     }
@@ -133,32 +132,69 @@ export function DepositModal({ open, onClose, defaultProtocol }: { open: boolean
 
   const handleHyperliquidDeposit = async () => {
     if (!evmAddress) throw new Error("EVM wallet not connected");
+    
     if (!isArbitrum) {
       setStatus("Switching to Arbitrum...");
-      try { await switchToArbitrum(); } catch { throw new Error("Failed to switch to Arbitrum network. Please switch manually in your wallet."); }
+      try { 
+        await switchToArbitrum(); 
+      } catch { 
+        throw new Error("Failed to switch to Arbitrum network. Please switch manually in your wallet."); 
+      }
       await new Promise(r => setTimeout(r, 500));
     }
-    setStatus("Fetching deposit details...");
-    const res = await fetch("/api/hyperliquid/deposit");
-    const data = await res.json();
-    if (!res.ok) throw new Error("Failed to get deposit info");
-    const signer = await getEvmSigner();
-    if (!signer) throw new Error("Could not get EVM signer");
-    const { ethers } = await import("ethers");
-    const depositAmount = ethers.parseUnits(amount, 6);
-    const usdc = new ethers.Contract(data.usdcAddress, data.erc20Abi, signer);
-    setStatus("Checking USDC allowance...");
-    const currentAllowance = await usdc.allowance(evmAddress, data.bridgeAddress);
-    if (currentAllowance < depositAmount) {
-      setStatus("Approving USDC spend... Please confirm in your wallet.");
-      const approveTx = await usdc.approve(data.bridgeAddress, depositAmount);
-      setStatus("Waiting for approval confirmation...");
-      await approveTx.wait();
+
+    setStatus("Preparing deposit...");
+    
+    const response = await fetch("/api/hyperliquid/deposit", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userAddress: evmAddress, amount: parseFloat(amount) }),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || "Failed to prepare deposit");
     }
-    setStatus("Depositing funds... Please confirm in your wallet.");
+
+    const data = await response.json();
+
+    setStatus("Please sign the permit (gasless approval)...");
+    
+    const signer = await getEvmSigner();
+    if (!signer) throw new Error("Could not get wallet signer");
+
+    const { ethers } = await import("ethers");
+    
+    const signature = await signer.signTypedData(
+      data.domain,
+      data.types,
+      {
+        owner: data.message.owner,
+        spender: data.message.spender,
+        value: BigInt(data.message.value),
+        nonce: BigInt(data.message.nonce),
+        deadline: BigInt(data.message.deadline),
+      }
+    );
+
+    const r = signature.slice(0, 66);
+    const s = "0x" + signature.slice(66, 130);
+    const v = parseInt(signature.slice(130, 132), 16);
+
+    setStatus("Submitting deposit transaction...");
+    
     const bridge = new ethers.Contract(data.bridgeAddress, data.bridgeAbi, signer);
-    const depositTx = await bridge.sendUSDC(depositAmount, evmAddress);
-    setStatus("Confirming deposit...");
+
+    const depositTx = await bridge.batchedDepositWithPermit([
+      {
+        user: evmAddress,
+        usd: BigInt(data.amountUsd),
+        deadline: BigInt(data.message.deadline),
+        signature: { r: BigInt(r), s: BigInt(s), v },
+      },
+    ]);
+
+    setStatus("Confirming transaction...");
     const receipt = await depositTx.wait();
     setTxHash(receipt.hash);
     setStep("success");
@@ -296,6 +332,7 @@ export function DepositModal({ open, onClose, defaultProtocol }: { open: boolean
                     value={amount}
                     onChange={e => setAmount(e.target.value)}
                     placeholder="0.00"
+                    min={selectedAsset.route === "hyperliquid" ? "5" : "0"}
                     style={{
                       width: "100%", padding: "14px 80px 14px 16px", borderRadius: 12,
                       background: "rgba(255,255,255,0.04)", border: `1px solid rgba(255,255,255,0.08)`,
@@ -314,6 +351,11 @@ export function DepositModal({ open, onClose, defaultProtocol }: { open: boolean
                     </span>
                   </div>
                 </div>
+                {selectedAsset.route === "hyperliquid" && (
+                  <div style={{ fontSize: 9, color: parsedAmt > 0 && parsedAmt < 5 ? "#EF4444" : "#6B7280", fontFamily: SANS, marginTop: 6 }}>
+                    Minimum deposit: 5 USDC
+                  </div>
+                )}
               </div>
 
               {/* Quick amounts */}
@@ -366,16 +408,19 @@ export function DepositModal({ open, onClose, defaultProtocol }: { open: boolean
 
               <button
                 data-testid="deposit-continue"
-                onClick={() => { if (parsedAmt > 0 && isEvmConnected) setStep("confirm"); }}
-                disabled={!isEvmConnected || parsedAmt <= 0}
+                onClick={() => { 
+                  const minAmount = selectedAsset.route === "hyperliquid" ? 5 : 0;
+                  if (parsedAmt >= minAmount && isEvmConnected) setStep("confirm"); 
+                }}
+                disabled={!isEvmConnected || parsedAmt <= 0 || (selectedAsset.route === "hyperliquid" && parsedAmt < 5)}
                 style={{
                   width: "100%", padding: "13px 0", borderRadius: 12, border: "none",
-                  background: ready && parsedAmt > 0
+                  background: ready && parsedAmt > 0 && !(selectedAsset.route === "hyperliquid" && parsedAmt < 5)
                     ? `linear-gradient(135deg, ${ACCENT}, #C4956A)`
                     : "rgba(255,255,255,0.04)",
-                  color: ready && parsedAmt > 0 ? "#0D1219" : "#4A5060",
+                  color: ready && parsedAmt > 0 && !(selectedAsset.route === "hyperliquid" && parsedAmt < 5) ? "#0D1219" : "#4A5060",
                   fontSize: 13, fontWeight: 700, fontFamily: SANS,
-                  cursor: ready && parsedAmt > 0 ? "pointer" : "not-allowed",
+                  cursor: ready && parsedAmt > 0 && !(selectedAsset.route === "hyperliquid" && parsedAmt < 5) ? "pointer" : "not-allowed",
                 }}
               >
                 Continue
@@ -418,7 +463,7 @@ export function DepositModal({ open, onClose, defaultProtocol }: { open: boolean
               }}>
                 {selectedAsset.route === "aster"
                   ? "This will require two transactions: an approval and a deposit."
-                  : "Funds will be bridged to your Azabu trading account via Arbitrum."}
+                  : "Using gasless permit signature - only one transaction required. Funds arrive in 1-2 minutes."}
               </div>
 
               <button

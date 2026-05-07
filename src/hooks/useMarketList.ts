@@ -177,8 +177,10 @@ export function useMarketList({
         case "market":
         case "alpha":
           return dir * a.primary.baseAsset.localeCompare(b.primary.baseAsset);
-        case "volume": return dir * (b.totalVolume24h - a.totalVolume24h);
-        case "oi": return dir * (b.totalOpenInterest - a.totalOpenInterest);
+        case "volume": 
+          return dir * ((b.primary.volume24h || 0) - (a.primary.volume24h || 0));
+        case "oi": 
+          return dir * ((b.primary.openInterest || 0) - (a.primary.openInterest || 0));
         case "price": return dir * ((b.primary.price || 0) - (a.primary.price || 0));
         case "change": return dir * ((b.primary.change24h || 0) - (a.primary.change24h || 0));
         case "funding": return dir * (Math.abs(b.bestFundingRate || 0) - Math.abs(a.bestFundingRate || 0));

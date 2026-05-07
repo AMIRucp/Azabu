@@ -71,7 +71,6 @@ export async function fetchTokenList(chainId: number): Promise<TokenState[]> {
     const { tokenCacheManager } = await import("@/utils/tokenCacheManager");
     return await tokenCacheManager.fetchTokens(chainId);
   } catch (error) {
-    console.error(`Failed to fetch token list for chain ${chainId}:`, error);
     return getFallbackTokens(chainId);
   }
 }
@@ -81,8 +80,7 @@ export async function preloadAllTokens(): Promise<void> {
     const { tokenCacheManager } = await import("@/utils/tokenCacheManager");
     const chainIds = SWAP_CHAINS.map(c => c.chainId);
     await tokenCacheManager.preloadTokens(chainIds);
-  } catch (error) {
-    console.warn("Failed to preload tokens:", error);
+  } catch {
   }
 }
 

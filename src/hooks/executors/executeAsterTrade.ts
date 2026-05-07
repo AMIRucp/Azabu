@@ -65,13 +65,11 @@ export async function executeAsterTrade(
   if (!resolvedUserId) {
     setTxMsg("Connect an EVM wallet to trade on Aster");
     setTxState("error");
-    console.log("[Trade] Blocked: No wallet or Aster ID available");
     return null;
   }
 
   setTxState("signing");
   setTxMsg("");
-  console.log("[Trade] Aster order:", { symbol: market.sym, side, sizeNum, leverage: lev });
 
   try {
     const asterSymbol = marketSymbol.endsWith("USDT") ? marketSymbol : `${market.sym}USDT`;
@@ -137,8 +135,7 @@ export async function executeAsterTrade(
           onTradeSuccess?.();
           return retryParams;
         }
-      } catch (tpSlErr) {
-        console.error("[Trade] TP/SL setup failed:", tpSlErr);
+      } catch {
         setTxMsg(`${side.toUpperCase()} ${market.sym} opened -- TP/SL failed to set`);
         setTxState("setup");
         onTradeSuccess?.();
@@ -151,7 +148,6 @@ export async function executeAsterTrade(
     onTradeSuccess?.();
     return null;
   } catch (err: unknown) {
-    console.error("[Trade] Aster error:", err);
     setTxMsg(err instanceof Error ? err.message : "Failed to submit order");
     setTxState("error");
     return null;

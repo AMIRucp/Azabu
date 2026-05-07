@@ -123,10 +123,9 @@ export default function TerminalPositions({ chain, livePrices, asterUserId }: Te
         const data = await res.json();
         if (!res.ok || data.error) throw new Error(data.error || "Failed to close");
       }
-    } catch (err) {
-      console.error("[Positions] Close error:", err);
+    } catch {
+      setClosingMarket(null);
     }
-    setClosingMarket(null);
   }, [asterUserId]);
 
   const handleTpSl = useCallback(async (pos: PositionData, _idx: number) => {
@@ -151,12 +150,10 @@ export default function TerminalPositions({ chain, livePrices, asterUserId }: Te
           }),
         });
         if (!res.ok) {
-          const errData = await res.json().catch(() => ({}));
-          console.error("TP/SL error:", errData.error);
+          await res.json().catch(() => {});
         }
       }
-    } catch (err) {
-      console.error("[Positions] TP/SL error:", err);
+    } catch {
     }
     setTpslSubmitting(false);
     setTpslOpen(null);

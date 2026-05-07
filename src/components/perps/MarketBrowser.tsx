@@ -25,7 +25,7 @@ function getCollaterals(primary: UnifiedMarket, alternatives: UnifiedMarket[]): 
 interface MarketBrowserProps {
   allMarkets: UnifiedMarket[];
   livePrices: Record<string, { price: number; change24h: number; vol24h?: number; openInterest?: number; fundingRate?: number }>;
-  onSelectMarket: (symbol: string, protocol?: string, meta?: { category?: string; baseAsset?: string }) => void;
+  onSelectMarket: (symbol: string, protocol?: string, meta?: { category?: string; baseAsset?: string; assetId?: number }) => void;
   isMobile: boolean;
   activeSym?: string;
 }
@@ -317,7 +317,7 @@ export default function MarketBrowser({ allMarkets, livePrices, onSelectMarket, 
                 <button
                   key={m.symbol + m.protocol}
                   data-testid={`trending-chip-${m.baseAsset?.toLowerCase() || m.symbol.toLowerCase()}`}
-                  onClick={() => onSelectMarket(m.symbol, m.protocol, { category: m.category, baseAsset: m.baseAsset })}
+                  onClick={() => onSelectMarket(m.symbol, m.protocol, { category: m.category, baseAsset: m.baseAsset, assetId: m.assetId })}
                   style={{
                     flexShrink: 0,
                     display: "inline-flex", alignItems: "center", gap: 4,
@@ -395,7 +395,7 @@ export default function MarketBrowser({ allMarkets, livePrices, onSelectMarket, 
             <div
               key={dedupKey}
               data-testid={`browser-row-${dedupKey}`}
-              onClick={() => onSelectMarket(m.symbol, m.protocol, { category: m.category, baseAsset: m.baseAsset })}
+              onClick={() => onSelectMarket(m.symbol, m.protocol, { category: m.category, baseAsset: m.baseAsset, assetId: m.assetId })}
               ref={isKb ? (el) => el?.scrollIntoView({ block: "nearest" }) : undefined}
               style={{
                 display: "flex", alignItems: "flex-start", justifyContent: "space-between",
@@ -423,7 +423,7 @@ export default function MarketBrowser({ allMarkets, livePrices, onSelectMarket, 
                 <div style={{ minWidth: 0 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                     <span style={{ fontSize: 14, fontWeight: 700, color: isActive ? "#D4A574" : T.text, fontFamily: mono }}>
-                      {d.normalizedBase.replace(/^spot:/, '').split('/')[0]}
+                      {m.symbol}
                     </span>
                     {m.type === "spot" && (
                       <span style={{

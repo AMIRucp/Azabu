@@ -6,29 +6,32 @@ import { injected, walletConnect, coinbaseWallet } from "wagmi/connectors";
 import { defineChain } from "viem";
 
 export const hyperliquidEvm = defineChain({
-  id: 999,
-  name: "Hyperliquid EVM",
-  nativeCurrency: { name: "HYPE", symbol: "HYPE", decimals: 18 },
+  id: 1337,
+  name: "Hyperliquid",
+  nativeCurrency: { name: "Hyperliquid", symbol: "HYPE", decimals: 18 },
   rpcUrls: {
-    default: { http: ["https://rpc.hyperliquid.xyz/evm"] },
+    default: { http: ["https://api.hyperliquid.xyz/evm"] },
   },
   blockExplorers: {
-    default: { name: "Hyperscan", url: "https://hyperscan.xyz" },
+    default: { name: "Hyperliquid Explorer", url: "https://explorer.hyperliquid.xyz" },
   },
 });
 
 function buildConnectors(): CreateConnectorFn[] {
+  if (typeof window === "undefined") {
+    return [
+      injected({ shimDisconnect: true }),
+      coinbaseWallet({ appName: "Azabu", darkMode: true }),
+    ];
+  }
+
   const list: CreateConnectorFn[] = [
     injected({ shimDisconnect: true }),
     coinbaseWallet({ appName: "Azabu", darkMode: true }),
   ];
 
-  const wcProjectId = typeof process !== "undefined"
-    ? process.env.NEXT_PUBLIC_WC_PROJECT_ID
-    : undefined;
+  const wcProjectId = process.env.NEXT_PUBLIC_WC_PROJECT_ID;
 
-  // WalletConnect is required for mobile wallet connections.
-  // Always add it — falls back gracefully if no project ID is set.
   if (wcProjectId) {
     list.push(
       walletConnect({
@@ -37,7 +40,7 @@ function buildConnectors(): CreateConnectorFn[] {
         metadata: {
           name: "Azabu",
           description: "Alternative Futures Exchange — 275+ leveraged markets",
-          url: typeof window !== "undefined" ? window.location.origin : "https://azabu.fi",
+          url: window.location.origin,
           icons: ["https://azabu.fi/favicon.png"],
         },
       }),
@@ -52,7 +55,7 @@ export const wagmiConfig = createConfig({
   connectors: buildConnectors(),
   multiInjectedProviderDiscovery: true,
   transports: {
-    [arbitrum.id]: http(),
+    [arbitrum.id]: http("https://arb1.arbitrum.io/rpc"),
     [mainnet.id]: http(),
     [polygon.id]: http(),
     [base.id]: http(),
@@ -60,8 +63,15 @@ export const wagmiConfig = createConfig({
     [avalanche.id]: http(),
     [hyperliquidEvm.id]: http(),
   },
-  storage: createStorage({
-    storage: typeof window !== "undefined" ? window.localStorage : undefined,
+  storage: typeof window !== "undefined" ? createStorage({
+    storage: window.localStorage,
+    key: "afx_wagmi",
+  }) : createStorage({
+    storage: {
+      getItem: () => null,
+      setItem: () => {},
+      removeItem: () => {},
+    },
     key: "afx_wagmi",
   }),
   ssr: true,

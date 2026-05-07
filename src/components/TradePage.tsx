@@ -16,7 +16,12 @@ const MARKET_KEY = "afx_trade_market";
 
 type DataModal = "book" | "trades" | "funding" | null;
 
-interface CanonicalMarket { sym: string; protocol: string; }
+interface CanonicalMarket { 
+  sym: string; 
+  protocol: string;
+  assetId?: number;
+  baseAsset?: string;
+}
 
 function readCanonicalMarket(): CanonicalMarket | null {
   try {
@@ -53,6 +58,7 @@ export default function TradePage({ fromMarkets = false }: TradePageProps) {
 
   const [selectedAsset, setSelectedAsset] = useState<string>("BTC");
   const [assetProtocol, setAssetProtocol] = useState<string>("hyperliquid");
+  const [assetId, setAssetId] = useState<number | undefined>(undefined);
 
   const livePrices = useMarketStore(s => s.livePrices);
 
@@ -60,7 +66,13 @@ export default function TradePage({ fromMarkets = false }: TradePageProps) {
     setMounted(true);
     setIsMobile(window.innerWidth < 768);
     const m = readCanonicalMarket();
-    if (m) { setSelectedAsset(m.sym); setAssetProtocol(m.protocol); }
+    if (m) { 
+      setSelectedAsset(m.sym); 
+      setAssetProtocol(m.protocol);
+      if (m.assetId !== undefined) {
+        setAssetId(m.assetId);
+      }
+    }
     const handleResize = () => setIsMobile(window.innerWidth < 768);
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
@@ -73,11 +85,19 @@ export default function TradePage({ fromMarkets = false }: TradePageProps) {
     return () => window.removeEventListener("keydown", handler);
   }, [dataModal]);
 
-  const handleAssetChange = useCallback((sym: string, protocol?: string) => {
+  const handleAssetChange = useCallback((sym: string, protocol?: string, meta?: { assetId?: number; baseAsset?: string }) => {
     const resolvedProtocol = protocol || "hyperliquid";
     setSelectedAsset(sym);
     setAssetProtocol(resolvedProtocol);
-    writeCanonicalMarket({ sym, protocol: resolvedProtocol });
+    if (meta?.assetId !== undefined) {
+      setAssetId(meta.assetId);
+    }
+    writeCanonicalMarket({ 
+      sym, 
+      protocol: resolvedProtocol,
+      assetId: meta?.assetId,
+      baseAsset: meta?.baseAsset,
+    });
   }, []);
 
   const chain = assetProtocol === "aster" ? "arbitrum" : assetProtocol;
@@ -364,7 +384,7 @@ export default function TradePage({ fromMarkets = false }: TradePageProps) {
             </>
           ) : (
             <div style={{ padding: "12px 12px 40px", display: "flex", flexDirection: "column", gap: 8 }}>
-              <SimpleTradeCard selectedAsset={selectedAsset} onAssetChange={handleAssetChange} onVenueChange={setAssetProtocol} />
+              <SimpleTradeCard selectedAsset={selectedAsset} assetId={assetId} onAssetChange={handleAssetChange} onVenueChange={setAssetProtocol} />
               <ActivePositionCard assetSym={selectedAsset} />
             </div>
           )}
@@ -406,7 +426,7 @@ export default function TradePage({ fromMarkets = false }: TradePageProps) {
           display: "flex", flexDirection: "column", overflow: "hidden",
         }}>
           <div style={{ height: "100%", overflowY: "auto", padding: "12px 12px 40px", display: "flex", flexDirection: "column", gap: 8 }}>
-            <SimpleTradeCard selectedAsset={selectedAsset} onAssetChange={handleAssetChange} onVenueChange={setAssetProtocol} />
+            <SimpleTradeCard selectedAsset={selectedAsset} assetId={assetId} onAssetChange={handleAssetChange} onVenueChange={setAssetProtocol} />
             <ActivePositionCard assetSym={selectedAsset} />
           </div>
         </div>

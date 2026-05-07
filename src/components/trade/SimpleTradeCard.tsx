@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo, useCallback, useRef } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { ChevronDown, ChevronUp, AlertTriangle } from "lucide-react";
 import useMarketStore from "@/stores/useMarketStore";
 import { useEvmWallet } from "@/hooks/useEvmWallet";
@@ -100,12 +100,14 @@ const SIZE_PRESETS = [25, 100, 250];
 
 interface SimpleTradeCardProps {
   selectedAsset?: string;
-  onAssetChange?: (sym: string) => void;
+  assetId?: number;
+  onAssetChange?: (sym: string, protocol?: string, meta?: { assetId?: number; baseAsset?: string }) => void;
   onVenueChange?: (venue: string) => void;
 }
 
-export default function SimpleTradeCard({ selectedAsset, onAssetChange, onVenueChange }: SimpleTradeCardProps) {
+export default function SimpleTradeCard({ selectedAsset, assetId, onAssetChange, onVenueChange }: SimpleTradeCardProps) {
   const { markets, livePrices, startPolling } = useMarketStore();
+  
   const { evmAddress, isEvmConnected, connectEvm } = useEvmWallet();
   const { txState, txMsg, execute, dismiss } = useTradeExecution();
 
@@ -143,8 +145,19 @@ export default function SimpleTradeCard({ selectedAsset, onAssetChange, onVenueC
 
   useEffect(() => {
     localStorage.setItem("afx_perps_asset", assetSym);
-    onAssetChange?.(assetSym);
-  }, [assetSym, onAssetChange]);
+    
+    const baseAssetFromSym = assetSym.split('-')[0].toUpperCase();
+    
+    const hlMarket = markets.find(m => 
+      m.protocol === "hyperliquid" && 
+      m.type === "perp" && 
+      m.baseAsset.toUpperCase() === baseAssetFromSym
+    );
+    onAssetChange?.(assetSym, hlMarket?.protocol, { 
+      assetId: hlMarket?.assetId, 
+      baseAsset: hlMarket?.baseAsset 
+    });
+  }, [assetSym, onAssetChange, markets]);
 
   useEffect(() => {
     const cleanup = startPolling();
@@ -156,6 +169,28 @@ export default function SimpleTradeCard({ selectedAsset, onAssetChange, onVenueC
     [assetSym, collateral, markets]
   );
   const { venue, chain, marketSymbol, maxLev, market: resolvedMarket } = venueResolution;
+
+  const effectiveAssetId = useMemo(() => {
+    if (assetId !== undefined) {
+      return assetId;
+    }
+    
+    if (resolvedMarket?.assetId !== undefined) {
+      return resolvedMarket.assetId;
+    }
+    
+    const baseAssetFromSym = assetSym.split('-')[0].toUpperCase();
+    
+    const hlMarket = markets.find(m => 
+      m.protocol === "hyperliquid" && 
+      m.type === "perp" && 
+      m.baseAsset.toUpperCase() === baseAssetFromSym
+    );
+    
+    if (hlMarket?.assetId !== undefined) return hlMarket.assetId;
+    
+    return undefined;
+  }, [assetId, resolvedMarket, markets, assetSym]);
 
   useEffect(() => {
     onVenueChange?.(venue);
@@ -173,13 +208,13 @@ export default function SimpleTradeCard({ selectedAsset, onAssetChange, onVenueC
   const livePrice = livePrices[marketSymbol]?.price ?? 0;
   const change24h = livePrices[marketSymbol]?.change24h ?? 0;
 
-  const sizeNum = parseFloat(sizeUsd) || 0;
+  const assetQty = parseFloat(sizeUsd) || 0;
+  const sizeNum = livePrice > 0 ? assetQty * livePrice : 0;
   const collateralRequired = effectiveLeverage > 0 ? sizeNum / effectiveLeverage : sizeNum;
-  const assetQty = livePrice > 0 ? sizeNum / livePrice : 0;
   const positionSize = sizeNum;
 
   const collateralState = useCollateralBalance(chain, collateralRequired);
-  const { balance, deficit, loading: balLoading, token: collateralToken, chainLabel: collateralChainLabel, evmConnected } = collateralState;
+  const { balance, deficit, loading: balLoading, token: collateralToken, chainLabel: collateralChainLabel } = collateralState;
 
   const liqDistPct = effectiveLeverage > 0 ? (1 / effectiveLeverage) * 100 * 0.95 : 0;
 
@@ -193,8 +228,6 @@ export default function SimpleTradeCard({ selectedAsset, onAssetChange, onVenueC
   const venueLabel = venue === "aster" ? "Aster" : "Hyperliquid";
   const isLong = side === "long";
   const accentColor = isLong ? "#22C55E" : "#EF4444";
-  const accentDim = isLong ? "rgba(34,197,94,0.08)" : "rgba(239,68,68,0.08)";
-  const accentBorder = isLong ? "rgba(34,197,94,0.2)" : "rgba(239,68,68,0.2)";
 
   const needsFunding = isEvmConnected && sizeNum > 0 && deficit > 0;
   const canTrade = isEvmConnected && sizeNum > 0 && livePrice > 0 && !needsFunding;
@@ -241,6 +274,7 @@ export default function SimpleTradeCard({ selectedAsset, onAssetChange, onVenueC
       sl: slPrice,
       hiddenOrder: false,
       asterUserId: evmAddress || undefined,
+      assetId: venue === "hyperliquid" ? effectiveAssetId : undefined,
       onTradeSuccess: () => {
         setCelebTrade({
           side,
@@ -252,7 +286,7 @@ export default function SimpleTradeCard({ selectedAsset, onAssetChange, onVenueC
         setSizeUsd("");
       },
     });
-  }, [canTrade, assetSym, livePrice, maxLev, marketSymbol, chain, side, assetQty, positionSize, effectiveLeverage, collateralRequired, tpEnabled, slEnabled, tpPriceTarget, slPriceTarget, evmAddress, execute]);
+  }, [canTrade, assetSym, livePrice, maxLev, marketSymbol, chain, side, assetQty, positionSize, effectiveLeverage, collateralRequired, tpEnabled, slEnabled, tpPriceTarget, slPriceTarget, evmAddress, execute, venue, effectiveAssetId]);
 
   const sectionStyle: React.CSSProperties = {
     background: "#0C0D10",
@@ -472,7 +506,7 @@ export default function SimpleTradeCard({ selectedAsset, onAssetChange, onVenueC
         </button>
       </div>
 
-      {/* Amount Input — swap-style with collateral token inline */}
+      {/* Amount Input — token amount with USD value below */}
       <div style={sectionStyle}>
         <div style={{ fontSize: 10, color: "#555B6A", marginBottom: 8, letterSpacing: "0.05em", textTransform: "uppercase", fontFamily: MONO }}>Amount</div>
         <div style={{
@@ -480,7 +514,7 @@ export default function SimpleTradeCard({ selectedAsset, onAssetChange, onVenueC
           background: "rgba(255,255,255,0.025)", borderRadius: 10,
           border: "1px solid rgba(255,255,255,0.07)",
           padding: "4px 4px 4px 12px",
-          marginBottom: 10,
+          marginBottom: 6,
         }}>
           <input
             data-testid="simple-size-input"
@@ -495,62 +529,48 @@ export default function SimpleTradeCard({ selectedAsset, onAssetChange, onVenueC
               minWidth: 0,
             }}
           />
-          {/* Collateral token pill — inline toggle */}
-          <div style={{ display: "flex", background: "#0C0D10", borderRadius: 8, border: "1px solid rgba(255,255,255,0.08)", padding: 3, gap: 2, flexShrink: 0 }}>
-            {([
-              { id: "USDC" as Collateral, icon: "/tokens/usdc.webp" },
-              { id: "USDT" as Collateral, icon: "/tokens/usdt.png" },
-            ]).map(({ id: c, icon }) => {
-              const active = collateral === c;
-              return (
-                <button
-                  key={c}
-                  data-testid={`simple-collateral-${c.toLowerCase()}`}
-                  onClick={() => setCollateral(c)}
-                  style={{
-                    display: "flex", alignItems: "center", gap: 5,
-                    padding: "6px 10px", borderRadius: 6, border: "none",
-                    background: active ? "rgba(255,255,255,0.08)" : "transparent",
-                    boxShadow: active ? "0 0 0 1px rgba(255,255,255,0.1)" : "none",
-                    cursor: "pointer", transition: "all 0.15s",
-                  }}
-                >
-                  <img src={icon} alt={c} style={{ width: 16, height: 16, borderRadius: "50%", objectFit: "cover", flexShrink: 0 }} />
-                  <span style={{
-                    fontSize: 11, fontWeight: active ? 700 : 500, fontFamily: MONO,
-                    color: active ? "#E6EDF3" : "#4A5568", letterSpacing: "0.03em",
-                  }}>{c}</span>
-                </button>
-              );
-            })}
+          {/* Token pill showing current asset */}
+          <div style={{
+            display: "flex", alignItems: "center", gap: 6,
+            background: "#0C0D10", borderRadius: 8,
+            border: "1px solid rgba(255,255,255,0.08)",
+            padding: "6px 10px", flexShrink: 0,
+          }}>
+            <TokenIcon symbol={assetSym} size={16} />
+            <span style={{ fontSize: 12, fontWeight: 700, fontFamily: MONO, color: "#E6EDF3", letterSpacing: "0.03em" }}>
+              {assetSym.split("-")[0].toUpperCase()}
+            </span>
           </div>
         </div>
-        {sizeNum > 0 && livePrice > 0 && (
-          <div style={{ fontSize: 10, color: "#4A5568", fontFamily: MONO, marginBottom: 8 }}>
-            ≈ {assetQty.toFixed(4)} {assetSym}
-          </div>
-        )}
+        {/* USD value below */}
+        <div style={{ fontSize: 11, color: "#4A5568", fontFamily: MONO, marginBottom: 10, minHeight: 16 }}>
+          {assetQty > 0 && livePrice > 0
+            ? <span>≈ <span style={{ color: "#6B7280" }}>${sizeNum.toFixed(2)}</span> USD</span>
+            : <span style={{ color: "#2A3040" }}>Enter amount in {assetSym.split("-")[0].toUpperCase()}</span>
+          }
+        </div>
         <div style={{ display: "flex", gap: 5 }}>
-          {SIZE_PRESETS.map(preset => (
+          {[0.001, 0.01, 0.1].map(preset => (
             <button
               key={preset}
               data-testid={`simple-preset-${preset}`}
               onClick={() => setSizeUsd(String(preset))}
               style={{
                 flex: 1, padding: "7px 0", borderRadius: 7, cursor: "pointer",
-                background: sizeNum === preset ? "rgba(212,165,116,0.1)" : "rgba(255,255,255,0.03)",
-                border: sizeNum === preset ? "1px solid rgba(212,165,116,0.3)" : "1px solid rgba(255,255,255,0.05)",
-                color: sizeNum === preset ? "#D4A574" : "#555B6A",
+                background: assetQty === preset ? "rgba(212,165,116,0.1)" : "rgba(255,255,255,0.03)",
+                border: assetQty === preset ? "1px solid rgba(212,165,116,0.3)" : "1px solid rgba(255,255,255,0.05)",
+                color: assetQty === preset ? "#D4A574" : "#555B6A",
                 fontSize: 11, fontWeight: 600, fontFamily: MONO,
                 transition: "all 0.12s",
               }}
-            >${preset}</button>
+            >{preset}</button>
           ))}
           <button
             data-testid="simple-preset-max"
             onClick={() => {
-              if (balance !== null && balance > 0) {
-                setSizeUsd((balance * effectiveLeverage).toFixed(0));
+              if (balance !== null && balance > 0 && livePrice > 0) {
+                const maxTokens = (balance * effectiveLeverage) / livePrice;
+                setSizeUsd(maxTokens.toFixed(6));
               }
             }}
             style={{
@@ -904,25 +924,55 @@ export default function SimpleTradeCard({ selectedAsset, onAssetChange, onVenueC
       </div>
 
       {/* TX Status */}
-      {txState !== "idle" && txState !== "success" && (
+      {txState !== "idle" && (
         <div
           data-testid="simple-tx-status"
-          onClick={dismiss}
+          onClick={txState === "success" ? undefined : dismiss}
           style={{
-            padding: "10px 12px", borderRadius: 8, cursor: "pointer",
-            background: txState === "error" ? "rgba(239,68,68,0.08)" : "rgba(249,115,22,0.08)",
-            border: txState === "error" ? "1px solid rgba(239,68,68,0.2)" : "1px solid rgba(249,115,22,0.2)",
+            padding: "10px 12px", borderRadius: 8, 
+            cursor: txState === "success" ? "default" : "pointer",
+            background: txState === "success" 
+              ? "rgba(34,197,94,0.08)" 
+              : txState === "error" 
+                ? "rgba(239,68,68,0.08)" 
+                : "rgba(249,115,22,0.08)",
+            border: txState === "success"
+              ? "1px solid rgba(34,197,94,0.2)"
+              : txState === "error" 
+                ? "1px solid rgba(239,68,68,0.2)" 
+                : "1px solid rgba(249,115,22,0.2)",
             fontSize: 11, color: "#E6EDF3", fontFamily: MONO,
+            display: "flex", justifyContent: "space-between", alignItems: "center",
           }}
         >
-          {txMsg || "Processing..."}
+          <span>{txMsg || "Processing..."}</span>
+          {txState === "success" && (
+            <button
+              onClick={dismiss}
+              style={{
+                background: "transparent",
+                border: "none",
+                color: "rgba(34,197,94,0.6)",
+                cursor: "pointer",
+                fontSize: 10,
+                fontFamily: MONO,
+                padding: "2px 6px",
+                borderRadius: 4,
+                transition: "color 0.15s",
+              }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = "rgba(34,197,94,1)"; }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = "rgba(34,197,94,0.6)"; }}
+            >
+              ✕
+            </button>
+          )}
         </div>
       )}
 
       {celebTrade && (
         <TradeSuccessOverlay
           trade={celebTrade}
-          onDismiss={() => { setCelebTrade(null); dismiss(); }}
+          onDismiss={() => { setCelebTrade(null); }}
         />
       )}
 

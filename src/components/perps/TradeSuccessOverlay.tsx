@@ -125,7 +125,7 @@ export default function TradeSuccessOverlay({ trade, onDismiss }: TradeSuccessOv
   useEffect(() => {
     setMounted(true);
     const t1 = setTimeout(() => setAnimIn(true), 20);
-    timerRef.current = setTimeout(() => handleDismiss(), 2000);
+    timerRef.current = setTimeout(() => handleDismiss(), 5000);
     return () => {
       clearTimeout(t1);
       if (timerRef.current) clearTimeout(timerRef.current);

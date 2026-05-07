@@ -140,7 +140,7 @@ function TerminalChartInner({ symbol, currentPrice, onTimeframeChange, chain }: 
     const isAsterSym = symbol.toUpperCase().endsWith('USDT');
     const rawSymbol = isAsterSym
       ? symbol.replace(/USDT$/i, '')
-      : symbol.replace(/-PERP$/i, '').replace(/-USD$/i, '').replace(/^1M/i, '');
+      : symbol.replace(/-USDC$/i, '').replace(/-USDT$/i, '').replace(/-PERP$/i, '').replace(/-USD$/i, '').replace(/^1M/i, '').split('-')[0].split('/')[0];
 
     fetchCandles(rawSymbol, TF_TO_SERVICE[tf], chain).then(result => {
       if (cancelled) return;
@@ -221,7 +221,7 @@ function TerminalChartInner({ symbol, currentPrice, onTimeframeChange, chain }: 
     const isAsterSym = symbol.toUpperCase().endsWith('USDT');
     const rawSymbol = isAsterSym
       ? symbol.replace(/USDT$/i, '')
-      : symbol.replace(/-PERP$/i, '').replace(/-USD$/i, '').replace(/^1M/i, '');
+      : symbol.replace(/-USDC$/i, '').replace(/-USDT$/i, '').replace(/-PERP$/i, '').replace(/-USD$/i, '').replace(/^1M/i, '').split('-')[0].split('/')[0];
 
     const poll = async () => {
       if (!chartReadyRef.current || !candleSeriesRef.current || !volumeSeriesRef.current) return;
