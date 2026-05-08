@@ -92,10 +92,10 @@ function StatCard({ label, value, subValue, variant }: {
   let subValueColor = "#6B7280";
   
   if (variant === "pnl-orange" || variant === "pnl-purple") {
-    valueColor = "#22C55E";
+    valueColor = "#94FFBB"; // Figma color for positive PNL
   } else if (variant === "healthy") {
     valueColor = "#E6EDF3";
-    subValueColor = "#22C55E";
+    subValueColor = "#94FFBB"; // Figma color for positive values
   }
   
   return (
