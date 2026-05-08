@@ -85,25 +85,15 @@ function StatCard({ label, value, subValue, variant }: {
   variant?: "pnl-orange" | "pnl-purple" | "default" | "healthy";
 }) {
   // Figma specs: Stroke #FFFFFF 5%, Inside, Weight 1, Corner radius 16, W 201 x H 101
-  // Fill: Linear gradient at 100%
-  let background = "rgba(255,255,255,0.02)";
-  let borderColor = "rgba(255,255,255,0.05)"; // 5% white per Figma
+  // Fill: Linear 100% black
+  const background = "#000000"; // Solid black per Figma
+  const borderColor = "rgba(255,255,255,0.05)"; // 5% white per Figma
   let valueColor = "#E6EDF3";
   let subValueColor = "#6B7280";
   
-  if (variant === "pnl-orange") {
-    // Linear gradient from top-left to bottom-right with orange tones
-    background = "linear-gradient(145deg, rgba(234,88,12,0.35) 0%, rgba(194,65,12,0.18) 50%, rgba(120,40,10,0.08) 100%)";
-    borderColor = "rgba(255,255,255,0.05)";
-    valueColor = "#22C55E";
-  } else if (variant === "pnl-purple") {
-    // Linear gradient with purple tones
-    background = "linear-gradient(145deg, rgba(168,85,247,0.25) 0%, rgba(139,92,246,0.14) 50%, rgba(88,28,135,0.06) 100%)";
-    borderColor = "rgba(255,255,255,0.05)";
+  if (variant === "pnl-orange" || variant === "pnl-purple") {
     valueColor = "#22C55E";
   } else if (variant === "healthy") {
-    background = "rgba(255,255,255,0.02)";
-    borderColor = "rgba(255,255,255,0.05)";
     valueColor = "#E6EDF3";
     subValueColor = "#22C55E";
   }
