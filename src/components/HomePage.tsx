@@ -85,17 +85,17 @@ function StatCard({ label, value, subValue, variant }: {
   variant?: "pnl-orange" | "pnl-purple" | "default" | "healthy";
 }) {
   let background = "rgba(255,255,255,0.02)";
-  let borderColor = "rgba(255,255,255,0.04)";
+  let borderColor = "rgba(255,255,255,0.05)"; // 5% white per Figma specs
   let valueColor = "#E6EDF3";
   let subValueColor = "#6B7280";
   
   if (variant === "pnl-orange") {
-    background = "linear-gradient(135deg, rgba(249,115,22,0.2) 0%, rgba(234,88,12,0.12) 50%, rgba(194,65,12,0.08) 100%)";
-    borderColor = "rgba(249,115,22,0.15)";
+    background = "linear-gradient(135deg, rgba(249,115,22,0.25) 0%, rgba(234,88,12,0.15) 50%, rgba(194,65,12,0.08) 100%)";
+    borderColor = "rgba(255,255,255,0.05)"; // 5% white per Figma
     valueColor = "#22C55E";
   } else if (variant === "pnl-purple") {
-    background = "linear-gradient(135deg, rgba(168,85,247,0.15) 0%, rgba(139,92,246,0.1) 50%, rgba(109,40,217,0.06) 100%)";
-    borderColor = "rgba(168,85,247,0.12)";
+    background = "linear-gradient(135deg, rgba(168,85,247,0.2) 0%, rgba(139,92,246,0.12) 50%, rgba(109,40,217,0.06) 100%)";
+    borderColor = "rgba(255,255,255,0.05)"; // 5% white per Figma
     valueColor = "#22C55E";
   } else if (variant === "healthy") {
     valueColor = "#E6EDF3";
@@ -105,9 +105,11 @@ function StatCard({ label, value, subValue, variant }: {
   return (
     <div style={{
       padding: "16px 18px",
-      borderRadius: 12,
+      borderRadius: 16, // 16px per Figma specs
       background,
       border: `1px solid ${borderColor}`,
+      minWidth: 201, // per Figma specs
+      minHeight: 101, // per Figma specs
     }}>
       <div style={{
         fontSize: 10,
