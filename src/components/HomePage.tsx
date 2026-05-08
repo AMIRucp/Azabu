@@ -1,11 +1,9 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { getIconWithJupiter } from "@/config/tokenIcons";
 import { useJupiterLogos } from "@/hooks/useJupiterLogos";
-import { useHyperliquidPortfolio } from "@/hooks/useHyperliquidPortfolio";
-import { useEvmWallet } from "@/hooks/useEvmWallet";
 import { ChevronRight } from "lucide-react";
 
 const MONO = "'JetBrains Mono', 'SF Mono', 'Fira Code', monospace";
@@ -23,13 +21,13 @@ const OPEN_POSITIONS = [
 ];
 
 const TRENDING_PERPS = [
-  { symbol: "BTC", pair: "BTC / USDT", name: "Bitcoin", tag: "CRYPTO", price: 93420, change: 2.84, vol: "1.2B", oi: "480M", leverage: "200X", color: "#F7931A" },
-  { symbol: "SOL", pair: "SOL / USDT", name: "Solana", tag: "CRYPTO", price: 138.20, change: 4.10, vol: "310M", oi: "190M", leverage: "100X", color: "#14F195" },
-  { symbol: "DOGE", pair: "DOGE / USDT", name: "Dogecoin", tag: "MEME", price: 0.1621, change: -3.40, vol: "88M", oi: "41M", leverage: "50X", color: "#C2A633" },
+  { symbol: "BTC", pair: "BTC / USDT", name: "Bitcoin", tag: "CRYPTO", tagColor: "#F97316", price: 93420, change: 2.84, vol: "1.2B", oi: "480M", leverage: "200X", color: "#F7931A" },
+  { symbol: "SOL", pair: "SOL / USDT", name: "Solana", tag: "CRYPTO", tagColor: "#22C55E", price: 138.20, change: 4.10, vol: "310M", oi: "190M", leverage: "100X", color: "#14F195" },
+  { symbol: "DOGE", pair: "DOGE / USDT", name: "Dogecoin", tag: "MEME", tagColor: "#22C55E", price: 0.1621, change: -3.40, vol: "88M", oi: "41M", leverage: "50X", color: "#C2A633" },
 ];
 
 const TODAYS_MOVERS = [
-  { symbol: "SOL", pair: "SOL-PERP", name: "Solana", leverage: "100x", price: 138.20, change: 4.10, color: "#14F195" },
+  { symbol: "SOL", pair: "SOL-PERP", name: "", leverage: "100x", price: 138.20, change: 4.10, color: "#14F195" },
   { symbol: "BTC", pair: "BTC-PERP", name: "Bitcoin", leverage: "200x", price: 93420, change: 2.84, color: "#F7931A" },
   { symbol: "LINK", pair: "LINK-PERP", name: "Chainlink", leverage: "75x", price: 13.84, change: 1.60, color: "#2A5ADA" },
   { symbol: "GOLD", pair: "GOLD-PERP", name: "Gold", leverage: "50x", price: 3314, change: 0.91, color: "#FFD700" },
@@ -37,9 +35,9 @@ const TODAYS_MOVERS = [
 ];
 
 const LEADERBOARD_PREVIEW = [
-  { rank: 1, name: "MiyamotoX", avatar: "MX", xp: "320k", color: "#F7931A" },
-  { rank: 2, name: "ShogunBull", avatar: "SB", xp: "180k", color: "#14F195" },
-  { rank: 3, name: "NinjaVault", avatar: "NV", xp: "95k", color: "#627EEA" },
+  { rank: 1, name: "MiyamotoX", avatar: "MX", xp: "320k", color: "#E879F9" },
+  { rank: 2, name: "ShogunBull", avatar: "SB", xp: "180k", color: "#22D3EE" },
+  { rank: 3, name: "NinjaVault", avatar: "NV", xp: "8B5CF6" },
 ];
 
 function MiniSparkline({ color, seed, trend }: { color: string; seed: number; trend: "up" | "down" }) {
@@ -59,7 +57,7 @@ function MiniSparkline({ color, seed, trend }: { color: string; seed: number; tr
     <svg viewBox="0 0 100 32" preserveAspectRatio="none" style={{ width: "100%", height: "100%" }}>
       <defs>
         <linearGradient id={`grad-${seed}`} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor={color} stopOpacity="0.2" />
+          <stop offset="0%" stopColor={color} stopOpacity="0.3" />
           <stop offset="100%" stopColor={color} stopOpacity="0" />
         </linearGradient>
       </defs>
@@ -86,18 +84,18 @@ function StatCard({ label, value, subValue, variant }: {
   subValue?: string;
   variant?: "pnl-orange" | "pnl-purple" | "default" | "healthy";
 }) {
-  let background = "linear-gradient(145deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01))";
-  let borderColor = "rgba(255,255,255,0.06)";
+  let background = "rgba(255,255,255,0.02)";
+  let borderColor = "rgba(255,255,255,0.04)";
   let valueColor = "#E6EDF3";
   let subValueColor = "#6B7280";
   
   if (variant === "pnl-orange") {
-    background = "linear-gradient(135deg, rgba(234,88,12,0.25) 0%, rgba(194,65,12,0.15) 50%, rgba(124,45,18,0.1) 100%)";
-    borderColor = "rgba(234,88,12,0.2)";
+    background = "linear-gradient(135deg, rgba(249,115,22,0.2) 0%, rgba(234,88,12,0.12) 50%, rgba(194,65,12,0.08) 100%)";
+    borderColor = "rgba(249,115,22,0.15)";
     valueColor = "#22C55E";
   } else if (variant === "pnl-purple") {
-    background = "linear-gradient(135deg, rgba(139,92,246,0.15) 0%, rgba(109,40,217,0.1) 50%, rgba(76,29,149,0.08) 100%)";
-    borderColor = "rgba(139,92,246,0.15)";
+    background = "linear-gradient(135deg, rgba(168,85,247,0.15) 0%, rgba(139,92,246,0.1) 50%, rgba(109,40,217,0.06) 100%)";
+    borderColor = "rgba(168,85,247,0.12)";
     valueColor = "#22C55E";
   } else if (variant === "healthy") {
     valueColor = "#E6EDF3";
@@ -106,7 +104,7 @@ function StatCard({ label, value, subValue, variant }: {
   
   return (
     <div style={{
-      padding: "16px 20px",
+      padding: "16px 18px",
       borderRadius: 12,
       background,
       border: `1px solid ${borderColor}`,
@@ -117,13 +115,13 @@ function StatCard({ label, value, subValue, variant }: {
         color: "#6B7280",
         fontFamily: SANS,
         textTransform: "uppercase",
-        letterSpacing: "0.05em",
-        marginBottom: 8,
+        letterSpacing: "0.04em",
+        marginBottom: 10,
       }}>
         {label}
       </div>
       <div style={{
-        fontSize: 22,
+        fontSize: 24,
         fontWeight: 600,
         color: valueColor,
         fontFamily: MONO,
@@ -157,7 +155,7 @@ function PositionCard({ position }: { position: typeof OPEN_POSITIONS[0] }) {
       style={{
         padding: "16px 18px",
         borderRadius: 12,
-        background: "linear-gradient(145deg, rgba(20,25,35,0.9), rgba(10,14,19,0.95))",
+        background: "rgba(255,255,255,0.02)",
         border: "1px solid rgba(255,255,255,0.04)",
         cursor: "pointer",
         transition: "border-color 0.15s",
@@ -180,7 +178,7 @@ function PositionCard({ position }: { position: typeof OPEN_POSITIONS[0] }) {
               display: "flex", 
               alignItems: "center", 
               justifyContent: "center", 
-              fontSize: 11, 
+              fontSize: 10, 
               fontWeight: 700, 
               color: "#000" 
             }}>
@@ -191,12 +189,13 @@ function PositionCard({ position }: { position: typeof OPEN_POSITIONS[0] }) {
         </div>
         <span style={{
           fontSize: 10,
-          fontWeight: 700,
+          fontWeight: 600,
           padding: "4px 10px",
           borderRadius: 6,
-          background: isLong ? "rgba(34,197,94,0.15)" : "rgba(239,68,68,0.15)",
+          background: isLong ? "rgba(34,197,94,0.12)" : "rgba(239,68,68,0.12)",
           color: isLong ? "#22C55E" : "#EF4444",
           fontFamily: MONO,
+          letterSpacing: "0.02em",
         }}>
           {position.side} {position.leverage}
         </span>
@@ -209,7 +208,7 @@ function PositionCard({ position }: { position: typeof OPEN_POSITIONS[0] }) {
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <span style={{
           fontSize: 18,
-          fontWeight: 700,
+          fontWeight: 600,
           color: isPositive ? "#22C55E" : "#EF4444",
           fontFamily: MONO,
         }}>
@@ -224,8 +223,6 @@ function PositionCard({ position }: { position: typeof OPEN_POSITIONS[0] }) {
 }
 
 function TrendingPerpCard({ perp }: { perp: typeof TRENDING_PERPS[0] }) {
-  const jupLogos = useJupiterLogos();
-  const icon = getIconWithJupiter(perp.symbol, jupLogos);
   const isPositive = perp.change >= 0;
   const chartColor = isPositive ? "#22C55E" : "#EF4444";
 
@@ -235,7 +232,7 @@ function TrendingPerpCard({ perp }: { perp: typeof TRENDING_PERPS[0] }) {
       style={{
         padding: "18px 20px",
         borderRadius: 14,
-        background: "linear-gradient(145deg, rgba(20,25,35,0.9), rgba(10,14,19,0.95))",
+        background: "rgba(255,255,255,0.02)",
         border: "1px solid rgba(255,255,255,0.04)",
         cursor: "pointer",
         transition: "border-color 0.15s, transform 0.15s",
@@ -267,17 +264,20 @@ function TrendingPerpCard({ perp }: { perp: typeof TRENDING_PERPS[0] }) {
         fontWeight: 700,
         padding: "3px 8px",
         borderRadius: 4,
-        background: perp.tag === "MEME" ? "rgba(34,197,94,0.15)" : "rgba(34,197,94,0.12)",
-        color: "#22C55E",
+        background: perp.tag === "CRYPTO" && perp.tagColor === "#F97316" 
+          ? "rgba(249,115,22,0.15)" 
+          : "rgba(34,197,94,0.12)",
+        color: perp.tagColor,
         fontFamily: MONO,
         marginBottom: 12,
+        letterSpacing: "0.02em",
       }}>
         {perp.tag}
       </span>
       
       <div style={{
         fontSize: 28,
-        fontWeight: 700,
+        fontWeight: 600,
         color: "#E6EDF3",
         fontFamily: MONO,
         letterSpacing: "-0.02em",
@@ -286,7 +286,7 @@ function TrendingPerpCard({ perp }: { perp: typeof TRENDING_PERPS[0] }) {
         ${typeof perp.price === "number" && perp.price < 1 ? perp.price.toFixed(4) : perp.price.toLocaleString()}
       </div>
       
-      <div style={{ fontSize: 9, color: "#6B7280", fontFamily: MONO, textTransform: "uppercase", marginBottom: 12 }}>
+      <div style={{ fontSize: 9, color: "#6B7280", fontFamily: MONO, textTransform: "uppercase", marginBottom: 12, letterSpacing: "0.02em" }}>
         UP TO {perp.leverage} LEVERAGE
       </div>
       
@@ -297,24 +297,24 @@ function TrendingPerpCard({ perp }: { perp: typeof TRENDING_PERPS[0] }) {
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <div style={{ display: "flex", gap: 16 }}>
           <div>
-            <div style={{ fontSize: 9, color: "#4A5060", fontFamily: MONO, marginBottom: 2 }}>VOL</div>
-            <div style={{ fontSize: 12, color: "#9BA4AE", fontFamily: MONO }}>${perp.vol}</div>
+            <div style={{ fontSize: 9, color: "#4B5563", fontFamily: MONO, marginBottom: 2 }}>VOL</div>
+            <div style={{ fontSize: 12, color: "#9CA3AF", fontFamily: MONO }}>${perp.vol}</div>
           </div>
           <div>
-            <div style={{ fontSize: 9, color: "#4A5060", fontFamily: MONO, marginBottom: 2 }}>OI</div>
-            <div style={{ fontSize: 12, color: "#9BA4AE", fontFamily: MONO }}>${perp.oi}</div>
+            <div style={{ fontSize: 9, color: "#4B5563", fontFamily: MONO, marginBottom: 2 }}>OI</div>
+            <div style={{ fontSize: 12, color: "#9CA3AF", fontFamily: MONO }}>${perp.oi}</div>
           </div>
         </div>
         <button
           onClick={(e) => { e.stopPropagation(); navigateToPage("trade", `${perp.symbol}USDT`); }}
           style={{
-            padding: "8px 16px",
+            padding: "8px 14px",
             borderRadius: 8,
             background: "rgba(255,255,255,0.06)",
             border: "none",
             color: "#E6EDF3",
             fontSize: 12,
-            fontWeight: 600,
+            fontWeight: 500,
             fontFamily: SANS,
             cursor: "pointer",
             transition: "background 0.15s",
@@ -349,7 +349,7 @@ function MoversRow({ mover, index }: { mover: typeof TODAYS_MOVERS[0]; index: nu
         transition: "background 0.15s",
         borderBottom: index < TODAYS_MOVERS.length - 1 ? "1px solid rgba(255,255,255,0.03)" : "none",
       }}
-      onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,0.03)"}
+      onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,0.02)"}
       onMouseLeave={e => e.currentTarget.style.background = "transparent"}
     >
       <div style={{ display: "flex", alignItems: "center", gap: 12, flex: 1, minWidth: 0 }}>
@@ -364,7 +364,7 @@ function MoversRow({ mover, index }: { mover: typeof TODAYS_MOVERS[0]; index: nu
             display: "flex", 
             alignItems: "center", 
             justifyContent: "center", 
-            fontSize: 12, 
+            fontSize: 11, 
             fontWeight: 700, 
             color: "#000" 
           }}>
@@ -373,7 +373,9 @@ function MoversRow({ mover, index }: { mover: typeof TODAYS_MOVERS[0]; index: nu
         )}
         <div>
           <div style={{ fontSize: 14, fontWeight: 600, color: "#E6EDF3", fontFamily: SANS }}>{mover.pair}</div>
-          <div style={{ fontSize: 11, color: "#6B7280", fontFamily: SANS }}>{mover.name} · {mover.leverage}</div>
+          <div style={{ fontSize: 11, color: "#6B7280", fontFamily: SANS }}>
+            {mover.name ? `${mover.name} · ` : ""}{mover.leverage}
+          </div>
         </div>
       </div>
       
@@ -397,13 +399,13 @@ function MoversRow({ mover, index }: { mover: typeof TODAYS_MOVERS[0]; index: nu
       <button
         onClick={(e) => { e.stopPropagation(); navigateToPage("trade", `${mover.symbol}USDT`); }}
         style={{
-          padding: "8px 16px",
+          padding: "8px 14px",
           borderRadius: 8,
           background: "rgba(255,255,255,0.06)",
           border: "none",
           color: "#E6EDF3",
           fontSize: 12,
-          fontWeight: 600,
+          fontWeight: 500,
           fontFamily: SANS,
           cursor: "pointer",
           transition: "background 0.15s",
@@ -421,9 +423,6 @@ function MoversRow({ mover, index }: { mover: typeof TODAYS_MOVERS[0]; index: nu
 }
 
 function AccountSidebar() {
-  const { evmAddress } = useEvmWallet();
-  const truncatedAddress = evmAddress ? `${evmAddress.slice(0, 6)}...${evmAddress.slice(-4)}` : "Not connected";
-  
   return (
     <div style={{
       width: 260,
@@ -436,8 +435,8 @@ function AccountSidebar() {
       <div style={{
         padding: "20px",
         borderRadius: 14,
-        background: "linear-gradient(145deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01))",
-        border: "1px solid rgba(255,255,255,0.06)",
+        background: "rgba(255,255,255,0.02)",
+        border: "1px solid rgba(255,255,255,0.04)",
       }}>
         <div style={{ fontSize: 10, fontWeight: 600, color: "#6B7280", fontFamily: MONO, letterSpacing: "0.08em", marginBottom: 16 }}>
           ACCOUNT
@@ -445,24 +444,24 @@ function AccountSidebar() {
         
         <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <span style={{ fontSize: 13, color: "#9BA4AE", fontFamily: SANS }}>Portfolio value</span>
+            <span style={{ fontSize: 13, color: "#9CA3AF", fontFamily: SANS }}>Portfolio value</span>
             <span style={{ fontSize: 13, fontWeight: 600, color: "#E6EDF3", fontFamily: MONO }}>$24,840</span>
           </div>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <span style={{ fontSize: 13, color: "#9BA4AE", fontFamily: SANS }}>Available margin</span>
+            <span style={{ fontSize: 13, color: "#9CA3AF", fontFamily: SANS }}>Available margin</span>
             <span style={{ fontSize: 13, fontWeight: 600, color: "#E6EDF3", fontFamily: MONO }}>$18,240</span>
           </div>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <span style={{ fontSize: 13, color: "#9BA4AE", fontFamily: SANS }}>{"Today's"}<br />PnL</span>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+            <span style={{ fontSize: 13, color: "#9CA3AF", fontFamily: SANS, lineHeight: 1.4 }}>{"Today's"}<br />PnL</span>
             <span style={{ fontSize: 13, fontWeight: 600, color: "#22C55E", fontFamily: MONO }}>+$384.20</span>
           </div>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <span style={{ fontSize: 13, color: "#9BA4AE", fontFamily: SANS }}>Margin ratio</span>
+            <span style={{ fontSize: 13, color: "#9CA3AF", fontFamily: SANS }}>Margin ratio</span>
             <span style={{ fontSize: 13, fontWeight: 600, color: "#F97316", fontFamily: MONO }}>26.6%</span>
           </div>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <span style={{ fontSize: 13, color: "#9BA4AE", fontFamily: SANS }}>Network</span>
-            <span style={{ fontSize: 13, fontWeight: 500, color: "#9BA4AE", fontFamily: SANS }}>Arbitrum</span>
+            <span style={{ fontSize: 13, color: "#9CA3AF", fontFamily: SANS }}>Network</span>
+            <span style={{ fontSize: 13, fontWeight: 500, color: "#9CA3AF", fontFamily: SANS }}>Arbitrum</span>
           </div>
         </div>
       </div>
@@ -471,8 +470,8 @@ function AccountSidebar() {
       <div style={{
         padding: "20px",
         borderRadius: 14,
-        background: "linear-gradient(145deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01))",
-        border: "1px solid rgba(255,255,255,0.06)",
+        background: "rgba(255,255,255,0.02)",
+        border: "1px solid rgba(255,255,255,0.04)",
       }}>
         <div style={{ fontSize: 10, fontWeight: 600, color: "#6B7280", fontFamily: MONO, letterSpacing: "0.08em", marginBottom: 16 }}>
           MY RANK
@@ -481,11 +480,11 @@ function AccountSidebar() {
         <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 8 }}>
           <div>
             <div style={{ fontSize: 10, color: "#6B7280", fontFamily: SANS, marginBottom: 4 }}>THIS WEEK</div>
-            <div style={{ fontSize: 40, fontWeight: 700, color: "#E6EDF3", fontFamily: MONO, letterSpacing: "-0.02em", lineHeight: 1 }}>#14</div>
+            <div style={{ fontSize: 44, fontWeight: 700, color: "#E6EDF3", fontFamily: MONO, letterSpacing: "-0.02em", lineHeight: 1 }}>#14</div>
           </div>
           <div style={{ textAlign: "right" }}>
             <span style={{ fontSize: 16, fontWeight: 700, color: "#F97316", fontFamily: MONO }}>3,240 XP</span>
-            <div style={{ fontSize: 10, color: "#6B7280", fontFamily: SANS }}>2,180 to Pro</div>
+            <div style={{ fontSize: 10, color: "#6B7280", fontFamily: SANS, marginTop: 2 }}>2,180 to Pro</div>
           </div>
         </div>
         
@@ -494,7 +493,7 @@ function AccountSidebar() {
         </div>
         
         {/* XP Progress Bar */}
-        <div style={{ height: 4, background: "rgba(255,255,255,0.08)", borderRadius: 2, marginBottom: 20 }}>
+        <div style={{ height: 4, background: "rgba(255,255,255,0.06)", borderRadius: 2, marginBottom: 20 }}>
           <div style={{ height: "100%", width: "60%", background: "linear-gradient(90deg, #F97316, #FB923C)", borderRadius: 2 }} />
         </div>
         
@@ -504,14 +503,14 @@ function AccountSidebar() {
             <div key={user.rank} style={{ display: "flex", alignItems: "center", gap: 10 }}>
               <span style={{ fontSize: 12, color: "#6B7280", fontFamily: MONO, width: 16 }}>{user.rank}</span>
               <div style={{
-                width: 26,
-                height: 26,
+                width: 28,
+                height: 28,
                 borderRadius: "50%",
                 background: user.color,
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                fontSize: 9,
+                fontSize: 10,
                 fontWeight: 700,
                 color: "#000",
                 fontFamily: MONO,
@@ -519,7 +518,7 @@ function AccountSidebar() {
                 {user.avatar}
               </div>
               <span style={{ flex: 1, fontSize: 13, color: "#E6EDF3", fontFamily: SANS }}>{user.name}</span>
-              <span style={{ fontSize: 12, color: "#9BA4AE", fontFamily: MONO }}>{user.xp}</span>
+              <span style={{ fontSize: 12, color: "#9CA3AF", fontFamily: MONO }}>{user.xp}</span>
             </div>
           ))}
         </div>
@@ -557,7 +556,7 @@ export default function HomePage() {
   return (
     <div style={{
       position: "relative",
-      minHeight: "100vh",
+      minHeight: "100%",
     }}>
       {/* Orange glow effect at top */}
       <div style={{
@@ -568,7 +567,7 @@ export default function HomePage() {
         width: "100%",
         maxWidth: 1000,
         height: 400,
-        background: "radial-gradient(ellipse at center top, rgba(234,88,12,0.15) 0%, rgba(234,88,12,0.05) 30%, transparent 70%)",
+        background: "radial-gradient(ellipse at center top, rgba(249,115,22,0.12) 0%, rgba(234,88,12,0.04) 40%, transparent 70%)",
         pointerEvents: "none",
       }} />
       
@@ -643,7 +642,7 @@ export default function HomePage() {
                   style={{
                     background: "none",
                     border: "none",
-                    color: "#9BA4AE",
+                    color: "#9CA3AF",
                     fontSize: 12,
                     fontFamily: SANS,
                     cursor: "pointer",
@@ -681,7 +680,7 @@ export default function HomePage() {
                   style={{
                     background: "none",
                     border: "none",
-                    color: "#9BA4AE",
+                    color: "#9CA3AF",
                     fontSize: 12,
                     fontFamily: SANS,
                     cursor: "pointer",
@@ -726,8 +725,8 @@ export default function HomePage() {
                       style={{
                         padding: "8px 14px",
                         borderRadius: 8,
-                        border: moversTab === tab.id ? "1px solid rgba(255,255,255,0.15)" : "1px solid transparent",
-                        background: moversTab === tab.id ? "rgba(255,255,255,0.08)" : "transparent",
+                        border: moversTab === tab.id ? "1px solid rgba(255,255,255,0.12)" : "1px solid transparent",
+                        background: moversTab === tab.id ? "rgba(255,255,255,0.06)" : "transparent",
                         color: moversTab === tab.id ? "#E6EDF3" : "#6B7280",
                         fontSize: 12,
                         fontWeight: 500,
@@ -747,7 +746,7 @@ export default function HomePage() {
               
               <div style={{
                 borderRadius: 14,
-                background: "linear-gradient(145deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01))",
+                background: "rgba(255,255,255,0.01)",
                 border: "1px solid rgba(255,255,255,0.04)",
                 overflow: "hidden",
               }}>
@@ -758,9 +757,9 @@ export default function HomePage() {
                   padding: "14px 16px",
                   borderBottom: "1px solid rgba(255,255,255,0.04)",
                 }}>
-                  <div style={{ flex: 1, fontSize: 11, fontWeight: 600, color: "#6B7280", fontFamily: MONO, textTransform: "uppercase" }}>Market</div>
-                  <div style={{ width: 120, fontSize: 11, fontWeight: 600, color: "#6B7280", fontFamily: MONO, textTransform: "uppercase", textAlign: "left" }}>Price</div>
-                  <div style={{ width: 80, fontSize: 11, fontWeight: 600, color: "#6B7280", fontFamily: MONO, textTransform: "uppercase", textAlign: "left" }}>24H %</div>
+                  <div style={{ flex: 1, fontSize: 10, fontWeight: 600, color: "#6B7280", fontFamily: MONO, textTransform: "uppercase", letterSpacing: "0.04em" }}>Market</div>
+                  <div style={{ width: 120, fontSize: 10, fontWeight: 600, color: "#6B7280", fontFamily: MONO, textTransform: "uppercase", textAlign: "left", letterSpacing: "0.04em" }}>Price</div>
+                  <div style={{ width: 80, fontSize: 10, fontWeight: 600, color: "#6B7280", fontFamily: MONO, textTransform: "uppercase", textAlign: "left", letterSpacing: "0.04em" }}>24H %</div>
                   <div style={{ width: 90 }} />
                 </div>
                 
