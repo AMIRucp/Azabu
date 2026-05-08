@@ -84,20 +84,26 @@ function StatCard({ label, value, subValue, variant }: {
   subValue?: string;
   variant?: "pnl-orange" | "pnl-purple" | "default" | "healthy";
 }) {
+  // Figma specs: Stroke #FFFFFF 5%, Inside, Weight 1, Corner radius 16, W 201 x H 101
+  // Fill: Linear gradient at 100%
   let background = "rgba(255,255,255,0.02)";
-  let borderColor = "rgba(255,255,255,0.05)"; // 5% white per Figma specs
+  let borderColor = "rgba(255,255,255,0.05)"; // 5% white per Figma
   let valueColor = "#E6EDF3";
   let subValueColor = "#6B7280";
   
   if (variant === "pnl-orange") {
-    background = "linear-gradient(135deg, rgba(249,115,22,0.25) 0%, rgba(234,88,12,0.15) 50%, rgba(194,65,12,0.08) 100%)";
-    borderColor = "rgba(255,255,255,0.05)"; // 5% white per Figma
+    // Linear gradient from top-left to bottom-right with orange tones
+    background = "linear-gradient(145deg, rgba(234,88,12,0.35) 0%, rgba(194,65,12,0.18) 50%, rgba(120,40,10,0.08) 100%)";
+    borderColor = "rgba(255,255,255,0.05)";
     valueColor = "#22C55E";
   } else if (variant === "pnl-purple") {
-    background = "linear-gradient(135deg, rgba(168,85,247,0.2) 0%, rgba(139,92,246,0.12) 50%, rgba(109,40,217,0.06) 100%)";
-    borderColor = "rgba(255,255,255,0.05)"; // 5% white per Figma
+    // Linear gradient with purple tones
+    background = "linear-gradient(145deg, rgba(168,85,247,0.25) 0%, rgba(139,92,246,0.14) 50%, rgba(88,28,135,0.06) 100%)";
+    borderColor = "rgba(255,255,255,0.05)";
     valueColor = "#22C55E";
   } else if (variant === "healthy") {
+    background = "rgba(255,255,255,0.02)";
+    borderColor = "rgba(255,255,255,0.05)";
     valueColor = "#E6EDF3";
     subValueColor = "#22C55E";
   }
@@ -105,11 +111,12 @@ function StatCard({ label, value, subValue, variant }: {
   return (
     <div style={{
       padding: "16px 18px",
-      borderRadius: 16, // 16px per Figma specs
+      borderRadius: 16, // Figma: Corner radius 16
       background,
-      border: `1px solid ${borderColor}`,
-      minWidth: 201, // per Figma specs
-      minHeight: 101, // per Figma specs
+      border: `1px solid ${borderColor}`, // Figma: Inside stroke, weight 1
+      minWidth: 201, // Figma: W 201
+      minHeight: 101, // Figma: H 101
+      boxSizing: "border-box",
     }}>
       <div style={{
         fontSize: 10,
