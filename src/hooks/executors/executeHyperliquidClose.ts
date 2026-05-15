@@ -1,4 +1,9 @@
 import type { TxCallbacks } from "./shared";
+import {
+  extractHyperliquidErrorMessage,
+  formatHlPerpPrice,
+  formatHlSize,
+} from "@/lib/hyperliquidOrderFormat";
 import { getWalletClient } from "@wagmi/core";
 import { wagmiConfig } from "@/config/wagmiConfig";
 import { toAccount } from "viem/accounts";
@@ -95,16 +100,14 @@ export async function executeHyperliquidClose(
     setTxMsg("Please sign close order in your wallet...");
 
     const isBuy = side === "short";
-    const aggressivePrice = isBuy
-      ? (markPrice * 1.10).toFixed(2)
-      : (markPrice * 0.90).toFixed(2);
+    const rawPrice = isBuy ? markPrice * 1.1 : markPrice * 0.9;
 
     const result = await exchange.order({
       orders: [{
         a: assetId,
         b: isBuy,
-        p: aggressivePrice,
-        s: size.toString(),
+        p: formatHlPerpPrice(rawPrice),
+        s: formatHlSize(size),
         r: true,
         t: { limit: { tif: "Ioc" } },
       }],
@@ -122,15 +125,17 @@ export async function executeHyperliquidClose(
       setTxState("error");
       throw new Error(`Close failed: ${errorMsg}`);
     }
-  } catch (e: any) {
-    if (e?.code === 4001 || e?.code === "ACTION_REJECTED") {
+  } catch (e: unknown) {
+    const code =
+      e && typeof e === "object" && "code" in e ? (e as { code?: number | string }).code : undefined;
+    if (code === 4001 || code === "ACTION_REJECTED") {
       setTxMsg("Transaction rejected");
       setTxState("error");
       throw new Error("Transaction rejected");
-    } else {
-      setTxMsg(e.message || "Failed to close position");
-      setTxState("error");
-      throw e;
     }
+    const msg = extractHyperliquidErrorMessage(e);
+    setTxMsg(msg);
+    setTxState("error");
+    throw new Error(msg);
   }
 }

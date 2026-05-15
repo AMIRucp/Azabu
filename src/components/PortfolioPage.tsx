@@ -219,12 +219,23 @@ function OverviewTab({ positions, unrealizedPnl, freeMargin, usedCollateral }: {
 export default function PortfolioPage() {
   const mobile = useIsMobile(640);
   const {
-    loading, noWallet, chainFilter, setChainFilter, fetchPortfolio,
+    loading, balancesLoading, noWallet, evmAddress, chainFilter, setChainFilter, fetchPortfolio,
     walletBalance, protocolDeposits, freeMargin, usedCollateral,
-    totalNetWorth, totalPnl, unrealizedPnl,
+    totalNetWorth, totalPnl, unrealizedPnl, hlEquity, asterEquity,
+    asterWarning, asterLoadError, asterQueriedUser, asterWalletMismatch,
     walletTokens, deposits, positions, data,
     perpPositionCount,
   } = usePortfolioData();
+
+  const walletShort =
+    evmAddress && evmAddress.length >= 10
+      ? `${evmAddress.slice(0, 6)}…${evmAddress.slice(-4)}`
+      : null;
+
+  const asterQueriedShort =
+    asterQueriedUser && asterQueriedUser.length >= 10
+      ? `${asterQueriedUser.slice(0, 6)}…${asterQueriedUser.slice(-4)}`
+      : null;
 
   const refreshPositions = usePositionStore((s) => s.refresh);
   const [walletModalOpen, setWalletModalOpen] = useState(false);
@@ -350,9 +361,19 @@ export default function PortfolioPage() {
       >
         {/* Header row */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-            <Wallet size={13} color={ORANGE} />
-            <span style={{ fontSize: mobile ? 12 : 14, fontWeight: 600, color: ORANGE, fontFamily: SANS }}>Portfolio</span>
+          <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <Wallet size={13} color={ORANGE} />
+              <span style={{ fontSize: mobile ? 12 : 14, fontWeight: 600, color: ORANGE, fontFamily: SANS }}>Portfolio</span>
+            </div>
+            {walletShort && (
+              <span
+                title={evmAddress ?? undefined}
+                style={{ fontSize: 9, color: DIM, fontFamily: MONO, letterSpacing: "0.02em" }}
+              >
+                {walletShort}
+              </span>
+            )}
           </div>
           {/* Refresh */}
           <button
@@ -370,21 +391,93 @@ export default function PortfolioPage() {
 
         {/* Big value */}
         <div style={{ marginBottom: 12 }}>
-          {loading ? (
+          {balancesLoading ? (
             <div style={{ width: 160, height: 32, background: "#1A1A1A", borderRadius: 6 }} />
           ) : (
             <div style={{ fontSize: mobile ? 28 : 48, fontWeight: 200, color: BRIGHT, fontFamily: MONO, letterSpacing: "-0.04em", lineHeight: 1 }}>
               {formatBigUsd(totalNetWorth)}
             </div>
           )}
+          {!balancesLoading && (hlEquity > 0 || asterEquity > 0) && (
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 10, marginTop: 8 }}>
+              {hlEquity > 0 && (
+                <span style={{ fontSize: 10, color: DIM, fontFamily: MONO }}>
+                  HL {formatBigUsd(hlEquity)}
+                </span>
+              )}
+              {asterEquity > 0 && (
+                <span style={{ fontSize: 10, color: DIM, fontFamily: MONO }}>
+                  Aster {formatBigUsd(asterEquity)}
+                </span>
+              )}
+            </div>
+          )}
         </div>
+
+        {asterWalletMismatch && (
+          <div
+            style={{
+              marginBottom: 10,
+              padding: "8px 10px",
+              borderRadius: 8,
+              background: "rgba(239, 68, 68, 0.1)",
+              border: "1px solid rgba(239, 68, 68, 0.35)",
+              fontSize: 10,
+              lineHeight: 1.45,
+              color: "#F87171",
+              fontFamily: SANS,
+            }}
+          >
+            Aster balance is for {asterQueriedShort}, but you are connected as {walletShort}. Disconnect and
+            connect the correct wallet, then refresh.
+          </div>
+        )}
+        {asterLoadError && !asterWalletMismatch && (
+          <div
+            style={{
+              marginBottom: 10,
+              padding: "8px 10px",
+              borderRadius: 8,
+              background: "rgba(239, 68, 68, 0.1)",
+              border: "1px solid rgba(239, 68, 68, 0.35)",
+              fontSize: 10,
+              lineHeight: 1.45,
+              color: "#F87171",
+              fontFamily: SANS,
+            }}
+          >
+            {asterLoadError}
+          </div>
+        )}
+        {asterWarning && !asterWalletMismatch && !asterLoadError && (
+          <div
+            style={{
+              marginBottom: 10,
+              padding: "8px 10px",
+              borderRadius: 8,
+              background: "rgba(234, 179, 8, 0.12)",
+              border: "1px solid rgba(234, 179, 8, 0.35)",
+              fontSize: 10,
+              lineHeight: 1.45,
+              color: "#EAB308",
+              fontFamily: SANS,
+            }}
+          >
+            {asterWarning}
+          </div>
+        )}
+        {!loading && asterQueriedShort && !asterWalletMismatch && (
+          <p style={{ margin: "0 0 10px", fontSize: 9, color: DIM, fontFamily: MONO }}>
+            Aster account: {asterQueriedShort}
+          </p>
+        )}
 
         {/* Stats row */}
         <div style={{ height: 1, background: BORDER, marginBottom: 10 }} />
         <div style={{ display: "grid", gridTemplateColumns: mobile ? "1fr 1fr" : "repeat(3, 1fr)", gap: mobile ? 8 : 12 }}>
-          <StatPill label="Wallet" value={loading ? "—" : formatBigUsd(walletBalance)} />
-          <StatPill label="Free Margin" value={loading ? "—" : formatBigUsd(freeMargin)} />
-          <StatPill label="Collateral" value={loading ? "—" : formatBigUsd(usedCollateral)} />
+          <StatPill label="Wallet" value={balancesLoading ? "—" : formatBigUsd(walletBalance)} />
+          <StatPill label="Free Margin" value={balancesLoading ? "—" : formatBigUsd(freeMargin)} />
+          <StatPill label="Collateral" value={balancesLoading ? "—" : formatBigUsd(usedCollateral)} />
         </div>
       </div>
 

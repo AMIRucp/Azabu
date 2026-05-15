@@ -16,14 +16,31 @@ type AssetDef = {
   routeLabel: string;
 };
 
+/** Native Arbitrum USDC for both venues — Aster treasury expects this bridged USDC (same permit domain as HL). */
+const ARB_NATIVE_USDC = "0xaf88d065e77c8cC2239327C5EDb3A432268e5831";
+
 const DEPOSIT_ASSETS: AssetDef[] = [
-  { symbol: "USDC",   address: "0xaf88d065e77c8cC2239327C5EDb3A432268e5831", decimals: 6, route: "hyperliquid", routeLabel: "Hyperliquid" },
-  { symbol: "USDT",   address: "0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9", decimals: 6, route: "aster",       routeLabel: "Aster" },
-  { symbol: "USDC.e", address: "0xFF970A61A04b1cA14834A43f5dE4533eBDDB5CC8", decimals: 6, route: "aster",       routeLabel: "Aster" },
+  { symbol: "USDC", address: ARB_NATIVE_USDC, decimals: 6, route: "hyperliquid", routeLabel: "Hyperliquid" },
+  { symbol: "USDC", address: ARB_NATIVE_USDC, decimals: 6, route: "aster", routeLabel: "Aster" },
 ];
 
 const QUICK_AMOUNTS = [25, 50, 100, 250, 500, 1000];
 const ACCENT = "#D4A574";
+
+/** EIP-2612 sig as 0x + 65 bytes — do not slice hex manually; r/s can be <32 hex chars without leading zeros. */
+function permitSignatureToRsV(
+  ethersMod: { Signature: { from(hex: string): { r: string; s: string; v: number } } },
+  sigHex: string,
+): { r: string; s: string; v: number } {
+  const sig = ethersMod.Signature.from(sigHex);
+  return { r: sig.r, s: sig.s, v: sig.v };
+}
+
+/** Circle USDC `permit` expects recovery id 27 or 28; some wallets return 0/1. */
+function normalizePermitV(v: number): number {
+  if (v === 0 || v === 1) return v + 27;
+  return v;
+}
 
 export function DepositModal({ open, onClose, defaultProtocol }: { open: boolean; onClose: () => void; defaultProtocol?: "aster" | "hyperliquid" }) {
   const { evmAddress, isEvmConnected, isArbitrum, switchToArbitrum, getEvmSigner } = useEvmWallet();
@@ -36,6 +53,7 @@ export function DepositModal({ open, onClose, defaultProtocol }: { open: boolean
   const [txHash, setTxHash] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
   const [walletBalance, setWalletBalance] = useState<string | null>(null);
+  const [balanceLoading, setBalanceLoading] = useState(false);
 
   useEffect(() => {
     if (open) {
@@ -44,6 +62,7 @@ export function DepositModal({ open, onClose, defaultProtocol }: { open: boolean
       setTxHash("");
       setErrorMsg("");
       setWalletBalance(null);
+      setBalanceLoading(false);
       setStep("amount");
       const idx = defaultProtocol === "aster" ? 1 : 0;
       setSelectedAsset(DEPOSIT_ASSETS[idx]);
@@ -51,26 +70,42 @@ export function DepositModal({ open, onClose, defaultProtocol }: { open: boolean
   }, [open, defaultProtocol]);
 
   useEffect(() => {
-    if (step !== "amount") return;
-    setWalletBalance(null);
+    if (!open || step !== "amount") return;
     let cancelled = false;
+
     const fetchBalance = async () => {
+      if (!evmAddress || !isEvmConnected) {
+        setWalletBalance(null);
+        setBalanceLoading(false);
+        return;
+      }
+      setBalanceLoading(true);
+      setWalletBalance(null);
       try {
-        if (evmAddress && isEvmConnected) {
-          const signer = await getEvmSigner();
-          if (!signer || cancelled) return;
-          const { ethers } = await import("ethers");
-          const token = new ethers.Contract(selectedAsset.address, ["function balanceOf(address) view returns (uint256)"], signer);
-          const raw = await token.balanceOf(evmAddress);
-          if (!cancelled) setWalletBalance(ethers.formatUnits(raw, selectedAsset.decimals));
+        const res = await fetch(
+          `/api/wallet/arbitrum-usdc?address=${encodeURIComponent(evmAddress)}`,
+          { cache: "no-store" }
+        );
+        const json = await res.json().catch(() => ({}));
+        if (!cancelled) {
+          if (res.ok && typeof json.balance === "string") {
+            setWalletBalance(json.balance);
+          } else {
+            setWalletBalance(null);
+          }
         }
       } catch {
         if (!cancelled) setWalletBalance(null);
+      } finally {
+        if (!cancelled) setBalanceLoading(false);
       }
     };
+
     fetchBalance();
-    return () => { cancelled = true; };
-  }, [selectedAsset, step, evmAddress, isEvmConnected, getEvmSigner]);
+    return () => {
+      cancelled = true;
+    };
+  }, [open, step, evmAddress, isEvmConnected]);
 
   const canDeposit = useCallback(() => {
     if (!amount || parseFloat(amount) <= 0) return false;
@@ -97,34 +132,67 @@ export function DepositModal({ open, onClose, defaultProtocol }: { open: boolean
     if (!evmAddress) throw new Error("EVM wallet not connected");
     if (!isArbitrum) {
       setStatus("Switching to Arbitrum...");
-      try { await switchToArbitrum(); } catch { throw new Error("Failed to switch to Arbitrum network. Please switch manually in your wallet."); }
-      await new Promise(r => setTimeout(r, 500));
+      try { await switchToArbitrum(); } catch { throw new Error("Please switch to Arbitrum network in your wallet."); }
+      await new Promise(r => setTimeout(r, 1000));
     }
-    setStatus("Fetching deposit details...");
-    const res = await fetch("/api/aster/deposit", {
+
+    setStatus("Preparing deposit...");
+    const response = await fetch("/api/aster/deposit", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ userAddress: evmAddress, amount: parseFloat(amount), asset: selectedAsset.symbol }),
+      body: JSON.stringify({
+        userAddress: evmAddress,
+        amount: parseFloat(amount),
+        tokenAddress: selectedAsset.address,
+      }),
     });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || "Failed to prepare deposit");
-    const signer = await getEvmSigner();
-    if (!signer) throw new Error("Could not get EVM signer");
-    const { ethers } = await import("ethers");
-    const tokenContract = new ethers.Contract(data.tokenAddress, data.erc20Abi, signer);
-    const depositAmount = ethers.parseUnits(amount, data.decimals);
-    setStatus("Checking token allowance...");
-    const currentAllowance = await tokenContract.allowance(evmAddress, data.treasuryAddress);
-    if (currentAllowance < depositAmount) {
-      setStatus("Approving token spend... Please confirm in your wallet.");
-      const approveTx = await tokenContract.approve(data.treasuryAddress, depositAmount);
-      setStatus("Waiting for approval confirmation...");
-      await approveTx.wait();
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || "Failed to prepare deposit");
     }
-    setStatus("Depositing funds... Please confirm in your wallet.");
+
+    const data = await response.json();
+
+    const signer = await getEvmSigner();
+    if (!signer) throw new Error("Could not get wallet signer");
+
+    const { ethers } = await import("ethers");
+    const owner = ethers.getAddress(evmAddress);
+    const amountWei = BigInt(data.amountWei);
+    const spender = ethers.getAddress(data.treasuryAddress);
+
+    const erc20ReadAbi = [
+      "function allowance(address owner, address spender) view returns (uint256)",
+    ];
+    const provider = signer.provider;
+    if (!provider) throw new Error("Wallet provider unavailable");
+
+    const tokenRead = new ethers.Contract(data.tokenAddress, erc20ReadAbi, provider);
+    const allowance = await tokenRead.allowance(owner, spender);
+
+    if (allowance < amountWei) {
+      setStatus("Approve USDC for Aster (one-time)...");
+      const approveAbi = ["function approve(address spender, uint256 amount) returns (bool)"];
+      const tokenApprove = new ethers.Contract(data.tokenAddress, approveAbi, signer);
+      const approveTx = await tokenApprove.approve(spender, ethers.MaxUint256, { gasLimit: 80_000n });
+      setStatus("Confirming approval...");
+      await approveTx.wait();
+    } else {
+      setStatus("Allowance ready, submitting deposit...");
+    }
+
+    setStatus("Submitting treasury deposit...");
     const treasury = new ethers.Contract(data.treasuryAddress, data.treasuryAbi, signer);
-    const depositTx = await treasury.deposit(data.tokenAddress, depositAmount, data.broker);
-    setStatus("Confirming deposit...");
+
+    const depositTx = await treasury.deposit(
+      data.tokenAddress,
+      BigInt(data.amountWei),
+      BigInt(data.brokerId),
+      { gasLimit: 200000n }
+    );
+
+    setStatus("Confirming transaction...");
     const receipt = await depositTx.wait();
     setTxHash(receipt.hash);
     setStep("success");
@@ -177,9 +245,7 @@ export function DepositModal({ open, onClose, defaultProtocol }: { open: boolean
       }
     );
 
-    const r = signature.slice(0, 66);
-    const s = "0x" + signature.slice(66, 130);
-    const v = parseInt(signature.slice(130, 132), 16);
+    const { r, s, v } = permitSignatureToRsV(ethers, signature);
 
     setStatus("Submitting deposit transaction...");
     
@@ -190,7 +256,7 @@ export function DepositModal({ open, onClose, defaultProtocol }: { open: boolean
         user: evmAddress,
         usd: BigInt(data.amountUsd),
         deadline: BigInt(data.message.deadline),
-        signature: { r: BigInt(r), s: BigInt(s), v },
+        signature: { r: BigInt(r), s: BigInt(s), v: normalizePermitV(v) },
       },
     ]);
 
@@ -285,12 +351,15 @@ export function DepositModal({ open, onClose, defaultProtocol }: { open: boolean
                 <div style={{ fontSize: 10, color: "#6B7280", fontFamily: SANS, marginBottom: 6 }}>Select token</div>
                 <div style={{ display: "flex", gap: 6 }}>
                   {DEPOSIT_ASSETS.map(asset => {
-                    const isSelected = selectedAsset.symbol === asset.symbol;
+                    const isSelected = selectedAsset.route === asset.route;
                     return (
                       <button
-                        key={asset.symbol}
-                        data-testid={`deposit-asset-${asset.symbol.replace('.', '')}`}
-                        onClick={() => { setSelectedAsset(asset); setAmount(""); setWalletBalance(null); }}
+                        key={`${asset.symbol}-${asset.route}`}
+                        data-testid={`deposit-asset-${asset.symbol.replace('.', '')}-${asset.route}`}
+                        onClick={() => {
+                          setSelectedAsset(asset);
+                          setAmount("");
+                        }}
                         style={{
                           flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 4,
                           padding: "10px 8px", borderRadius: 10,
@@ -303,7 +372,7 @@ export function DepositModal({ open, onClose, defaultProtocol }: { open: boolean
                           {asset.symbol}
                         </span>
                         <span style={{ fontSize: 8, color: "#4A5568", fontFamily: SANS }}>
-                          Arbitrum
+                          {asset.routeLabel}
                         </span>
                       </button>
                     );
@@ -315,13 +384,32 @@ export function DepositModal({ open, onClose, defaultProtocol }: { open: boolean
               <div style={{ marginBottom: 14 }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
                   <span style={{ fontSize: 10, color: "#6B7280", fontFamily: SANS }}>Amount</span>
-                  {walletBalance !== null && (
+                  {isEvmConnected && (
                     <span
                       data-testid="deposit-wallet-balance"
-                      style={{ fontSize: 10, color: "#6B7280", fontFamily: MONO, cursor: "pointer" }}
-                      onClick={() => setAmount(walletBalance)}
+                      style={{
+                        fontSize: 10,
+                        color: "#6B7280",
+                        fontFamily: MONO,
+                        cursor: walletBalance !== null && !balanceLoading ? "pointer" : "default",
+                      }}
+                      onClick={() => {
+                        if (walletBalance !== null && !balanceLoading) setAmount(walletBalance);
+                      }}
                     >
-                      Balance: <span style={{ color: "#E6EDF3", fontWeight: 600 }}>{parseFloat(walletBalance).toLocaleString(undefined, { maximumFractionDigits: 4 })}</span> <span style={{ color: ACCENT, fontSize: 8 }}>MAX</span>
+                      {balanceLoading ? (
+                        "Balance: …"
+                      ) : walletBalance !== null ? (
+                        <>
+                          Balance:{" "}
+                          <span style={{ color: "#E6EDF3", fontWeight: 600 }}>
+                            {parseFloat(walletBalance).toLocaleString(undefined, { maximumFractionDigits: 4 })}
+                          </span>{" "}
+                          <span style={{ color: ACCENT, fontSize: 8 }}>MAX</span>
+                        </>
+                      ) : (
+                        <span style={{ color: "#6B7280" }}>Balance unavailable</span>
+                      )}
                     </span>
                   )}
                 </div>
@@ -462,7 +550,7 @@ export function DepositModal({ open, onClose, defaultProtocol }: { open: boolean
                 fontSize: 10, color: "#FFA500", fontFamily: SANS, lineHeight: 1.5,
               }}>
                 {selectedAsset.route === "aster"
-                  ? "This will require two transactions: an approval and a deposit."
+                  ? "Aster uses two confirmations: approve USDC to the treasury (EIP-2612 permit tx), then the deposit call. Matches on-chain Aster flows."
                   : "Using gasless permit signature - only one transaction required. Funds arrive in 1-2 minutes."}
               </div>
 

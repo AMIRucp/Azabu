@@ -2,6 +2,7 @@
 import { useState, useCallback, useMemo } from "react";
 import { Loader2 } from "lucide-react";
 import usePositionStore from "@/stores/usePositionStore";
+import { asterWalletHeaders } from "@/lib/asterClientHeaders";
 
 const T = {
   bg: "#08080c",
@@ -93,7 +94,7 @@ export default function TerminalPositions({ chain, livePrices, asterUserId }: Te
         const asterSymbol = `${pos.market}USDT`;
         const res = await fetch("/api/aster/close-position", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", ...asterWalletHeaders(asterUserId) },
           body: JSON.stringify({
             userId: asterUserId,
             symbol: asterSymbol,
@@ -139,7 +140,7 @@ export default function TerminalPositions({ chain, livePrices, asterUserId }: Te
         const qty = (pos.size || pos.sizeBase || 0).toString();
         const res = await fetch("/api/aster/tp-sl", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", ...asterWalletHeaders(asterUserId) },
           body: JSON.stringify({
             userId: asterUserId,
             symbol: asterSymbol,

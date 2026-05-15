@@ -9,6 +9,8 @@ import { Loader2 } from "lucide-react";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { crossedThreshold } from "@/lib/tradeAnimations";
 import { executeHyperliquidClose } from "@/hooks/executors/executeHyperliquidClose";
+import { useEvmWallet } from "@/hooks/useEvmWallet";
+import { asterWalletHeaders } from "@/lib/asterClientHeaders";
 
 const SANS = "Inter, -apple-system, sans-serif";
 const MONO = "'IBM Plex Mono', 'SF Mono', monospace";
@@ -189,6 +191,7 @@ export default function PositionsTable({
   showSummary?: boolean;
 }) {
   const isMobile = useIsMobile(640);
+  const { evmAddress } = useEvmWallet();
   const positions = usePositionStore((s) => s.positions);
   const isLoading = usePositionStore((s) => s.isLoading);
   const removePosition = usePositionStore((s) => s.removePosition);
@@ -239,16 +242,16 @@ export default function PositionsTable({
 
     try {
       if (pos.protocol === "aster") {
-        const asterUserId = typeof window !== "undefined" ? localStorage.getItem("aster_user_id") : null;
-        if (!asterUserId) throw new Error("Aster account not connected");
+        if (!evmAddress) throw new Error("Connect wallet to close Aster positions");
 
+        const asterSymbol = `${pos.baseAsset}${pos.quoteAsset || "USDT"}`.replace(/-/g, "").toUpperCase();
         const closeQty = (pos.sizeBase * fraction).toString();
         const res = await fetch("/api/aster/close-position", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", ...asterWalletHeaders(evmAddress) },
           body: JSON.stringify({
-            userId: asterUserId,
-            symbol: `${pos.baseAsset}USDT`,
+            userId: evmAddress,
+            symbol: asterSymbol,
             side: pos.side === "LONG" ? "SELL" : "BUY",
             quantity: closeQty,
           }),
@@ -317,7 +320,7 @@ export default function PositionsTable({
 
     setClosingId(null);
     setConfirmClose(null);
-  }, [removePosition]);
+  }, [removePosition, evmAddress]);
 
   const handleClose = useCallback((pos: UnifiedPosition, fraction: number) => {
     if (fraction < 0) {

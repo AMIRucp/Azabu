@@ -2,6 +2,8 @@
 
 import { useState, useCallback, useEffect } from "react";
 import { useEvmWallet } from "@/hooks/useEvmWallet";
+import { parseAsterBalances } from "@/lib/asterBalanceParse";
+import { asterWalletHeaders } from "@/lib/asterClientHeaders";
 
 const MONO = "'IBM Plex Mono', 'SF Mono', monospace";
 const SANS = "Inter, -apple-system, sans-serif";
@@ -13,7 +15,7 @@ const PROTOCOLS: {
   id: Protocol; name: string; chain: string; asset: string;
   logo: string; chainLogo: string; color: string; desc: string;
 }[] = [
-  { id: "aster",       name: "Aster",       chain: "Arbitrum",    asset: "USDT", logo: "/tokens/aster-logo.webp",    chainLogo: "/tokens/arb.webp",           color: "#28A0F0", desc: "Withdraw from perps collateral" },
+  { id: "aster",       name: "Aster",       chain: "Arbitrum",    asset: "USDC", logo: "/tokens/aster-logo.webp",    chainLogo: "/tokens/arb.webp",           color: "#28A0F0", desc: "Withdraw from perps collateral" },
   { id: "hyperliquid", name: "Hyperliquid", chain: "Hyperliquid", asset: "USDC", logo: "/tokens/hyperliquid.webp",   chainLogo: "/tokens/hyperliquid.webp",   color: "#33FF88", desc: "Withdraw from perps account" },
 ];
 
@@ -44,30 +46,55 @@ export function WithdrawModal({
   const [txHash, setTxHash]     = useState("");
   const [errorMsg, setErrorMsg] = useState("");
   const [platformBalance, setPlatformBalance] = useState<number | null>(null);
+  const [asterTotalEquity, setAsterTotalEquity] = useState<number | null>(null);
+  const [balanceLoadError, setBalanceLoadError] = useState<string | null>(null);
+  const [asterWithdrawAsset, setAsterWithdrawAsset] = useState<string>("USDC");
 
   useEffect(() => {
     if (open) {
-      setAmount(""); setStatus(""); setTxHash(""); setErrorMsg(""); setPlatformBalance(null);
+      setAmount(""); setStatus(""); setTxHash(""); setErrorMsg(""); setPlatformBalance(null); setAsterTotalEquity(null);
+      setBalanceLoadError(null);
+      setAsterWithdrawAsset("USDC");
       setProtocol(defaultProtocol ?? "aster");
       setStep("amount");
     }
   }, [open, defaultProtocol]);
 
-  // Fetch platform balance when entering amount step
   useEffect(() => {
     if (step !== "amount") return;
     setPlatformBalance(null);
+    setAsterTotalEquity(null);
+    setBalanceLoadError(null);
     let cancelled = false;
+    const walletAtStart = evmAddress?.toLowerCase() ?? "";
 
     const load = async () => {
       try {
         if (protocol === "aster" && evmAddress) {
-          const res = await fetch(`/api/aster/balance?userId=${evmAddress}`);
-          if (!res.ok) return;
+          const uid = encodeURIComponent(evmAddress);
+          const res = await fetch(`/api/aster/balance?userId=${uid}`, {
+            headers: asterWalletHeaders(evmAddress),
+          });
           const data = await res.json();
-          const usdt = (data.balances || []).find((b: { asset: string; crossWalletBalance?: string; balance?: string }) => b.asset === "USDT" || b.asset === "USDC");
-          const bal = usdt ? parseFloat(usdt.crossWalletBalance || usdt.balance || "0") : 0;
-          if (!cancelled) setPlatformBalance(bal);
+          if (cancelled) return;
+          if (walletAtStart !== (evmAddress?.toLowerCase() ?? "")) return;
+          const apiUser = typeof data.user === "string" ? data.user : null;
+          if (apiUser && apiUser.toLowerCase() !== walletAtStart) return;
+
+          if (!res.ok || data.error) {
+            setPlatformBalance(null);
+            setAsterTotalEquity(null);
+            setBalanceLoadError(
+              typeof data.error === "string" ? data.error : "Could not load Aster balance"
+            );
+            return;
+          }
+          const rows = Array.isArray(data.balances) ? data.balances : [];
+          const parsed = parseAsterBalances(rows);
+          setPlatformBalance(parsed?.withdrawable ?? 0);
+          setAsterTotalEquity(parsed?.totalEquity ?? 0);
+          setBalanceLoadError(null);
+          setAsterWithdrawAsset(parsed?.primaryAsset ?? "USDC");
         } else if (protocol === "hyperliquid" && evmAddress) {
           const res = await fetch(`/api/portfolio/hyperliquid?address=${evmAddress}`);
           if (!res.ok) {
@@ -77,13 +104,22 @@ export function WithdrawModal({
           const data = await res.json();
           if (data.success && data.account) {
             const availableBalance = parseFloat(data.account.availableBalance || "0");
-            if (!cancelled) setPlatformBalance(availableBalance);
+            if (!cancelled) {
+              setPlatformBalance(availableBalance);
+              setBalanceLoadError(null);
+            }
           } else {
-            if (!cancelled) setPlatformBalance(0);
+            if (!cancelled) {
+              setPlatformBalance(0);
+              setBalanceLoadError(null);
+            }
           }
         }
       } catch {
-        if (!cancelled) setPlatformBalance(0);
+        if (!cancelled) {
+          setPlatformBalance(null);
+          setBalanceLoadError("Could not load balance");
+        }
       }
     };
 
@@ -98,6 +134,13 @@ export function WithdrawModal({
   }, [isEvmConnected, evmAddress]);
 
   const maxAmount = platformBalance ?? 0;
+
+  const asterBalanceDisplay =
+    balanceLoadError != null
+      ? "—"
+      : platformBalance === null
+        ? "Loading..."
+        : `${platformBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${selected?.asset ?? ""}`;
 
   const setPercentage = (pct: number) => {
     if (maxAmount <= 0) return;
@@ -118,21 +161,14 @@ export function WithdrawModal({
     }
   };
 
-  // ─── Aster ────────────────────────────────────────────────────────────────
   const handleAsterWithdraw = async () => {
     if (!evmAddress) throw new Error("EVM wallet not connected");
-
-    if (!isArbitrum) {
-      setStatus("Switching to Arbitrum...");
-      try { await switchToArbitrum(); } catch { throw new Error("Please switch to Arbitrum manually."); }
-      await new Promise(r => setTimeout(r, 500));
-    }
 
     setStatus("Fetching withdrawal details...");
     const res = await fetch("/api/aster/withdraw", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ userAddress: evmAddress, amount: parseFloat(amount), asset: "USDT" }),
+      body: JSON.stringify({ userAddress: evmAddress, amount: parseFloat(amount), asset: asterWithdrawAsset }),
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || "Failed to prepare withdrawal");
@@ -140,21 +176,40 @@ export function WithdrawModal({
     const signer = await getEvmSigner();
     if (!signer) throw new Error("Could not get EVM signer");
 
-    const { ethers } = await import("ethers");
-    const withdrawAmount = ethers.parseUnits(amount, data.decimals);
+    setStatus("Please sign the withdrawal request in your wallet...");
 
-    setStatus("Withdrawing from Aster... Please confirm in your wallet.");
-    const treasury = new ethers.Contract(data.treasuryAddress, data.treasuryAbi, signer);
-    const tx = await treasury.withdraw(data.tokenAddress, withdrawAmount);
+    const typedMessage = {
+      ...data.message,
+      nonce: BigInt(data.userNonce),
+    };
 
-    setStatus("Confirming withdrawal...");
-    const receipt = await tx.wait();
+    const userSignature = await signer.signTypedData(
+      data.domain,
+      data.types,
+      typedMessage
+    );
 
-    setTxHash(receipt.hash);
+    setStatus("Submitting withdrawal to Aster...");
+
+    const submitRes = await fetch("/api/aster/withdraw", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json", ...asterWalletHeaders(evmAddress) },
+      body: JSON.stringify({
+        userAddress: evmAddress,
+        amount: parseFloat(amount),
+        asset: data.asset,
+        fee: data.fee,
+        userNonce: data.userNonce,
+        userSignature,
+      }),
+    });
+    const submitData = await submitRes.json();
+    if (!submitRes.ok) throw new Error(submitData.error || "Withdrawal submission failed");
+
+    setTxHash("aster-" + (submitData.withdrawId || Date.now()));
     setStep("success");
   };
 
-  // ─── Hyperliquid ──────────────────────────────────────────────────────────
   const handleHlWithdraw = async () => {
     if (!evmAddress) throw new Error("EVM wallet not connected");
 
@@ -287,15 +342,45 @@ export function WithdrawModal({
               {/* Platform balance */}
               <div style={{
                 padding: "10px 14px", borderRadius: 8, marginBottom: 14,
-                background: "rgba(51,255,136,0.04)", border: "1px solid rgba(51,255,136,0.12)",
-                display: "flex", justifyContent: "space-between", alignItems: "center",
+                background: balanceLoadError ? "rgba(239,68,68,0.06)" : "rgba(51,255,136,0.04)",
+                border: balanceLoadError ? "1px solid rgba(239,68,68,0.2)" : "1px solid rgba(51,255,136,0.12)",
+                display: "flex", flexDirection: "column", gap: 6,
               }}>
-                <span style={{ fontSize: 10, color: "#6B7280", fontFamily: SANS }}>Available in {selected.name}</span>
-                <span data-testid="withdraw-platform-balance" style={{ fontSize: 13, fontWeight: 700, color: "#33FF88", fontFamily: MONO }}>
-                  {platformBalance === null
-                    ? "Loading..."
-                    : `${platformBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${selected.asset}`}
-                </span>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <span style={{ fontSize: 10, color: "#6B7280", fontFamily: SANS }}>
+                    {protocol === "aster" ? "Withdrawable from Aster" : `Available in ${selected.name}`}
+                  </span>
+                  <span data-testid="withdraw-platform-balance" style={{
+                    fontSize: 13, fontWeight: 700,
+                    color: balanceLoadError ? "#F87171" : "#33FF88",
+                    fontFamily: MONO,
+                  }}>
+                    {protocol === "aster" ? asterBalanceDisplay : (
+                      platformBalance === null
+                        ? "Loading..."
+                        : `${platformBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${selected.asset}`
+                    )}
+                  </span>
+                </div>
+                {protocol === "aster" &&
+                  !balanceLoadError &&
+                  asterTotalEquity != null &&
+                  platformBalance != null &&
+                  asterTotalEquity > platformBalance + 0.001 && (
+                    <p style={{ margin: 0, fontSize: 10, color: "#6B7280", fontFamily: SANS, lineHeight: 1.45 }}>
+                      Total in Aster:{" "}
+                      {asterTotalEquity.toLocaleString(undefined, {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}{" "}
+                      {asterWithdrawAsset} (rest may be in margin or open positions)
+                    </p>
+                  )}
+                {balanceLoadError && protocol === "aster" && (
+                  <p style={{ margin: 0, fontSize: 10, color: "#F87171", fontFamily: SANS, lineHeight: 1.45 }}>
+                    {balanceLoadError}
+                  </p>
+                )}
               </div>
 
               {/* Amount input */}

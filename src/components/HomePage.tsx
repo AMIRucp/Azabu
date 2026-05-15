@@ -8,7 +8,6 @@ import { SECTORS, getSector, type SectorKey } from "@/config/equitySectors";
 import { useJupiterLogos } from "@/hooks/useJupiterLogos";
 import { usePortfolioData } from "@/hooks/usePortfolioData";
 import { useEvmWallet } from "@/hooks/useEvmWallet";
-import { useHyperliquidPortfolio } from "@/hooks/useHyperliquidPortfolio";
 import { Wallet } from "lucide-react";
 import { MarketsIcon, TradeIcon, SwapIcon, PortfolioIcon, LeaderboardIcon, SettingsIcon } from "./navIcons";
 
@@ -959,15 +958,18 @@ function BalanceStat({ label, value, highlight }: { label: string; value: number
 
 export default function HomePage() {
   const isMobile = useIsMobile();
-  const { data: portfolio, loading: portfolioLoading } = usePortfolioData();
+  const {
+    totalNetWorth,
+    walletBalance,
+    freeMargin,
+    usedCollateral,
+    hlEquity,
+    asterEquity,
+    balancesLoading: portfolioLoading,
+  } = usePortfolioData();
   const { evmAddress } = useEvmWallet();
   const anyWalletConnected = !!evmAddress;
   const jupiterLogos = useJupiterLogos();
-  const { account: hlAccount } = useHyperliquidPortfolio({
-    address: evmAddress || undefined,
-    enabled: !!evmAddress,
-    pollInterval: 30000,
-  });
 
   const [activeIndex, setActiveIndex] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
@@ -1139,14 +1141,17 @@ export default function HomePage() {
                   marginBottom: 10, lineHeight: 1,
                 }}
               >
-                ${(portfolio?.totalNetWorth ?? 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                ${totalNetWorth.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </div>
               <div style={{ display: "flex", gap: isMobile ? 12 : 20, flexWrap: "wrap" }}>
-                <BalanceStat label="Wallet" value={portfolio?.walletBalance ?? 0} />
-                <BalanceStat label="Free Margin" value={portfolio?.freeMargin ?? 0} />
-                <BalanceStat label="Collateral" value={portfolio?.usedCollateral ?? 0} />
-                {hlAccount && hlAccount.accountValue > 0 && (
-                  <BalanceStat label="Hyperliquid" value={hlAccount.accountValue} highlight />
+                <BalanceStat label="Wallet" value={walletBalance} />
+                <BalanceStat label="Free Margin" value={freeMargin} />
+                <BalanceStat label="Collateral" value={usedCollateral} />
+                {hlEquity > 0 && (
+                  <BalanceStat label="Hyperliquid" value={hlEquity} highlight />
+                )}
+                {asterEquity > 0 && (
+                  <BalanceStat label="Aster" value={asterEquity} highlight />
                 )}
               </div>
             </div>

@@ -111,7 +111,6 @@ export async function GET(request: NextRequest) {
       ? parseFloat(state.marginSummary.totalRawUsd)
       : 0;
 
-    // Get spot USDC balance
     let spotUsdcBalance = 0;
     if (spotState && spotState.balances) {
       const usdcBalance = spotState.balances.find(b => b.coin === "USDC");
@@ -122,7 +121,6 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Total account value = perp account + spot USDC
     const totalAccountValue = accountValue + spotUsdcBalance;
 
     const positions = (state.assetPositions || []).map((pos) => {

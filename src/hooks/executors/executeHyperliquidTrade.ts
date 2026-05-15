@@ -1,5 +1,10 @@
 import type { TxCallbacks, HyperliquidTradeParams } from "./shared";
 import { recordTradeToDb } from "./shared";
+import {
+  extractHyperliquidErrorMessage,
+  formatHlPerpPrice,
+  formatHlSize,
+} from "@/lib/hyperliquidOrderFormat";
 import { getWalletClient } from "@wagmi/core";
 import { wagmiConfig } from "@/config/wagmiConfig";
 import { toAccount } from "viem/accounts";
@@ -54,7 +59,7 @@ export async function executeHyperliquidTrade(
   callbacks: TxCallbacks,
 ) {
   const { setTxState, setTxMsg, setTxSig } = callbacks;
-  const { market, side, sizeNum, lev, otype, evmAddress, assetId, onTradeSuccess } = params;
+  const { market, side, sizeNum, lev, otype, price, evmAddress, assetId, onTradeSuccess } = params;
 
   try {
     setTxState("signing");
@@ -87,7 +92,12 @@ export async function executeHyperliquidTrade(
     const transport = new HttpTransport();
     const exchange = new ExchangeClient({ transport, wallet: customAccount });
 
-    const asset = assetId !== undefined ? assetId : 0;
+    if (assetId === undefined) {
+      setTxMsg(`Select ${coin} from the market list so Hyperliquid asset id is set`);
+      setTxState("error");
+      return;
+    }
+
     const isMarket = otype === "market";
 
     if (sizeNum <= 0) {
@@ -96,14 +106,27 @@ export async function executeHyperliquidTrade(
       return;
     }
 
+    if (!market.price || market.price <= 0) {
+      setTxMsg("Invalid price for order");
+      setTxState("error");
+      return;
+    }
+
     setTxMsg("Please sign order in your wallet...");
+
+    const isBuy = side === "long";
+    const rawPrice = isMarket
+      ? isBuy
+        ? market.price * 1.1
+        : market.price * 0.9
+      : parseFloat(price) || market.price;
 
     const result = await exchange.order({
       orders: [{
-        a: asset,
-        b: side === "long",
-        p: market.price.toString(),
-        s: sizeNum.toString(),
+        a: assetId,
+        b: isBuy,
+        p: formatHlPerpPrice(rawPrice),
+        s: formatHlSize(sizeNum),
         r: false,
         t: isMarket ? { limit: { tif: "Ioc" } } : { limit: { tif: "Gtc" } },
       }],
@@ -132,11 +155,13 @@ export async function executeHyperliquidTrade(
       setTxMsg(`Order failed: ${JSON.stringify(result)}`);
       setTxState("error");
     }
-  } catch (e: any) {
-    if (e?.code === 4001 || e?.code === "ACTION_REJECTED") {
+  } catch (e: unknown) {
+    const code =
+      e && typeof e === "object" && "code" in e ? (e as { code?: number | string }).code : undefined;
+    if (code === 4001 || code === "ACTION_REJECTED") {
       setTxMsg("Transaction rejected");
     } else {
-      setTxMsg(e.message || "Hyperliquid trade failed");
+      setTxMsg(extractHyperliquidErrorMessage(e));
     }
     setTxState("error");
   }

@@ -70,8 +70,6 @@ const nextConfig = {
     '@drift-labs/sdk',
     '@coral-xyz/anchor',
     'rpc-websockets',
-    'pg',
-    'drizzle-orm',
   ],
   allowedDevOrigins: [],
   transpilePackages: [

@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo } from "react";
+import { getAddress } from "viem";
 import { useAccount, useConnect, useDisconnect, useSwitchChain, useReconnect } from "wagmi";
 import {
   ETHEREUM_CHAIN_ID, ARBITRUM_CHAIN_ID, POLYGON_CHAIN_ID,
@@ -260,8 +261,17 @@ export function useEvmWallet() {
     [connectors],
   );
 
+  const evmAddress = useMemo(() => {
+    if (!address) return null;
+    try {
+      return getAddress(address);
+    } catch {
+      return null;
+    }
+  }, [address]);
+
   return {
-    evmAddress: address ?? null,
+    evmAddress,
     isEvmConnected: isConnected,
     evmChainId: chainId ?? null,
     isEthereum,

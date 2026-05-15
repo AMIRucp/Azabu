@@ -7,6 +7,7 @@ import useMarketStore from "@/stores/useMarketStore";
 import { useEvmWallet } from "@/hooks/useEvmWallet";
 import { useTradeExecution } from "@/hooks/useTradeExecution";
 import { useCollateralBalance } from "@/hooks/useCollateralBalance";
+import { asterWalletHeaders } from "@/lib/asterClientHeaders";
 
 const MONO = "'JetBrains Mono', 'SF Mono', monospace";
 const SANS = "'Inter', system-ui, sans-serif";
@@ -60,7 +61,7 @@ export default function ActivePositionCard({ assetSym }: ActivePositionCardProps
         const asterSymbol = `${position.baseAsset}USDT`;
         const res = await fetch("/api/aster/close-position", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", ...asterWalletHeaders(evmAddress) },
           body: JSON.stringify({
             userId: evmAddress,
             symbol: asterSymbol,
@@ -135,7 +136,7 @@ export default function ActivePositionCard({ assetSym }: ActivePositionCardProps
       try {
         const res = await fetch("/api/aster/close-position", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", ...asterWalletHeaders(evmAddress) },
           body: JSON.stringify({
             userId: evmAddress,
             symbol: marketSymbol,

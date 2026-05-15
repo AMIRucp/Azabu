@@ -56,9 +56,23 @@ export default function TradePage({ fromMarkets = false }: TradePageProps) {
   const [mobileView, setMobileView] = useState<"chart" | "trade">("chart");
   const [dataModal, setDataModal] = useState<DataModal>(null);
 
-  const [selectedAsset, setSelectedAsset] = useState<string>("BTC");
-  const [assetProtocol, setAssetProtocol] = useState<string>("hyperliquid");
-  const [assetId, setAssetId] = useState<number | undefined>(undefined);
+  const [selectedAsset, setSelectedAsset] = useState<string>(() => {
+    if (typeof window === "undefined") return "BTC";
+    return readCanonicalMarket()?.sym ?? "BTC";
+  });
+  const [assetProtocol, setAssetProtocol] = useState<string>(() => {
+    if (typeof window === "undefined") return "hyperliquid";
+    return readCanonicalMarket()?.protocol ?? "hyperliquid";
+  });
+  const [assetId, setAssetId] = useState<number | undefined>(() => {
+    if (typeof window === "undefined") return undefined;
+    return readCanonicalMarket()?.assetId;
+  });
+
+  const forcedProtocol =
+    assetProtocol === "aster" || assetProtocol === "hyperliquid" || assetProtocol === "lighter"
+      ? assetProtocol
+      : undefined;
 
   const livePrices = useMarketStore(s => s.livePrices);
 
@@ -384,7 +398,7 @@ export default function TradePage({ fromMarkets = false }: TradePageProps) {
             </>
           ) : (
             <div style={{ padding: "12px 12px 40px", display: "flex", flexDirection: "column", gap: 8 }}>
-              <SimpleTradeCard selectedAsset={selectedAsset} assetId={assetId} onAssetChange={handleAssetChange} onVenueChange={setAssetProtocol} />
+              <SimpleTradeCard selectedAsset={selectedAsset} assetId={assetId} forcedProtocol={forcedProtocol} onAssetChange={handleAssetChange} onVenueChange={setAssetProtocol} />
               <ActivePositionCard assetSym={selectedAsset} />
             </div>
           )}
@@ -426,7 +440,7 @@ export default function TradePage({ fromMarkets = false }: TradePageProps) {
           display: "flex", flexDirection: "column", overflow: "hidden",
         }}>
           <div style={{ height: "100%", overflowY: "auto", padding: "12px 12px 40px", display: "flex", flexDirection: "column", gap: 8 }}>
-            <SimpleTradeCard selectedAsset={selectedAsset} assetId={assetId} onAssetChange={handleAssetChange} onVenueChange={setAssetProtocol} />
+            <SimpleTradeCard selectedAsset={selectedAsset} assetId={assetId} forcedProtocol={forcedProtocol} onAssetChange={handleAssetChange} onVenueChange={setAssetProtocol} />
             <ActivePositionCard assetSym={selectedAsset} />
           </div>
         </div>

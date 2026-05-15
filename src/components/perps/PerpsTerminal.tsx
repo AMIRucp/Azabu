@@ -98,6 +98,10 @@ export default function PerpsTerminal() {
           setChain("hyperliquid");
           setSelectedProtocol("hyperliquid");
           localStorage.setItem("afx_last_chain", "hyperliquid");
+        } else if (preselectProto === "aster") {
+          setChain("arbitrum");
+          setSelectedProtocol("aster");
+          localStorage.setItem("afx_last_chain", "arbitrum");
         } else if (preselect.endsWith("USDT")) {
           setChain("arbitrum");
           setSelectedProtocol("aster");
@@ -127,6 +131,10 @@ export default function PerpsTerminal() {
           setChain("hyperliquid");
           setSelectedProtocol("hyperliquid");
           localStorage.setItem("afx_last_chain", "hyperliquid");
+        } else if (proto === "aster") {
+          setChain("arbitrum");
+          setSelectedProtocol("aster");
+          localStorage.setItem("afx_last_chain", "arbitrum");
         } else if (market.endsWith("USDT")) {
           setChain("arbitrum");
           setSelectedProtocol("aster");
@@ -483,7 +491,18 @@ export default function PerpsTerminal() {
               display: "flex", flexDirection: "column",
             }}>
               <div style={{ padding: "12px 12px 40px", display: "flex", flexDirection: "column", gap: 8 }}>
-                <SimpleTradeCard selectedAsset={rawSym} />
+                <SimpleTradeCard
+                  selectedAsset={rawSym}
+                  forcedProtocol={
+                    selectedProtocol === "aster" || selectedProtocol === "hyperliquid" || selectedProtocol === "lighter"
+                      ? selectedProtocol
+                      : chain === "arbitrum"
+                        ? "aster"
+                        : chain === "lighter"
+                          ? "lighter"
+                          : "hyperliquid"
+                  }
+                />
                 <ActivePositionCard assetSym={rawSym} />
               </div>
             </div>

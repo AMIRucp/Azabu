@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { HttpTransport, InfoClient, SubscriptionClient, WebSocketTransport } from "@nktkas/hyperliquid";
 import type { UnifiedMarket } from "@/types/market";
 
+const ASTER_BASE = "https://fapi.asterdex.com";
 const CACHE_TTL = 30 * 1000;
 
 interface CacheEntry {
@@ -50,6 +51,87 @@ async function initWebSocketSubscription() {
 }
 
 initWebSocketSubscription();
+
+async function fetchAsterMarkets(): Promise<UnifiedMarket[]> {
+  const [tickersRes, premiumRes, exchangeRes] = await Promise.all([
+    fetch(`${ASTER_BASE}/fapi/v3/ticker/24hr`),
+    fetch(`${ASTER_BASE}/fapi/v3/premiumIndex`),
+    fetch(`${ASTER_BASE}/fapi/v3/exchangeInfo`),
+  ]);
+
+  if (!tickersRes.ok || !premiumRes.ok || !exchangeRes.ok) {
+    throw new Error("Failed to fetch Aster market data");
+  }
+
+  const tickers: Array<{
+    symbol: string; priceChange: string; priceChangePercent: string;
+    lastPrice: string; volume: string; quoteVolume: string;
+    highPrice: string; lowPrice: string; openPrice: string;
+  }> = await tickersRes.json();
+
+  const premiums: Array<{
+    symbol: string; markPrice: string; indexPrice: string;
+    lastFundingRate: string; nextFundingTime: number;
+  }> = await premiumRes.json();
+
+  const exchangeInfo = await exchangeRes.json();
+
+  const premiumMap = new Map(premiums.map(p => [p.symbol, p]));
+  const symbolInfoMap = new Map(
+    (exchangeInfo.symbols || []).map((s: any) => [s.symbol, s])
+  );
+
+  const markets: UnifiedMarket[] = [];
+
+  for (const ticker of tickers) {
+    const { symbol } = ticker;
+    if (!symbol.endsWith("USDT")) continue;
+
+    const symbolInfo = symbolInfoMap.get(symbol) as any;
+    if (!symbolInfo || symbolInfo.status !== "TRADING") continue;
+
+    const premium = premiumMap.get(symbol);
+    const baseAsset = symbolInfo.baseAsset as string;
+    const lastPrice = parseFloat(ticker.lastPrice);
+    const openPrice = parseFloat(ticker.openPrice);
+    const change24h = openPrice > 0
+      ? ((lastPrice - openPrice) / openPrice) * 100
+      : parseFloat(ticker.priceChangePercent);
+    const volume24h = parseFloat(ticker.quoteVolume);
+
+    if (volume24h === 0) continue;
+
+    const markPrice = premium ? parseFloat(premium.markPrice) : lastPrice;
+    const indexPrice = premium ? parseFloat(premium.indexPrice) : undefined;
+    const fundingRate = premium ? parseFloat(premium.lastFundingRate) * 100 : 0;
+
+    const reqMargin = parseFloat(symbolInfo.requiredMarginPercent || "2");
+    const maxLeverage = reqMargin > 0 ? Math.round(100 / reqMargin) : 50;
+
+    markets.push({
+      id: `aster-${symbol.toLowerCase()}`,
+      protocol: "aster" as const,
+      chain: "arbitrum" as const,
+      type: "perp" as const,
+      symbol: `${baseAsset}-USDT`,
+      baseAsset,
+      quoteAsset: "USDT",
+      price: lastPrice,
+      change24h,
+      volume24h,
+      openInterest: 0,
+      fundingRate,
+      maxLeverage,
+      markPrice,
+      indexPrice,
+      name: symbol,
+      isMarketOpen: true,
+    } as UnifiedMarket);
+  }
+
+  markets.sort((a, b) => b.volume24h - a.volume24h);
+  return markets;
+}
 
 async function fetchHyperliquidMarkets(): Promise<UnifiedMarket[]> {
   const transport = new HttpTransport();
@@ -184,7 +266,16 @@ export async function GET() {
       );
     }
 
-    const markets = await fetchHyperliquidMarkets();
+    const [hlMarkets, asterMarkets] = await Promise.allSettled([
+      fetchHyperliquidMarkets(),
+      fetchAsterMarkets(),
+    ]);
+
+    const markets = [
+      ...(hlMarkets.status === "fulfilled" ? hlMarkets.value : []),
+      ...(asterMarkets.status === "fulfilled" ? asterMarkets.value : []),
+    ];
+    markets.sort((a, b) => b.volume24h - a.volume24h);
 
     const response = {
       success: true,

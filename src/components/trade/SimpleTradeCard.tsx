@@ -11,6 +11,7 @@ import type { CelebrationTrade } from "@/components/perps/TradeSuccessOverlay";
 import type { UnifiedMarket } from "@/types/market";
 import TokenIcon from "@/components/shared/TokenIcon";
 import { DepositModal } from "@/components/DepositModal";
+import { AsterAgentApprovalModal, useAsterAgentApproval } from "@/components/AsterAgentApprovalModal";
 import type { TradeChain } from "@/config/collateralConfig";
 
 const ProtectIcon = ({ size = 14, color = "#D4A574", opacity = 1 }: { size?: number; color?: string; opacity?: number }) => (
@@ -50,8 +51,11 @@ function resolveSmartVenue(sym: string, collateral: Collateral, markets: Unified
   if (collateral === "USDT" && asterMatch) {
     return { venue: "aster", chain: "arbitrum", marketSymbol: asterMatch.symbol, maxLev: asterMatch.maxLeverage ?? 20, market: asterMatch };
   }
-  if (collateral === "USDC" && hlMatch) {
+  if (collateral === "USDC" && hlMatch && !asterMatch) {
     return { venue: "hyperliquid", chain: "hyperliquid", marketSymbol: hlMatch.symbol, maxLev: hlMatch.maxLeverage ?? 20, market: hlMatch };
+  }
+  if (asterMatch && !hlMatch) {
+    return { venue: "aster", chain: "arbitrum", marketSymbol: asterMatch.symbol, maxLev: asterMatch.maxLeverage ?? 20, market: asterMatch };
   }
   if (hlMatch) {
     return { venue: "hyperliquid", chain: "hyperliquid", marketSymbol: hlMatch.symbol, maxLev: hlMatch.maxLeverage ?? 20, market: hlMatch };
@@ -101,15 +105,17 @@ const SIZE_PRESETS = [25, 100, 250];
 interface SimpleTradeCardProps {
   selectedAsset?: string;
   assetId?: number;
+  forcedProtocol?: "aster" | "hyperliquid" | "lighter";
   onAssetChange?: (sym: string, protocol?: string, meta?: { assetId?: number; baseAsset?: string }) => void;
   onVenueChange?: (venue: string) => void;
 }
 
-export default function SimpleTradeCard({ selectedAsset, assetId, onAssetChange, onVenueChange }: SimpleTradeCardProps) {
+export default function SimpleTradeCard({ selectedAsset, assetId, forcedProtocol, onAssetChange, onVenueChange }: SimpleTradeCardProps) {
   const { markets, livePrices, startPolling } = useMarketStore();
   
   const { evmAddress, isEvmConnected, connectEvm } = useEvmWallet();
   const { txState, txMsg, execute, dismiss } = useTradeExecution();
+  const { showModal: showAgentModal, requireApproval, handleApproved, closeModal: closeAgentModal } = useAsterAgentApproval();
 
   const allAssets = useMemo(
     () => { const a = buildAssetsFromMarkets(markets); return a.length > 0 ? a : FALLBACK_ASSETS; },
@@ -144,31 +150,39 @@ export default function SimpleTradeCard({ selectedAsset, assetId, onAssetChange,
   }, [selectedAsset]);
 
   useEffect(() => {
-    localStorage.setItem("afx_perps_asset", assetSym);
-    
-    const baseAssetFromSym = assetSym.split('-')[0].toUpperCase();
-    
-    const hlMarket = markets.find(m => 
-      m.protocol === "hyperliquid" && 
-      m.type === "perp" && 
-      m.baseAsset.toUpperCase() === baseAssetFromSym
-    );
-    onAssetChange?.(assetSym, hlMarket?.protocol, { 
-      assetId: hlMarket?.assetId, 
-      baseAsset: hlMarket?.baseAsset 
-    });
-  }, [assetSym, onAssetChange, markets]);
-
-  useEffect(() => {
     const cleanup = startPolling();
     return cleanup;
   }, [startPolling]);
 
   const venueResolution = useMemo(
-    () => resolveSmartVenue(assetSym, collateral, markets),
-    [assetSym, collateral, markets]
+    () => {
+      const resolved = resolveSmartVenue(assetSym, collateral, markets);
+      if (forcedProtocol) {
+        const forcedMarket = markets.find(
+          m => m.protocol === forcedProtocol && m.baseAsset.toUpperCase() === assetSym.toUpperCase()
+        );
+        const chainMap: Record<string, TradeChain> = { aster: "arbitrum", hyperliquid: "hyperliquid", lighter: "lighter" };
+        return {
+          venue: forcedProtocol,
+          chain: chainMap[forcedProtocol] ?? "hyperliquid",
+          marketSymbol: forcedMarket?.symbol ?? (forcedProtocol === "aster" ? `${assetSym}-USDT` : assetSym),
+          maxLev: forcedMarket?.maxLeverage ?? resolved.maxLev,
+          market: forcedMarket ?? resolved.market,
+        } as VenueResolution;
+      }
+      return resolved;
+    },
+    [assetSym, collateral, markets, forcedProtocol]
   );
   const { venue, chain, marketSymbol, maxLev, market: resolvedMarket } = venueResolution;
+
+  useEffect(() => {
+    localStorage.setItem("afx_perps_asset", assetSym);
+    onAssetChange?.(assetSym, venue, {
+      assetId: resolvedMarket?.assetId,
+      baseAsset: resolvedMarket?.baseAsset,
+    });
+  }, [assetSym, venue, resolvedMarket, onAssetChange]);
 
   const effectiveAssetId = useMemo(() => {
     if (assetId !== undefined) {
@@ -205,8 +219,15 @@ export default function SimpleTradeCard({ selectedAsset, assetId, onAssetChange,
     setLeverage(prev => Math.min(prev, maxLev));
   }, [maxLev]);
 
-  const livePrice = livePrices[marketSymbol]?.price ?? 0;
-  const change24h = livePrices[marketSymbol]?.change24h ?? 0;
+  const livePrice = livePrices[marketSymbol]?.price
+    ?? livePrices[`${assetSym}-USDT`]?.price
+    ?? livePrices[`${assetSym}USDT`]?.price
+    ?? livePrices[`${assetSym}-PERP`]?.price
+    ?? 0;
+  const change24h = livePrices[marketSymbol]?.change24h
+    ?? livePrices[`${assetSym}-USDT`]?.change24h
+    ?? livePrices[`${assetSym}-PERP`]?.change24h
+    ?? 0;
 
   const assetQty = parseFloat(sizeUsd) || 0;
   const sizeNum = livePrice > 0 ? assetQty * livePrice : 0;
@@ -230,7 +251,9 @@ export default function SimpleTradeCard({ selectedAsset, assetId, onAssetChange,
   const accentColor = isLong ? "#22C55E" : "#EF4444";
 
   const needsFunding = isEvmConnected && sizeNum > 0 && deficit > 0;
-  const canTrade = isEvmConnected && sizeNum > 0 && livePrice > 0 && !needsFunding;
+  const ASTER_MIN_NOTIONAL = 5;
+  const belowMinNotional = venue === "aster" && sizeNum > 0 && sizeNum < ASTER_MIN_NOTIONAL;
+  const canTrade = isEvmConnected && sizeNum > 0 && livePrice > 0 && !needsFunding && !belowMinNotional;
 
   const filteredAssets = useMemo(() => {
     if (!pickerSearch) return allAssets;
@@ -247,6 +270,8 @@ export default function SimpleTradeCard({ selectedAsset, assetId, onAssetChange,
   const handleTrade = useCallback(async () => {
     if (!canTrade) return;
 
+    if (venue === "aster" && requireApproval()) return;
+
     const tpPrice = tpEnabled && tpPriceTarget > 0 ? tpPriceTarget.toFixed(2) : "";
     const slPrice = slEnabled && slPriceTarget > 0 ? slPriceTarget.toFixed(2) : "";
 
@@ -256,10 +281,11 @@ export default function SimpleTradeCard({ selectedAsset, assetId, onAssetChange,
       maxLev,
       marketName: marketSymbol,
       category: "crypto",
+      protocol: venue,
     };
 
     await execute({
-      chain: chain === "hyperliquid" ? "hyperliquid" : "arbitrum",
+      chain: venue === "aster" ? "arbitrum" : venue === "hyperliquid" ? "hyperliquid" : "lighter",
       market: marketInfo,
       side,
       sizeNum: assetQty,
@@ -286,7 +312,7 @@ export default function SimpleTradeCard({ selectedAsset, assetId, onAssetChange,
         setSizeUsd("");
       },
     });
-  }, [canTrade, assetSym, livePrice, maxLev, marketSymbol, chain, side, assetQty, positionSize, effectiveLeverage, collateralRequired, tpEnabled, slEnabled, tpPriceTarget, slPriceTarget, evmAddress, execute, venue, effectiveAssetId]);
+  }, [canTrade, assetSym, livePrice, maxLev, marketSymbol, chain, side, assetQty, positionSize, effectiveLeverage, collateralRequired, tpEnabled, slEnabled, tpPriceTarget, slPriceTarget, evmAddress, execute, venue, effectiveAssetId, requireApproval]);
 
   const sectionStyle: React.CSSProperties = {
     background: "#0C0D10",
@@ -980,6 +1006,12 @@ export default function SimpleTradeCard({ selectedAsset, assetId, onAssetChange,
         open={depositModalOpen}
         onClose={() => setDepositModalOpen(false)}
         defaultProtocol={venue === "aster" ? "aster" : "hyperliquid"}
+      />
+
+      <AsterAgentApprovalModal
+        open={showAgentModal}
+        onClose={closeAgentModal}
+        onApproved={handleApproved}
       />
     </div>
   );

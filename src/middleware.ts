@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 
-// Edge middleware: in-memory rate limiting as fast first-line defense.
-// DB-backed persistent rate limiting is applied at route level via server/security.ts withRateLimit().
 const RATE_LIMIT_WINDOW = 60_000;
 const API_MAX = 60;
 const TRADE_PATHS = [
   "/api/aster/open-position",
   "/api/aster/close-position",
+  "/api/aster/cancel-order",
+  "/api/aster/withdraw",
   "/api/drift/perp-order",
   "/api/swap/execute",
   "/api/send",

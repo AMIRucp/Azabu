@@ -1,5 +1,6 @@
 import { recordTrade } from "@/services/xpService";
 import { checkTradeAchievements } from "@/services/achievements";
+import { asterWalletHeaders } from "@/lib/asterClientHeaders";
 import type { TxCallbacks, AsterTradeParams } from "./shared";
 
 export interface TpSlRetryParams {
@@ -9,6 +10,47 @@ export interface TpSlRetryParams {
   quantity: number;
   takeProfit?: number;
   stopLoss?: number;
+}
+
+export type CancelAsterOrderParams = {
+  userId: string;
+  symbol: string;
+  orderId?: string | number;
+  origClientOrderId?: string;
+};
+
+export async function cancelAsterOrder(
+  params: CancelAsterOrderParams
+): Promise<{ ok: true; data?: unknown; orderId?: string | number } | { ok: false; error: string; code?: number }> {
+  const normalizedSymbol = params.symbol
+    .replace(/-/g, "")
+    .replace(/USDC$/i, "USDT")
+    .toUpperCase();
+  const body: Record<string, string | number | undefined> = {
+    userId: params.userId,
+    symbol: normalizedSymbol,
+    orderId: params.orderId,
+    origClientOrderId: params.origClientOrderId,
+  };
+  if (params.orderId === undefined) delete body.orderId;
+  if (params.origClientOrderId === undefined) delete body.origClientOrderId;
+
+  const res = await fetch("/api/aster/cancel-order", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...asterWalletHeaders(params.userId) },
+    body: JSON.stringify(body),
+  });
+  const data = (await res.json().catch(() => ({}))) as {
+    success?: boolean;
+    error?: string;
+    code?: number;
+    orderId?: string | number;
+    data?: unknown;
+  };
+  if (res.ok && data.success) {
+    return { ok: true, data: data.data, orderId: data.orderId };
+  }
+  return { ok: false, error: data.error || `Cancel failed (${res.status})`, code: data.code };
 }
 
 export async function retryAsterTpSl(
@@ -31,7 +73,7 @@ export async function retryAsterTpSl(
 
     const res = await fetch("/api/aster/tp-sl", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...asterWalletHeaders(params.userId) },
       body: JSON.stringify(body),
     });
     const data = await res.json().catch(() => ({}));
@@ -72,13 +114,17 @@ export async function executeAsterTrade(
   setTxMsg("");
 
   try {
-    const asterSymbol = marketSymbol.endsWith("USDT") ? marketSymbol : `${market.sym}USDT`;
+    const normalizedSymbol = marketSymbol
+      .replace(/-/g, "")
+      .replace(/USDC$/i, "USDT")
+      .toUpperCase();
+    const finalSymbol = normalizedSymbol.endsWith("USDT") ? normalizedSymbol : `${market.sym.toUpperCase()}USDT`;
     const res = await fetch("/api/aster/open-position", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...asterWalletHeaders(resolvedUserId) },
       body: JSON.stringify({
         userId: resolvedUserId,
-        symbol: asterSymbol,
+        symbol: finalSymbol,
         side: side === "long" ? "BUY" : "SELL",
         quantity: sizeNum,
         leverage: Math.min(lev, maxLev),
@@ -106,7 +152,7 @@ export async function executeAsterTrade(
       const closeSide = side === "long" ? "SELL" : "BUY";
       const tpSlBody: Record<string, string | number> = {
         userId: resolvedUserId,
-        symbol: asterSymbol,
+        symbol: finalSymbol,
         side: closeSide,
         quantity: sizeNum,
       };
@@ -115,7 +161,7 @@ export async function executeAsterTrade(
 
       const retryParams: TpSlRetryParams = {
         userId: resolvedUserId,
-        symbol: asterSymbol,
+        symbol: finalSymbol,
         side: closeSide,
         quantity: sizeNum,
         takeProfit: tp ? parseFloat(tp) : undefined,
@@ -125,7 +171,7 @@ export async function executeAsterTrade(
       try {
         const tpSlRes = await fetch("/api/aster/tp-sl", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", ...asterWalletHeaders(resolvedUserId) },
           body: JSON.stringify(tpSlBody),
         });
         const tpSlData = await tpSlRes.json().catch(() => ({}));
@@ -143,8 +189,7 @@ export async function executeAsterTrade(
       }
     }
 
-    setTxMsg(`${side.toUpperCase()} ${market.sym} executed on Aster`);
-    setTxState("success");
+    setTxMsg(`${side.toUpperCase()} ${market.sym} executed on Aster`);    setTxState("success");
     onTradeSuccess?.();
     return null;
   } catch (err: unknown) {
