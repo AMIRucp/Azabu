@@ -249,6 +249,8 @@ export default function PerpsTerminal() {
     marketName: sym,
     protocol: selectedUnifiedMarket?.protocol,
     category: selectedUnifiedMarket?.category,
+    assetId: selectedUnifiedMarket?.assetId,
+    szDecimals: selectedUnifiedMarket?.szDecimals,
   }), [rawSym, currentPrice, selectedMaxLev, sym, selectedUnifiedMarket]);
 
   const panelMarket = useMemo(() => ({

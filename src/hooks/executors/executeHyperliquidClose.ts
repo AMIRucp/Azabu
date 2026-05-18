@@ -3,6 +3,7 @@ import {
   extractHyperliquidErrorMessage,
   formatHlPerpPrice,
   formatHlSize,
+  roundHlSizeToDecimals,
 } from "@/lib/hyperliquidOrderFormat";
 import { toUserFacingError } from "@/lib/userFacingErrors";
 import { getWalletClient } from "@wagmi/core";
@@ -97,7 +98,9 @@ export async function executeHyperliquidClose(
     const exchange = new ExchangeClient({ transport, wallet: customAccount });
 
     if (!markPrice || markPrice <= 0) throw new Error("Invalid mark price for close order");
-    if (size <= 0) throw new Error("Invalid size for close order");
+    const sizeDecimals = szDecimals ?? 6;
+    const orderSize = roundHlSizeToDecimals(size, sizeDecimals);
+    if (orderSize <= 0) throw new Error("Invalid size for close order");
 
     setTxMsg("Please sign close order in your wallet...");
 
@@ -109,7 +112,7 @@ export async function executeHyperliquidClose(
         a: assetId,
         b: isBuy,
         p: formatHlPerpPrice(rawPrice),
-        s: formatHlSize(size, szDecimals ?? 6),
+        s: formatHlSize(orderSize, sizeDecimals),
         r: true,
         t: { limit: { tif: "Ioc" } },
       }],

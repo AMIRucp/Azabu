@@ -9,6 +9,7 @@ import { useCollateralBalance } from "@/hooks/useCollateralBalance";
 import TradeSuccessOverlay from "@/components/perps/TradeSuccessOverlay";
 import type { CelebrationTrade } from "@/components/perps/TradeSuccessOverlay";
 import type { UnifiedMarket } from "@/types/market";
+import { roundHlSizeToDecimals } from "@/lib/hyperliquidOrderFormat";
 import TokenIcon from "@/components/shared/TokenIcon";
 import { DepositModal } from "@/components/DepositModal";
 import { AsterAgentApprovalModal, useAsterAgentApproval } from "@/components/AsterAgentApprovalModal";
@@ -201,39 +202,28 @@ export default function SimpleTradeCard({ selectedAsset, assetId, forcedProtocol
     });
   }, [assetSym, venue, resolvedMarket, onAssetChange]);
 
-  const effectiveAssetId = useMemo(() => {
-    if (assetId !== undefined) {
-      return assetId;
-    }
-    
-    if (resolvedMarket?.assetId !== undefined) {
-      return resolvedMarket.assetId;
-    }
-    
-    const baseAssetFromSym = assetSym.split('-')[0].toUpperCase();
-    
-    const hlMarket = markets.find(m => 
-      m.protocol === "hyperliquid" && 
-      m.type === "perp" && 
-      m.baseAsset.toUpperCase() === baseAssetFromSym
-    );
-    
-    if (hlMarket?.assetId !== undefined) return hlMarket.assetId;
-    
-    return undefined;
-  }, [assetId, resolvedMarket, markets, assetSym]);
-
-  const effectiveSzDecimals = useMemo(() => {
-    if (resolvedMarket?.szDecimals !== undefined) return resolvedMarket.szDecimals;
+  const hlPerpMarket = useMemo(() => {
     const baseAssetFromSym = assetSym.split("-")[0].toUpperCase();
-    const hlMarket = markets.find(
+    if (resolvedMarket?.protocol === "hyperliquid" && resolvedMarket.type === "perp") {
+      return resolvedMarket;
+    }
+    return markets.find(
       (m) =>
         m.protocol === "hyperliquid" &&
         m.type === "perp" &&
         m.baseAsset.toUpperCase() === baseAssetFromSym,
     );
-    return hlMarket?.szDecimals;
-  }, [resolvedMarket, markets, assetSym]);
+  }, [assetSym, resolvedMarket, markets]);
+
+  const effectiveAssetId = useMemo(() => {
+    if (assetId !== undefined) return assetId;
+    return hlPerpMarket?.assetId;
+  }, [assetId, hlPerpMarket]);
+
+  const effectiveSzDecimals = useMemo(() => {
+    if (venue !== "hyperliquid") return undefined;
+    return hlPerpMarket?.szDecimals ?? 6;
+  }, [venue, hlPerpMarket]);
 
   useEffect(() => {
     onVenueChange?.(venue);
@@ -260,12 +250,16 @@ export default function SimpleTradeCard({ selectedAsset, assetId, forcedProtocol
 
   const baseAssetSym = assetSym.split("-")[0].toUpperCase();
   const inputAmount = parseFloat(sizeUsd) || 0;
-  const assetQty =
+  const rawAssetQty =
     amountUnit === "base"
       ? inputAmount
       : livePrice > 0
         ? inputAmount / livePrice
         : 0;
+  const assetQty =
+    venue === "hyperliquid" && effectiveSzDecimals !== undefined
+      ? roundHlSizeToDecimals(rawAssetQty, effectiveSzDecimals)
+      : rawAssetQty;
   const sizeNum = livePrice > 0 ? assetQty * livePrice : amountUnit !== "base" ? inputAmount : 0;
 
   const switchAmountUnit = useCallback(
@@ -711,7 +705,7 @@ export default function SimpleTradeCard({ selectedAsset, assetId, forcedProtocol
               <span>≈ <span style={{ color: "#6B7280" }}>${sizeNum.toFixed(2)}</span> USD</span>
             ) : (
               <span>
-                ≈ <span style={{ color: "#6B7280" }}>{assetQty.toFixed(6)}</span> {baseAssetSym}
+                ≈ <span style={{ color: "#6B7280" }}>{assetQty.toFixed(effectiveSzDecimals ?? 6)}</span> {baseAssetSym}
               </span>
             )
           ) : (

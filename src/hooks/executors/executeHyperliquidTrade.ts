@@ -4,6 +4,7 @@ import {
   extractHyperliquidErrorMessage,
   formatHlPerpPrice,
   formatHlSize,
+  roundHlSizeToDecimals,
 } from "@/lib/hyperliquidOrderFormat";
 import { toUserFacingError } from "@/lib/userFacingErrors";
 import { getWalletClient } from "@wagmi/core";
@@ -60,7 +61,8 @@ export async function executeHyperliquidTrade(
   callbacks: TxCallbacks,
 ) {
   const { setTxState, setTxMsg, setTxSig } = callbacks;
-  const { market, side, sizeNum, lev, otype, price, evmAddress, assetId, szDecimals, onTradeSuccess } = params;
+  const { market, side, sizeNum, lev, otype, price, evmAddress, assetId, szDecimals, onTradeSuccess } =
+    params;
 
   try {
     setTxState("signing");
@@ -101,8 +103,11 @@ export async function executeHyperliquidTrade(
 
     const isMarket = otype === "market";
 
-    if (sizeNum <= 0) {
-      setTxMsg("Order size must be greater than zero");
+    const sizeDecimals = szDecimals ?? 6;
+    const orderSize = roundHlSizeToDecimals(sizeNum, sizeDecimals);
+
+    if (orderSize <= 0) {
+      setTxMsg("Order size is below the minimum for this market");
       setTxState("error");
       return;
     }
@@ -122,20 +127,12 @@ export async function executeHyperliquidTrade(
         : market.price * 0.9
       : parseFloat(price) || market.price;
 
-    const hlSzDecimals = szDecimals ?? 6;
-    const orderSize = formatHlSize(sizeNum, hlSzDecimals);
-    if (parseFloat(orderSize) <= 0) {
-      setTxMsg("Order size is too small for this market");
-      setTxState("error");
-      return;
-    }
-
     const result = await exchange.order({
       orders: [{
         a: assetId,
         b: isBuy,
         p: formatHlPerpPrice(rawPrice),
-        s: orderSize,
+        s: formatHlSize(orderSize, sizeDecimals),
         r: false,
         t: isMarket ? { limit: { tif: "Ioc" } } : { limit: { tif: "Gtc" } },
       }],

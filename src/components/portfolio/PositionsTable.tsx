@@ -287,11 +287,11 @@ export default function PositionsTable({
         await executeHyperliquidClose(
           {
             assetId: market.assetId,
+            szDecimals: market.szDecimals,
             size: closeSize,
             side: pos.side.toLowerCase() as "long" | "short",
             coin: pos.baseAsset,
             markPrice: market.price,
-            szDecimals: market.szDecimals,
             onSuccess: () => {
               closeSuccess = true;
             },

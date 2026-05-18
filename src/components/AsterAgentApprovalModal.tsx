@@ -42,6 +42,7 @@ export function AsterAgentApprovalModal({ open, onClose, onApproved }: Props) {
   const [errorMsg, setErrorMsg] = useState("");
   const [phaseLabel, setPhaseLabel] = useState("");
   const [setupHint, setSetupHint] = useState("");
+  const [updateIpHint, setUpdateIpHint] = useState("");
   const statusRef = useRef<AsterSetupStatus | null>(null);
 
   useEffect(() => {
@@ -50,6 +51,7 @@ export function AsterAgentApprovalModal({ open, onClose, onApproved }: Props) {
       setErrorMsg("");
       setPhaseLabel("");
       setSetupHint("");
+      setUpdateIpHint("");
       statusRef.current = null;
     }
   }, [open]);
@@ -365,6 +367,130 @@ export function AsterAgentApprovalModal({ open, onClose, onApproved }: Props) {
     }
   }, [evmAddress, onApproved, refreshSetupHint]);
 
+  const handleUpdateAgent = useCallback(async () => {
+    if (!evmAddress) return;
+    setErrorMsg("");
+    setPhaseLabel("");
+    setUpdateIpHint("");
+
+    const ethereum = getEthereum();
+    if (!ethereum) {
+      setErrorMsg(toUserFacingError("Connect a wallet extension to continue.", "onboarding"));
+      setStep("error");
+      return;
+    }
+
+    const signTyped = async (payload: {
+      domain: object;
+      types: Record<string, Array<{ name: string; type: string }>>;
+      primaryType: string;
+      message: object;
+    }): Promise<string> => {
+      const typedData = JSON.stringify({
+        domain: payload.domain,
+        types: {
+          EIP712Domain: [
+            { name: "name", type: "string" },
+            { name: "version", type: "string" },
+            { name: "chainId", type: "uint256" },
+            { name: "verifyingContract", type: "address" },
+          ],
+          ...payload.types,
+        },
+        primaryType: payload.primaryType,
+        message: payload.message,
+      });
+      return ethereum.request({
+        method: "eth_signTypedData_v4",
+        params: [evmAddress, typedData],
+      });
+    };
+
+    const currentChainId = ethereum.chainId;
+    const BSC = "0x38";
+
+    const restoreChain = async () => {
+      if (currentChainId && currentChainId !== BSC) {
+        try {
+          await ethereum.request({ method: "wallet_switchEthereumChain", params: [{ chainId: currentChainId }] });
+        } catch {
+          /* ignore */
+        }
+      }
+    };
+
+    try {
+      setStep("switching");
+      setPhaseLabel("Switching to BNB Smart Chain");
+      try {
+        await ethereum.request({ method: "wallet_switchEthereumChain", params: [{ chainId: BSC }] });
+      } catch (switchErr: unknown) {
+        const se = switchErr as { code?: number };
+        if (se?.code === 4902) {
+          await ethereum.request({
+            method: "wallet_addEthereumChain",
+            params: [
+              {
+                chainId: BSC,
+                chainName: "BNB Smart Chain",
+                nativeCurrency: { name: "BNB", symbol: "BNB", decimals: 18 },
+                rpcUrls: ["https://bsc-dataseed.binance.org/"],
+                blockExplorerUrls: ["https://bscscan.com"],
+              },
+            ],
+          });
+        } else {
+          throw new Error("Please switch to BNB Smart Chain to update the trading agent.");
+        }
+      }
+
+      setStep("signing");
+      setPhaseLabel("Preparing agent update");
+      const prepRes = await fetch(`/api/aster/update-agent?userAddress=${encodeURIComponent(evmAddress)}`);
+      const prepData = await prepRes.json();
+      if (!prepRes.ok) throw new Error(prepData.error || "Failed to prepare agent update");
+
+      const ip = typeof prepData.ipWhitelist === "string" ? prepData.ipWhitelist : "";
+      if (ip) {
+        setUpdateIpHint(ip);
+        setPhaseLabel(`Sign to whitelist server IP ${ip}`);
+      } else {
+        setPhaseLabel("Sign to update trading agent");
+      }
+
+      const sig = await signTyped({
+        domain: prepData.domain,
+        types: prepData.types,
+        primaryType: prepData.primaryType,
+        message: prepData.message,
+      });
+
+      setStep("submitting");
+      setPhaseLabel("Submitting agent update…");
+      const postRes = await fetch("/api/aster/update-agent", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ postParams: prepData.postParams, signature: sig }),
+      });
+      const postData = await postRes.json();
+      if (!postRes.ok) {
+        const errMsg = String(postData.error || "Agent update failed");
+        if (/device time|timestamp|nonce/i.test(errMsg)) {
+          throw new Error("Clock sync error — please try again.");
+        }
+        throw new Error(errMsg);
+      }
+
+      setStep("success");
+      setPhaseLabel("");
+    } catch (e: unknown) {
+      setErrorMsg(toUserFacingError(e, "onboarding"));
+      setStep("error");
+    } finally {
+      await restoreChain();
+    }
+  }, [evmAddress]);
+
   const busy = step === "checking" || step === "switching" || step === "signing" || step === "submitting";
   if (!open) return null;
 
@@ -525,7 +651,28 @@ export function AsterAgentApprovalModal({ open, onClose, onApproved }: Props) {
                   boxShadow: "0 0 20px rgba(40,160,240,0.15)",
                 }}
               >
-                Authorize Aster Trading
+                Enable
+              </button>
+              <button
+                type="button"
+                onClick={handleUpdateAgent}
+                disabled={!evmAddress || busy}
+                style={{
+                  width: "100%",
+                  padding: "11px 0",
+                  borderRadius: 10,
+                  border: "1px solid rgba(40,160,240,0.25)",
+                  background: "rgba(40,160,240,0.06)",
+                  color: "#28A0F0",
+                  fontSize: 12,
+                  fontWeight: 600,
+                  cursor: evmAddress && !busy ? "pointer" : "not-allowed",
+                  fontFamily: SANS,
+                  marginTop: 8,
+                  opacity: evmAddress && !busy ? 1 : 0.5,
+                }}
+              >
+                Update agent
               </button>
               <button
                 onClick={onClose}
@@ -590,8 +737,12 @@ export function AsterAgentApprovalModal({ open, onClose, onApproved }: Props) {
                   <path d="M20 6 9 17l-5-5" />
                 </svg>
               </div>
-              <div style={{ fontSize: 15, fontWeight: 700, color: "#E6EDF3", fontFamily: SANS, marginBottom: 6 }}>Aster Trading Enabled</div>
-              <div style={{ fontSize: 11, color: "#6B7280", fontFamily: SANS }}>Agent and builder are set. You can place orders from this app.</div>
+              <div style={{ fontSize: 15, fontWeight: 700, color: "#E6EDF3", fontFamily: SANS, marginBottom: 6 }}>{updateIpHint ? "Agent Updated" : "Aster Trading Enabled"}</div>
+              <div style={{ fontSize: 11, color: "#6B7280", fontFamily: SANS }}>
+                {updateIpHint
+                  ? `Server IP whitelisted: ${updateIpHint}`
+                  : "Agent and builder are set. You can place orders from this app."}
+              </div>
             </div>
           )}
 

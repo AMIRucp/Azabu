@@ -12,6 +12,7 @@ import CollateralDrawer from "./CollateralDrawer";
 import { DepositModal } from "@/components/DepositModal";
 import { onTradeConfirmed } from "@/lib/tradeAnimations";
 import TradeSuccessOverlay, { type CelebrationTrade } from "./TradeSuccessOverlay";
+import { roundHlSizeToDecimals } from "@/lib/hyperliquidOrderFormat";
 
 type DepositProtocol = "aster" | "hyperliquid";
 
@@ -34,7 +35,16 @@ const T = {
 
 const mono = "'JetBrains Mono', 'SF Mono', 'Fira Code', monospace";
 
-interface MarketData { sym: string; price: number; maxLev: number; marketName?: string; category?: string; }
+interface MarketData {
+  sym: string;
+  price: number;
+  maxLev: number;
+  marketName?: string;
+  category?: string;
+  assetId?: number;
+  szDecimals?: number;
+  protocol?: string;
+}
 interface TerminalTradePanelProps {
   market: MarketData;
   chain: "arbitrum" | "hyperliquid" | "lighter";
@@ -113,13 +123,17 @@ export default function TerminalTradePanel({ market, chain, asterUserId, pairId,
     if (lev > maxLev) setLev(maxLev);
   }, [maxLev]);
 
-  const rawSize = parseFloat(size) || 0;
-  const sizeNum = sizeDenom === "usd" && market.price > 0 ? rawSize / market.price : rawSize;
-  const posValue = sizeNum * market.price;
-  const collateral = lev > 0 ? posValue / lev : 0;
-
   const isAster = market.marketName?.endsWith("USDT") || market.sym?.endsWith("USDT");
   const isHL = chain === "hyperliquid";
+
+  const rawSize = parseFloat(size) || 0;
+  const rawSizeNum = sizeDenom === "usd" && market.price > 0 ? rawSize / market.price : rawSize;
+  const sizeNum =
+    isHL && market.szDecimals !== undefined
+      ? roundHlSizeToDecimals(rawSizeNum, market.szDecimals)
+      : rawSizeNum;
+  const posValue = sizeNum * market.price;
+  const collateral = lev > 0 ? posValue / lev : 0;
   const isLighter = chain === "lighter" || (market as any).protocol === "lighter";
   const feeKey = isHL ? "hyperliquid" : isLighter ? "lighter" : isAster ? "aster" : chain;
   const feeRate = PROTOCOL_FEES[feeKey] ?? 0.0005;
@@ -166,8 +180,24 @@ export default function TerminalTradePanel({ market, chain, asterUserId, pairId,
     const currentSym = market.sym;
     const currentEntryPrice = market.price;
     execute({
-      chain, market, side, sizeNum, posValue, lev, otype, price, maxLev,
-      marketSymbol, collateral, tp, sl, hiddenOrder, asterUserId, pairId,
+      chain,
+      market,
+      side,
+      sizeNum,
+      posValue,
+      lev,
+      otype,
+      price,
+      maxLev,
+      marketSymbol,
+      collateral,
+      tp,
+      sl,
+      hiddenOrder,
+      asterUserId,
+      pairId,
+      assetId: isHL ? market.assetId : undefined,
+      szDecimals: isHL ? market.szDecimals : undefined,
       onTradeSuccess: () => {
         setSize("");
         onTradeSuccess?.();

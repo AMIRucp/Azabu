@@ -11,14 +11,14 @@ interface CacheEntry {
 }
 
 const g = globalThis as typeof globalThis & {
-  _unifiedMarketsCache_v2?: CacheEntry;
+  _unifiedMarketsCache_v3?: CacheEntry;
   _wsSubscription?: SubscriptionClient;
   _livePrices?: Map<string, { price: number; timestamp: number }>;
   _wsInitialized?: boolean;
 };
 
-if (!g._unifiedMarketsCache_v2) {
-  g._unifiedMarketsCache_v2 = { data: null, ts: 0 };
+if (!g._unifiedMarketsCache_v3) {
+  g._unifiedMarketsCache_v3 = { data: null, ts: 0 };
 }
 
 if (!g._livePrices) {
@@ -217,6 +217,7 @@ async function fetchHyperliquidMarkets(): Promise<UnifiedMarket[]> {
         name: pairSymbol,
         isMarketOpen: true,
         assetId: pair.index,
+        szDecimals: token0?.szDecimals,
       } as UnifiedMarket;
     })
     .filter((p): p is UnifiedMarket => p !== null);
@@ -229,7 +230,7 @@ async function fetchHyperliquidMarkets(): Promise<UnifiedMarket[]> {
 
 export async function GET() {
   try {
-    const cached = g._unifiedMarketsCache_v2;
+    const cached = g._unifiedMarketsCache_v3;
     const now = Date.now();
     
     if (cached && cached.data && now - cached.ts < CACHE_TTL) {
@@ -287,7 +288,7 @@ export async function GET() {
       wsConnected: !!g._wsSubscription,
     };
 
-    g._unifiedMarketsCache_v2 = { data: response, ts: Date.now() };
+    g._unifiedMarketsCache_v3 = { data: response, ts: Date.now() };
 
     return NextResponse.json(response, {
       headers: {
@@ -296,7 +297,7 @@ export async function GET() {
       },
     });
   } catch (error) {
-    const cached = g._unifiedMarketsCache_v2;
+    const cached = g._unifiedMarketsCache_v3;
     if (cached && cached.data) {
       return NextResponse.json(cached.data, {
         headers: {

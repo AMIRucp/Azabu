@@ -23,5 +23,6 @@ export interface UnifiedMarket {
   overnightMaxLeverage?: number | null;
   closingFee?: number;
   assetId?: number;
+  /** Hyperliquid size decimals for order `s` field. */
   szDecimals?: number;
 }
