@@ -24,7 +24,6 @@ interface LeaderEntry {
   achievements: string[];
 }
 
-// Demo/mock data so the page looks great before real entries accumulate
 const DEMO_ENTRIES: LeaderEntry[] = [
   { rank: 1, walletAddress: "0xA1B2...C3D4", callsign: "MiyamotoX", xpTotal: 320000, level: 52, tierBadge: "tier-elite", rankName: "Elite", volumeTotal: 5800000, weeklyXp: 4200, achievements: ["first-blood","century","thousand-cuts","inferno","diamond-hands","og","top-10"] },
   { rank: 2, walletAddress: "0xF5E6...B7A8", callsign: "ShogunBull", xpTotal: 180000, level: 43, tierBadge: "tier-pro", rankName: "Pro", volumeTotal: 2200000, weeklyXp: 2800, achievements: ["first-blood","century","burning-spirit","explorer","whale","on-fire"] },
@@ -35,7 +34,6 @@ const DEMO_ENTRIES: LeaderEntry[] = [
   { rank: 7, walletAddress: "0xT0U1...V2W3", callsign: null, xpTotal: 3800, level: 9, tierBadge: "tier-challenger", rankName: "Challenger", volumeTotal: 42000, weeklyXp: 210, achievements: ["first-blood","degen"] },
   { rank: 8, walletAddress: "0xX4Y5...Z6A7", callsign: "KatanaKing", xpTotal: 1200, level: 5, tierBadge: "tier-novice", rankName: "Novice", volumeTotal: 18000, weeklyXp: 95, achievements: ["first-blood","night-owl"] },
 ];
-
 
 const RANK_KANJI: Record<number, string> = {
   1: "一",
@@ -60,9 +58,8 @@ function fmtVol(n: number) {
   return `$${n.toFixed(0)}`;
 }
 
-// Achievement badges to show in grid (all 22 achievement badges only, no tier badges)
 const ACHIEVEMENT_BADGES = BADGE_DEFINITIONS.filter((b) => b.category !== "tier");
-// Tier badges
+
 const TIER_BADGES = BADGE_DEFINITIONS.filter((b) => b.category === "tier");
 
 interface Props {
@@ -127,7 +124,7 @@ export default function LeaderboardPage({ onClose, isMobile: isMobileProp }: Pro
 
   return (
     <div style={containerStyle} data-testid="leaderboard-page">
-      {/* Header */}
+      
       <div style={{
         flexShrink: 0,
         padding: isMobile ? "16px 16px 0" : "20px 24px 0",
@@ -166,7 +163,7 @@ export default function LeaderboardPage({ onClose, isMobile: isMobileProp }: Pro
           </div>
         </div>
 
-        {/* Section tabs */}
+        
         <div style={{ display: "flex", gap: 0, marginBottom: -1 }}>
           {(["board", "profile"] as const).map((s) => (
             <button
@@ -189,7 +186,7 @@ export default function LeaderboardPage({ onClose, isMobile: isMobileProp }: Pro
         </div>
       </div>
 
-      {/* Content */}
+      
       <div style={{ flex: 1, overflowY: "auto" }}>
         {activeSection === "board" ? (
           <BoardSection
@@ -228,7 +225,7 @@ function BoardSection({
 
   return (
     <div>
-      {/* Stat tabs */}
+      
       <div style={{
         display: "flex", gap: 8, padding: isMobile ? "12px 16px" : "12px 24px",
         borderBottom: "1px solid rgba(255,255,255,0.04)",
@@ -261,7 +258,7 @@ function BoardSection({
         )}
       </div>
 
-      {/* Column header */}
+      
       {!isMobile && (
         <div style={{
           display: "grid",
@@ -292,7 +289,7 @@ function BoardSection({
         </div>
       )}
 
-      {/* Rows */}
+      
       {loading ? (
         <div style={{ padding: "40px 24px", textAlign: "center", color: "rgba(255,255,255,0.2)", fontFamily: mono, fontSize: 11 }}>
           Loading rankings...
@@ -318,7 +315,7 @@ function BoardSection({
                   boxShadow: isMe ? "inset 0 0 0 1px rgba(212,165,116,0.12)" : undefined,
                 }}
               >
-                {/* Rank */}
+                
                 <div style={{
                   width: 22, flexShrink: 0, textAlign: "center",
                   fontSize: isTop3 ? 14 : 11, fontWeight: 600, fontFamily: isTop3 ? "serif" : mono,
@@ -327,12 +324,12 @@ function BoardSection({
                   {isTop3 ? RANK_KANJI[entry.rank] : entry.rank}
                 </div>
 
-                {/* Tier badge — fixed width */}
+                
                 <div style={{ flexShrink: 0, width: 28, display: "flex", alignItems: "center", justifyContent: "center" }}>
                   <Badge id={entry.tierBadge} earned size={24} showTooltip={false} />
                 </div>
 
-                {/* Trader info — grows, clips */}
+                
                 <div style={{ flex: 1, minWidth: 0, overflow: "hidden" }}>
                   <div style={{
                     fontSize: 13, fontWeight: 700,
@@ -355,7 +352,7 @@ function BoardSection({
                   </div>
                 </div>
 
-                {/* Stat — fixed right column */}
+                
                 <div style={{
                   flexShrink: 0, minWidth: 52, textAlign: "right",
                   fontSize: 12, fontWeight: 700, fontFamily: mono, color: "#F0F2F5",
@@ -438,7 +435,7 @@ function ProfileSection({
 
   return (
     <div style={{ padding: `${pad}px` }}>
-      {/* User stat card */}
+      
       <div style={{
         padding: "16px", borderRadius: 12,
         background: "rgba(255,255,255,0.03)",
@@ -488,7 +485,7 @@ function ProfileSection({
         </div>
       </div>
 
-      {/* Tier progression */}
+      
       <div style={{ marginBottom: 24 }}>
         <div style={{
           fontSize: 10, fontFamily: mono, color: "rgba(255,255,255,0.3)",
@@ -515,7 +512,7 @@ function ProfileSection({
         </div>
       </div>
 
-      {/* Achievement badge grid */}
+      
       <div>
         <div style={{
           fontSize: 10, fontFamily: mono, color: "rgba(255,255,255,0.3)",

@@ -415,7 +415,7 @@ export default function TerminalTradePanel({ market, chain, asterUserId, pairId,
                 display: "flex", alignItems: "center", justifyContent: "center", gap: 7,
               }}>
                 {isActive && <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 1, background: tint, opacity: 0.7 }} />}
-                {/* Small SVG chart watermark */}
+                
                 <svg width="50" height="28" viewBox="0 0 50 28" fill="none" aria-hidden="true"
                   style={{ position: "absolute", right: 0, top: 0, opacity: isActive ? 0.14 : 0.05, transition: "opacity 0.2s", pointerEvents: "none" }}>
                   {isL
@@ -790,7 +790,6 @@ export default function TerminalTradePanel({ market, chain, asterUserId, pairId,
           </div>
         )}
       </div>
-
 
       <div data-testid="trade-tpsl-toggle" onClick={() => setShowTpSl(!showTpSl)} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: showTpSl ? 6 : 10, cursor: "pointer", padding: "6px 0" }}>
         <span style={{ fontSize: 10, color: T.text3, fontFamily: mono, fontWeight: 400 }}>TP / SL</span>

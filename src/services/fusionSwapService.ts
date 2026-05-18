@@ -62,7 +62,6 @@ class FusionSwapService {
     if (!this.provider) this.provider = new JsonRpcProvider(NODE_URL);
   }
 
-  // STEP 1: Get Quote
   async getQuote(params: {
     fromTokenAddress: string;
     toTokenAddress: string;
@@ -117,7 +116,6 @@ class FusionSwapService {
     }
   }
 
-  // STEP 2: Create Order
   async createOrder(params: {
     fromTokenAddress: string;
     toTokenAddress: string;

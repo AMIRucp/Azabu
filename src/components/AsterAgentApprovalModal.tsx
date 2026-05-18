@@ -1,35 +1,25 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useEvmWallet } from "@/hooks/useEvmWallet";
+import {
+  isAsterApprovedInStorage,
+  markAsterApprovedInStorage,
+  unmarkAsterApprovedInStorage,
+} from "@/lib/asterApprovalStorage";
+import { fetchAsterSetupStatus } from "@/lib/asterSetupStatusClient";
+import {
+  ensureAsterApiWallet,
+  fetchAsterAgentAddress,
+  pollAsterSetupStatusClient,
+} from "@/lib/asterOnboardingClient";
+import type { AsterSetupStatus } from "@/lib/asterSetupStatus";
+import { toUserFacingError } from "@/lib/userFacingErrors";
 
 const SANS = "Inter, -apple-system, sans-serif";
 const MONO = "'IBM Plex Mono', 'SF Mono', monospace";
-const STORAGE_KEY = "aster_pro_two_step_v2";
 
-type Step = "prompt" | "switching" | "signing" | "submitting" | "success" | "error";
-
-function isApproved(address: string): boolean {
-  try {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (!stored) return false;
-    const list: string[] = JSON.parse(stored);
-    return list.includes(address.toLowerCase());
-  } catch {
-    return false;
-  }
-}
-
-function markApproved(address: string) {
-  try {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    const list: string[] = stored ? JSON.parse(stored) : [];
-    if (!list.includes(address.toLowerCase())) {
-      list.push(address.toLowerCase());
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
-    }
-  } catch {}
-}
+type Step = "prompt" | "checking" | "switching" | "signing" | "submitting" | "success" | "error";
 
 interface Props {
   open: boolean;
@@ -37,33 +27,78 @@ interface Props {
   onApproved: () => void;
 }
 
+type EthProvider = {
+  request: (args: { method: string; params: unknown[] }) => Promise<string>;
+  chainId?: string;
+};
+
+function getEthereum(): EthProvider | undefined {
+  return (window as unknown as { ethereum?: EthProvider }).ethereum;
+}
+
 export function AsterAgentApprovalModal({ open, onClose, onApproved }: Props) {
   const { evmAddress } = useEvmWallet();
   const [step, setStep] = useState<Step>("prompt");
   const [errorMsg, setErrorMsg] = useState("");
   const [phaseLabel, setPhaseLabel] = useState("");
+  const [setupHint, setSetupHint] = useState("");
+  const statusRef = useRef<AsterSetupStatus | null>(null);
 
   useEffect(() => {
     if (open) {
       setStep("prompt");
       setErrorMsg("");
       setPhaseLabel("");
+      setSetupHint("");
+      statusRef.current = null;
     }
   }, [open]);
+
+  const refreshSetupHint = useCallback(async (address: string) => {
+    const status = await fetchAsterSetupStatus(address);
+    statusRef.current = status;
+    if (!status) {
+      setSetupHint("");
+      return status;
+    }
+
+    const short = `${status.derivedAgentAddress.slice(0, 8)}…${status.derivedAgentAddress.slice(-6)}`;
+
+    if (status.needsCreateApiWallet) {
+      setSetupHint(
+        "Step 1: Create your futures account (sign the message on BNB Chain / chain 56). Step 2: Approve the trading agent and builder on BSC (no gas)."
+      );
+    } else if (status.needsWeb3Registration || !status.hasAsterAccount) {
+      setSetupHint(
+        "Step 1: Sign the Astherus message to open your futures account (no deposit required for registration). Step 2: Approve agent Azabu on BNB Chain."
+      );
+    } else if (status.ready) {
+      setSetupHint("Trading agent and builder are already approved for this wallet.");
+    } else if (!status.agentApproved) {
+      setSetupHint(
+        `Azabu will register a dedicated trading agent (${short}) for this wallet, then ask you to approve it on BNB Chain (no gas).`
+      );
+    } else if (!status.builderApproved) {
+      setSetupHint("Your trading agent is set up. One more signature is needed to approve the platform builder.");
+    } else {
+      setSetupHint("");
+    }
+    return status;
+  }, []);
+
+  useEffect(() => {
+    if (!open || !evmAddress) return;
+    void refreshSetupHint(evmAddress);
+  }, [open, evmAddress, refreshSetupHint]);
 
   const handleApprove = useCallback(async () => {
     if (!evmAddress) return;
     setErrorMsg("");
     setPhaseLabel("");
 
-    const ethereum = (window as unknown as {
-      ethereum?: {
-        request: (args: { method: string; params: unknown[] }) => Promise<string>;
-        chainId?: string;
-      };
-    }).ethereum;
+    const ethereum = getEthereum();
     if (!ethereum) {
-      setErrorMsg("MetaMask not found");
+      setErrorMsg(toUserFacingError("Connect a wallet extension to continue.", "onboarding"));
       setStep("error");
       return;
     }
@@ -102,12 +137,169 @@ export function AsterAgentApprovalModal({ open, onClose, onApproved }: Props) {
         try {
           await ethereum.request({ method: "wallet_switchEthereumChain", params: [{ chainId: currentChainId }] });
         } catch {
-          /* best effort */
+          
         }
       }
     };
 
+    const submitAgentApproval = async (): Promise<boolean> => {
+      const runOnce = async () => {
+        setStep("signing");
+        setPhaseLabel("Approving trading agent");
+        const agentRes = await fetch(`/api/aster/approve-agent?userAddress=${encodeURIComponent(evmAddress)}`);
+        const agentData = await agentRes.json();
+        if (!agentRes.ok) throw new Error(agentData.error || "Failed to prepare agent approval");
+
+        const agentSig = await signTyped({
+          domain: agentData.domain,
+          types: agentData.types,
+          primaryType: agentData.primaryType,
+          message: agentData.message,
+        });
+
+        setStep("submitting");
+        setPhaseLabel("Submitting agent approval…");
+        const agentPost = await fetch("/api/aster/approve-agent", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ postParams: agentData.postParams, signature: agentSig }),
+        });
+        const agentPostData = await agentPost.json();
+        if (!agentPost.ok) {
+          const errMsg = String(agentPostData.error || "Agent approval failed");
+          const already = agentPostData.alreadyExists === true || /already exists/i.test(errMsg);
+          if (!already) {
+            if (/device time|timestamp|nonce/i.test(errMsg)) {
+              throw new Error("Clock sync error — please try again.");
+            }
+            if (/no aster user found|account does not exist|open a futures account/i.test(errMsg)) {
+              throw new Error("ASTER_ACCOUNT_MISSING");
+            }
+            throw new Error(errMsg);
+          }
+        }
+      };
+
+      try {
+        await runOnce();
+      } catch (e) {
+        if (e instanceof Error && e.message === "ASTER_ACCOUNT_MISSING") {
+          setStep("signing");
+          setPhaseLabel("Registering Aster futures account…");
+          await ensureAsterApiWallet(evmAddress, ethereum, { forceWeb3: true });
+          await runOnce();
+        } else {
+          throw e;
+        }
+      }
+      return true;
+    };
+
+    const submitBuilderApproval = async (): Promise<boolean> => {
+      setStep("signing");
+      setPhaseLabel("Finishing setup");
+      const buildRes = await fetch(`/api/aster/approve-builder?userAddress=${encodeURIComponent(evmAddress)}`);
+      const buildData = await buildRes.json();
+      if (!buildRes.ok) throw new Error(buildData.error || "Failed to prepare builder approval");
+
+      const buildSig = await signTyped({
+        domain: buildData.domain,
+        types: buildData.types,
+        primaryType: buildData.primaryType,
+        message: buildData.message,
+      });
+
+      setStep("submitting");
+      setPhaseLabel("Submitting builder approval…");
+      const buildPost = await fetch("/api/aster/approve-builder", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ postParams: buildData.postParams, signature: buildSig }),
+      });
+      const buildPostData = await buildPost.json();
+
+      if (!buildPost.ok) {
+        const errMsg = buildPostData.error || "Builder approval failed";
+        if (/already exists/i.test(errMsg) || buildPostData.alreadyExists) return true;
+        if (/device time|timestamp|nonce/i.test(errMsg)) {
+          throw new Error("Clock sync error — please try again.");
+        }
+        if (/no aster user found|account does not exist|open a futures account/i.test(errMsg)) {
+          throw new Error(
+            "Futures account not registered for this wallet. Run setup again and complete the Astherus sign step first."
+          );
+        }
+        throw new Error(errMsg);
+      }
+      return true;
+    };
+
     try {
+      setStep("checking");
+      setPhaseLabel("Checking Aster setup");
+      let status = statusRef.current ?? (await refreshSetupHint(evmAddress));
+      if (!status) {
+        status = await refreshSetupHint(evmAddress);
+      }
+
+      if (status?.ready) {
+        markAsterApprovedInStorage(evmAddress);
+        setStep("success");
+        setTimeout(() => onApproved(), 800);
+        return;
+      }
+
+      let needsAgent = !status?.agentApproved;
+      let needsBuilder = !status?.builderApproved;
+
+      if (!needsAgent && !needsBuilder) {
+        markAsterApprovedInStorage(evmAddress);
+        setStep("success");
+        setTimeout(() => onApproved(), 800);
+        return;
+      }
+
+      if (!status) throw new Error("Could not verify Aster setup");
+
+      let agentAddress = status.derivedAgentAddress || null;
+
+      const needsAstherusSign =
+        status.needsCreateApiWallet ||
+        status.needsWeb3Registration ||
+        !status.hasAsterAccount;
+
+      if (needsAstherusSign) {
+        setStep("signing");
+        setPhaseLabel("Sign in to Astherus (check your wallet)");
+        const created = await ensureAsterApiWallet(evmAddress, ethereum, {
+          forceWeb3: status.needsCreateApiWallet || !status.hasAsterAccount,
+          onStatus: (msg) => setPhaseLabel(msg),
+        });
+        agentAddress = created.agentAddress;
+        status = (await refreshSetupHint(evmAddress)) ?? status;
+        if (!status) throw new Error("Could not verify Aster registration");
+      }
+
+      if (!agentAddress) {
+        agentAddress = (await fetchAsterAgentAddress(evmAddress)) ?? status.derivedAgentAddress ?? null;
+      }
+      if (!agentAddress) {
+        throw new Error("Failed to resolve API wallet agent address");
+      }
+      if (needsAstherusSign) {
+        setPhaseLabel(`Agent ${agentAddress.slice(0, 8)}…${agentAddress.slice(-6)}`);
+      }
+
+      needsAgent = !status?.agentApproved;
+      needsBuilder = !status?.builderApproved;
+
+      if (!needsAgent && !needsBuilder) {
+        markAsterApprovedInStorage(evmAddress);
+        setStep("success");
+        setTimeout(() => onApproved(), 800);
+        return;
+      }
+
       setStep("switching");
       try {
         await ethereum.request({ method: "wallet_switchEthereumChain", params: [{ chainId: BSC }] });
@@ -131,92 +323,49 @@ export function AsterAgentApprovalModal({ open, onClose, onApproved }: Props) {
         }
       }
 
-      setStep("signing");
-      setPhaseLabel("Step 1 of 2 — approve trading agent");
-      const agentRes = await fetch(`/api/aster/approve-agent?userAddress=${encodeURIComponent(evmAddress)}`);
-      const agentData = await agentRes.json();
-      if (!agentRes.ok) throw new Error(agentData.error || "Failed to prepare agent approval");
+      let agentOk = !needsAgent;
+      let builderOk = !needsBuilder;
 
-      const agentSig = await signTyped({
-        domain: agentData.domain,
-        types: agentData.types,
-        primaryType: agentData.primaryType,
-        message: agentData.message,
-      });
-
-      setStep("submitting");
-      setPhaseLabel("Submitting agent approval…");
-      const agentPost = await fetch("/api/aster/approve-agent", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ postParams: agentData.postParams, signature: agentSig }),
-      });
-      const agentPostData = await agentPost.json();
-      if (!agentPost.ok) {
-        const errMsg = String(agentPostData.error || "Agent approval failed");
-        const already = agentPostData.alreadyExists === true || /already exists/i.test(errMsg);
-        if (!already) {
-          if (/device time|timestamp|nonce/i.test(errMsg)) {
-            throw new Error("Clock sync error — please try again.");
-          }
-          if (/no aster user found/i.test(errMsg)) {
-            throw new Error("No Aster account found. Please deposit to Aster first at app.asterdex.com.");
-          }
-          throw new Error(errMsg);
-        }
+      if (needsAgent) {
+        agentOk = await submitAgentApproval();
       }
 
-      setStep("signing");
-      setPhaseLabel("Step 2 of 2 — approve builder (fee cap)");
-      const buildRes = await fetch(`/api/aster/approve-builder?userAddress=${encodeURIComponent(evmAddress)}`);
-      const buildData = await buildRes.json();
-      if (!buildRes.ok) throw new Error(buildData.error || "Failed to prepare builder approval");
-
-      const buildSig = await signTyped({
-        domain: buildData.domain,
-        types: buildData.types,
-        primaryType: buildData.primaryType,
-        message: buildData.message,
-      });
-
-      setStep("submitting");
-      setPhaseLabel("Submitting builder approval…");
-      const buildPost = await fetch("/api/aster/approve-builder", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ postParams: buildData.postParams, signature: buildSig }),
-      });
-      const buildPostData = await buildPost.json();
-
-      if (!buildPost.ok) {
-        const errMsg = buildPostData.error || "Builder approval failed";
-        if (/already exists/i.test(errMsg) || buildPostData.alreadyExists) {
-          markApproved(evmAddress);
-          setStep("success");
-          setTimeout(() => onApproved(), 1500);
-          return;
-        }
-        if (/device time|timestamp|nonce/i.test(errMsg)) {
-          throw new Error("Clock sync error — please try again.");
-        }
-        if (/no aster user found/i.test(errMsg)) {
-          throw new Error("No Aster account found. Please deposit to Aster first at app.asterdex.com.");
-        }
-        throw new Error(errMsg);
+      if (needsBuilder) {
+        builderOk = await submitBuilderApproval();
       }
 
-      markApproved(evmAddress);
-      setStep("success");
-      setTimeout(() => onApproved(), 1500);
+      setStep("checking");
+      setPhaseLabel("Verifying Aster setup");
+      const after = await pollAsterSetupStatusClient(evmAddress);
+      if (after?.ready) {
+        markAsterApprovedInStorage(evmAddress);
+        setStep("success");
+        setTimeout(() => onApproved(), 1500);
+        return;
+      }
+
+      if (agentOk && builderOk) {
+        markAsterApprovedInStorage(evmAddress);
+        setStep("success");
+        setTimeout(() => onApproved(), 1500);
+        return;
+      }
+
+      const detail = after
+        ? `Agent: ${after.agentApproved ? "ok" : "pending"}, Builder: ${after.builderApproved ? "ok" : "pending"}`
+        : "Could not reach Aster";
+      throw new Error(
+        `Setup still pending (${detail}). Wait a moment and tap Try Again, or deposit on Aster if you have not funded the account.`
+      );
     } catch (e: unknown) {
-      const msg = e instanceof Error ? e.message : "Authorization failed";
-      setErrorMsg(msg.includes("rejected") || msg.includes("4001") ? "Signature rejected. Please try again." : msg);
+      setErrorMsg(toUserFacingError(e, "onboarding"));
       setStep("error");
     } finally {
       await restoreChain();
     }
-  }, [evmAddress, onApproved]);
+  }, [evmAddress, onApproved, refreshSetupHint]);
 
+  const busy = step === "checking" || step === "switching" || step === "signing" || step === "submitting";
   if (!open) return null;
 
   return (
@@ -254,7 +403,7 @@ export function AsterAgentApprovalModal({ open, onClose, onApproved }: Props) {
             justifyContent: "space-between",
           }}
         >
-          <span style={{ fontSize: 14, fontWeight: 700, color: "#E6EDF3", fontFamily: SANS }}>Enable Aster Trading</span>
+          <span style={{ fontSize: 14, fontWeight: 700, color: "#E6EDF3", fontFamily: SANS }}>Enable Trading</span>
           <button
             onClick={onClose}
             style={{
@@ -290,7 +439,7 @@ export function AsterAgentApprovalModal({ open, onClose, onApproved }: Props) {
                 }}
               >
                 <div style={{ fontSize: 13, fontWeight: 600, color: "#E6EDF3", fontFamily: SANS, marginBottom: 6 }}>
-                  Two-step setup (official Aster Code)
+  
                 </div>
                 <div style={{ fontSize: 11, color: "#9BA4AE", fontFamily: SANS, lineHeight: 1.6 }}>
                   On BSC (no gas): (1) approve the <strong>trading agent</strong> so the server signer can place orders, (2) approve the{" "}
@@ -301,7 +450,7 @@ export function AsterAgentApprovalModal({ open, onClose, onApproved }: Props) {
                 {[
                   { icon: "✓", text: "Agent: server wallet may trade on your Aster account" },
                   { icon: "✓", text: "Builder: fee rate cap for routed orders" },
-                  { icon: "✗", text: "Agent cannot withdraw your funds (as configured)" },
+                  { icon: "✓", text: "Agent can withdraw perps collateral (server IP whitelisted)" },
                 ].map((item, i) => (
                   <div
                     key={i}
@@ -343,6 +492,23 @@ export function AsterAgentApprovalModal({ open, onClose, onApproved }: Props) {
               >
                 {evmAddress ? `${evmAddress.slice(0, 10)}...${evmAddress.slice(-8)}` : "—"}
               </div>
+              {setupHint ? (
+                <div
+                  style={{
+                    padding: "10px 12px",
+                    borderRadius: 8,
+                    marginBottom: 16,
+                    background: "rgba(40,160,240,0.04)",
+                    border: "1px solid rgba(40,160,240,0.12)",
+                    fontSize: 11,
+                    color: "#9BA4AE",
+                    fontFamily: SANS,
+                    lineHeight: 1.55,
+                  }}
+                >
+                  {setupHint}
+                </div>
+              ) : null}
               <button
                 onClick={handleApprove}
                 style={{
@@ -381,7 +547,7 @@ export function AsterAgentApprovalModal({ open, onClose, onApproved }: Props) {
             </>
           )}
 
-          {(step === "switching" || step === "signing" || step === "submitting") && (
+          {(step === "checking" || step === "switching" || step === "signing" || step === "submitting") && (
             <div style={{ textAlign: "center", padding: "24px 0" }}>
               <div
                 style={{
@@ -396,7 +562,7 @@ export function AsterAgentApprovalModal({ open, onClose, onApproved }: Props) {
               />
               <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
               <div style={{ fontSize: 13, color: "#E6EDF3", fontFamily: SANS, fontWeight: 600, marginBottom: 6 }}>
-                {step === "switching" ? "Switching to BNB Smart Chain..." : step === "signing" ? "Sign in your wallet..." : "Submitting to Aster..."}
+                {step === "checking" ? "Checking Aster setup..." : step === "switching" ? "Switching to BNB Smart Chain..." : step === "signing" ? "Sign in your wallet..." : "Submitting to Aster..."}
               </div>
               <div style={{ fontSize: 11, color: "#6B7280", fontFamily: SANS }}>
                 {phaseLabel ? `${phaseLabel} — ` : ""}
@@ -494,32 +660,63 @@ export function useAsterAgentApproval() {
   const { evmAddress, isEvmConnected } = useEvmWallet();
   const [showModal, setShowModal] = useState(false);
   const [approved, setApproved] = useState(false);
+  const [statusLoading, setStatusLoading] = useState(false);
+
+  const syncServerStatus = useCallback(async (address: string) => {
+    setStatusLoading(true);
+    try {
+      const status = await fetchAsterSetupStatus(address);
+      if (status?.ready) {
+        markAsterApprovedInStorage(address);
+        setApproved(true);
+        return true;
+      }
+      unmarkAsterApprovedInStorage(address);
+      setApproved(false);
+      return false;
+    } finally {
+      setStatusLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    if (isEvmConnected && evmAddress) setApproved(isApproved(evmAddress));
-    else setApproved(false);
-  }, [evmAddress, isEvmConnected]);
+    if (!isEvmConnected || !evmAddress) {
+      setApproved(false);
+      return;
+    }
+    if (isAsterApprovedInStorage(evmAddress)) {
+      setApproved(true);
+    }
+    void syncServerStatus(evmAddress);
+  }, [evmAddress, isEvmConnected, syncServerStatus]);
 
   const requireApproval = useCallback((): boolean => {
     if (!evmAddress || !isEvmConnected) return false;
-    if (isApproved(evmAddress)) {
-      setApproved(true);
-      return false;
-    }
+    if (approved) return false;
     setShowModal(true);
     return true;
-  }, [evmAddress, isEvmConnected]);
+  }, [evmAddress, isEvmConnected, approved]);
 
   const handleApproved = useCallback(() => {
+    if (evmAddress) markAsterApprovedInStorage(evmAddress);
     setApproved(true);
     setShowModal(false);
-  }, []);
+    if (evmAddress) void syncServerStatus(evmAddress);
+  }, [evmAddress, syncServerStatus]);
+
+  const openEnableTradingModal = useCallback(() => {
+    if (!evmAddress || !isEvmConnected) return;
+    setShowModal(true);
+  }, [evmAddress, isEvmConnected]);
 
   return {
     showModal,
     approved,
+    statusLoading,
     requireApproval,
+    openEnableTradingModal,
     handleApproved,
     closeModal: () => setShowModal(false),
+    refreshSetupStatus: () => (evmAddress ? syncServerStatus(evmAddress) : Promise.resolve(false)),
   };
 }

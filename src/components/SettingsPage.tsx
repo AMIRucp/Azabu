@@ -14,7 +14,6 @@ const DIM   = "#6B7280";
 const MUTED = "#3A4050";
 const ORANGE = "#D4A574";
 
-/* ─── Card container ─────────────────────────────────────── */
 function Card({ children }: { children: ReactNode }) {
   return (
     <div style={{
@@ -27,7 +26,6 @@ function Card({ children }: { children: ReactNode }) {
   );
 }
 
-/* ─── Card title row ─────────────────────────────────────── */
 function CardTitle({ label, value }: { label: string; value?: string }) {
   return (
     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
@@ -37,7 +35,6 @@ function CardTitle({ label, value }: { label: string; value?: string }) {
   );
 }
 
-/* ─── Pill button group ──────────────────────────────────── */
 function PillGroup<T extends string | number>({
   options, value, onChange, testIdPrefix,
 }: {
@@ -75,7 +72,6 @@ function PillGroup<T extends string | number>({
   );
 }
 
-/* ─── Toggle row ─────────────────────────────────────────── */
 function ToggleRow({
   label, desc, value, onChange, warning, testId,
 }: {
@@ -101,7 +97,7 @@ function ToggleRow({
         {desc && <div style={{ fontSize: 10, color: DIM, fontFamily: SANS, marginTop: 2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{desc}</div>}
         {warning && <div style={{ fontSize: 10, color: ORANGE, fontFamily: SANS, marginTop: 2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{warning}</div>}
       </div>
-      {/* Toggle switch */}
+      
       <div
         style={{
           width: 40, height: 22, borderRadius: 11, flexShrink: 0,
@@ -124,7 +120,6 @@ function ToggleRow({
   );
 }
 
-/* ─── Number input row ───────────────────────────────────── */
 function NumberRow({
   label, value, onChange, suffix, min, max,
 }: {
@@ -154,7 +149,6 @@ function NumberRow({
   );
 }
 
-/* ─── Main page ──────────────────────────────────────────── */
 export default function SettingsPage() {
   const s = useSettingsStore();
   const isMobile = useIsMobile();
@@ -172,7 +166,7 @@ export default function SettingsPage() {
       style={{ maxWidth: 600, margin: "0 auto", padding: isMobile ? "12px 12px 100px" : "36px 28px 80px" }}
       data-testid="page-settings"
     >
-      {/* Page header */}
+      
       <div style={{ marginBottom: 20 }}>
         <h1 style={{ fontSize: isMobile ? 20 : 24, fontWeight: 700, color: TEXT, fontFamily: SANS, margin: "0 0 4px", letterSpacing: "-0.02em" }}>
           Settings
@@ -182,7 +176,7 @@ export default function SettingsPage() {
         </p>
       </div>
 
-      {/* ── Slippage Tolerance ──────────────────────────── */}
+      
       <Card>
         <CardTitle label="Slippage Tolerance" />
         <PillGroup
@@ -198,7 +192,7 @@ export default function SettingsPage() {
         />
       </Card>
 
-      {/* ── Transaction & Gas ────────────────────────────── */}
+      
       <Card>
         <CardTitle label="Transaction Deadline" />
         <div style={{ display: "flex", alignItems: "baseline", gap: 10 }}>
@@ -222,7 +216,7 @@ export default function SettingsPage() {
         </div>
       </Card>
 
-      {/* ── Routing & Expert Mode ──────────────────────── */}
+      
       <Card>
         <div style={{ paddingBottom: 4 }}>
           <ToggleRow
@@ -243,7 +237,7 @@ export default function SettingsPage() {
         </div>
       </Card>
 
-      {/* ── Trading Defaults ──────────────────────────── */}
+      
       <Card>
         <CardTitle label="Trading Defaults" />
         <ToggleRow
@@ -290,7 +284,7 @@ export default function SettingsPage() {
         </div>
       </Card>
 
-      {/* ── TP / SL ───────────────────────────────────── */}
+      
       <Card>
         <CardTitle label="Take Profit / Stop Loss" />
         <ToggleRow
@@ -309,7 +303,7 @@ export default function SettingsPage() {
         )}
       </Card>
 
-      {/* ── Appearance ────────────────────────────────── */}
+      
       <Card>
         <CardTitle label="Appearance" />
         <ToggleRow
@@ -332,7 +326,7 @@ export default function SettingsPage() {
         />
       </Card>
 
-      {/* ── Notifications ─────────────────────────────── */}
+      
       <Card>
         <CardTitle label="Notifications" />
         <ToggleRow
@@ -367,7 +361,7 @@ export default function SettingsPage() {
         />
       </Card>
 
-      {/* ── Sound ─────────────────────────────────────── */}
+      
       <Card>
         <CardTitle label="Sound" />
         <ToggleRow
@@ -378,7 +372,7 @@ export default function SettingsPage() {
         />
       </Card>
 
-      {/* ── Privacy ───────────────────────────────────── */}
+      
       <Card>
         <CardTitle label="Privacy" />
         <ToggleRow
@@ -395,7 +389,7 @@ export default function SettingsPage() {
         />
       </Card>
 
-      {/* ── Support ───────────────────────────────────── */}
+      
       <Card>
         <button
           data-testid="settings-help-btn"
@@ -418,7 +412,7 @@ export default function SettingsPage() {
         </button>
       </Card>
 
-      {/* ── Reset ─────────────────────────────────────── */}
+      
       <div style={{ marginTop: 2, marginBottom: 24 }}>
         {!showResetConfirm ? (
           <button

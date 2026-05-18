@@ -32,17 +32,26 @@ async function signV3(rawQueryString: string, signerPrivateKey: string): Promise
   return wallet.signTypedData(EIP712_DOMAIN, EIP712_TYPES, { msg: rawQueryString });
 }
 
-export type AsterFapiV3UserSignedPath = "balance" | "positionRisk";
+export type AsterFapiV3UserSignedPath =
+  | "balance"
+  | "positionRisk"
+  | "allOrders"
+  | "agent"
+  | "builder";
 
 const PATH_MAP: Record<AsterFapiV3UserSignedPath, string> = {
   balance: "/fapi/v3/balance",
   positionRisk: "/fapi/v3/positionRisk",
+  allOrders: "/fapi/v3/allOrders",
+  agent: "/fapi/v3/agent",
+  builder: "/fapi/v3/builder",
 };
 
 export async function asterFapiV3UserSignedGet(
   kind: AsterFapiV3UserSignedPath,
   userChecksummed: string,
-  signer: { address: string; privateKey: string }
+  signer: { address: string; privateKey: string },
+  extraParams?: Record<string, string>
 ): Promise<{ ok: true; data: unknown } | { ok: false; error: string; code?: number }> {
   const user = ethers.getAddress(userChecksummed);
   const signerAddr = ethers.getAddress(signer.address);
@@ -57,6 +66,7 @@ export async function asterFapiV3UserSignedGet(
     const now = await asterSyncedNowMs({ force: attempt > 0 });
     const nonce = nextAsterAuthNonceV3(now);
     const allParams: Record<string, string> = {
+      ...(extraParams ?? {}),
       nonce,
       user,
       signer: signerAddr,

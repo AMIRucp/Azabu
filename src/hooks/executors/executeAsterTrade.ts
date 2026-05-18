@@ -2,6 +2,7 @@ import { recordTrade } from "@/services/xpService";
 import { checkTradeAchievements } from "@/services/achievements";
 import { asterWalletHeaders } from "@/lib/asterClientHeaders";
 import type { TxCallbacks, AsterTradeParams } from "./shared";
+import { toUserFacingError } from "@/lib/userFacingErrors";
 
 export interface TpSlRetryParams {
   userId: string;
@@ -103,7 +104,7 @@ export async function executeAsterTrade(
   } = params;
   const { setTxState, setTxMsg } = callbacks;
 
-  const resolvedUserId = asterUserId || walletAddress;
+  const resolvedUserId = walletAddress || asterUserId;
   if (!resolvedUserId) {
     setTxMsg("Connect an EVM wallet to trade on Aster");
     setTxState("error");
@@ -135,11 +136,7 @@ export async function executeAsterTrade(
     });
     const data = await res.json();
     if (!res.ok || data.error) {
-      const msg = data.error || "Order failed";
-      if (/region|geo|restricted|not available/i.test(msg)) {
-        throw new Error("Aster is not available in your current region. Try using a VPN or deploying from an allowed location.");
-      }
-      throw new Error(msg);
+      throw new Error(toUserFacingError(data.error || "Order failed", "trade"));
     }
 
     recordTrade({ volume: posValue, chain: 'Arbitrum', protocol: 'Aster', market: market.sym });
@@ -193,7 +190,7 @@ export async function executeAsterTrade(
     onTradeSuccess?.();
     return null;
   } catch (err: unknown) {
-    setTxMsg(err instanceof Error ? err.message : "Failed to submit order");
+    setTxMsg(toUserFacingError(err, "trade"));
     setTxState("error");
     return null;
   }

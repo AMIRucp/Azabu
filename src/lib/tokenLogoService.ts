@@ -101,7 +101,6 @@ const SYMBOL_LOGO: Record<string, string> = {
   XPTUSDT: T("xpt"), XPDUSDT: T("xpd"), CLUSDT: T("cl"),
   NATGASUSDT: T("natgas"), PAXGUSDT: T("paxg"), WTIUSDT: T("wti"),
 
-
   SAMSUNG: T("samsung"), SKHYNIX: T("skhynix"), HYUNDAI: T("hyundai"),
   KRCOMP: T("krcomp"), HANMI: T("hanmi"),
   SAMSUNGUSDC: T("samsung"), SKHYNIXUSDC: T("skhynix"), HYUNDAIUSDC: T("hyundai"),

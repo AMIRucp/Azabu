@@ -117,7 +117,7 @@ export async function GET(request: NextRequest) {
       if (usdcBalance) {
         const total = parseFloat(usdcBalance.total);
         const hold = parseFloat(usdcBalance.hold);
-        spotUsdcBalance = total - hold; // Available USDC
+        spotUsdcBalance = total - hold;
       }
     }
 

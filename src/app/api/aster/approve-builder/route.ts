@@ -100,7 +100,6 @@ export async function POST(request: NextRequest) {
     const queryString = buildQueryString(allParams);
     const url = `${ASTER_FAPI_BASE}/fapi/v3/approveBuilder?${queryString}`;
 
-
     const res = await fetch(url, {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded", "User-Agent": "NodeApp/1.0" },

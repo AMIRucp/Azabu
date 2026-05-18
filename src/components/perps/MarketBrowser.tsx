@@ -71,7 +71,7 @@ export default function MarketBrowser({ allMarkets, livePrices, onSelectMarket, 
 
   const HEADER_ICONS: Record<string, JSX.Element> = {
     market: (
-      /* Torii gate — 鳥居 */
+      
       <svg width="13" height="11" viewBox="0 0 13 11" fill="none" style={{ flexShrink: 0 }}>
         <path d="M1 3.5 Q6.5 1 12 3.5" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round"/>
         <line x1="2.5" y1="5" x2="10.5" y2="5" stroke="currentColor" strokeWidth="0.9" strokeLinecap="round"/>
@@ -80,7 +80,7 @@ export default function MarketBrowser({ allMarkets, livePrices, onSelectMarket, 
       </svg>
     ),
     price: (
-      /* Coin/price — 円 circle with cross */
+      
       <svg width="11" height="11" viewBox="0 0 11 11" fill="none" style={{ flexShrink: 0 }}>
         <circle cx="5.5" cy="5.5" r="4.5" stroke="currentColor" strokeWidth="1"/>
         <line x1="3" y1="5.5" x2="8" y2="5.5" stroke="currentColor" strokeWidth="0.9" strokeLinecap="round"/>
@@ -88,13 +88,13 @@ export default function MarketBrowser({ allMarkets, livePrices, onSelectMarket, 
       </svg>
     ),
     change: (
-      /* Wave/tide — 波 */
+      
       <svg width="14" height="9" viewBox="0 0 14 9" fill="none" style={{ flexShrink: 0 }}>
         <path d="M0.5 6 C2 3 4 1 5.5 4.5 C7 8 9 8 10.5 4.5 C12 1 13 2 13.5 3" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" fill="none"/>
       </svg>
     ),
     volume: (
-      /* Mountain — 山 (Fuji-inspired volume bars) */
+      
       <svg width="13" height="11" viewBox="0 0 13 11" fill="none" style={{ flexShrink: 0 }}>
         <line x1="2" y1="10.5" x2="2" y2="7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
         <line x1="5" y1="10.5" x2="5" y2="3.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
@@ -103,7 +103,7 @@ export default function MarketBrowser({ allMarkets, livePrices, onSelectMarket, 
       </svg>
     ),
     oi: (
-      /* Diamond — 菱 */
+      
       <svg width="11" height="11" viewBox="0 0 11 11" fill="none" style={{ flexShrink: 0 }}>
         <path d="M5.5 1 L10 5.5 L5.5 10 L1 5.5 Z" stroke="currentColor" strokeWidth="1" fill="none"/>
         <line x1="5.5" y1="3.5" x2="5.5" y2="7.5" stroke="currentColor" strokeWidth="0.7" strokeLinecap="round" opacity="0.6"/>
@@ -150,7 +150,7 @@ export default function MarketBrowser({ allMarkets, livePrices, onSelectMarket, 
       fontFamily: mono, color: T.text,
     }}>
 
-      {/* Search */}
+      
       <div style={{ padding: isMobile ? "10px 12px 0" : "10px 16px 0", flexShrink: 0 }}>
         <div style={{
           position: "relative", display: "flex", alignItems: "center",
@@ -184,13 +184,13 @@ export default function MarketBrowser({ allMarkets, livePrices, onSelectMarket, 
         </div>
       </div>
 
-      {/* Collateral filter + Category tabs — single combined row */}
+      
       <div style={{
         display: "flex", alignItems: "center", gap: 0,
         padding: isMobile ? "6px 12px 0" : "6px 16px 0",
         flexShrink: 0,
       }}>
-        {/* Collateral toggles */}
+        
         <div data-testid="collateral-filter" style={{
           display: "inline-flex", flexShrink: 0,
           gap: 1, paddingRight: 8,
@@ -244,7 +244,7 @@ export default function MarketBrowser({ allMarkets, livePrices, onSelectMarket, 
           })}
         </div>
 
-        {/* Category tabs — scrollable */}
+        
         <div style={{
           display: "flex", gap: 2, overflowX: "auto", scrollbarWidth: "none",
           flex: 1, minWidth: 0,
@@ -274,7 +274,7 @@ export default function MarketBrowser({ allMarkets, livePrices, onSelectMarket, 
         </div>
       </div>
 
-      {/* Sort header */}
+      
       <div style={{
         display: "flex", justifyContent: "space-between", alignItems: "center",
         padding: isMobile ? "5px 12px 4px" : "5px 16px 4px",
@@ -297,7 +297,7 @@ export default function MarketBrowser({ allMarkets, livePrices, onSelectMarket, 
 
       <div style={{ flex: 1, overflow: "auto" }}>
 
-        {/* Trending strip — lives inside the scroll area, scrolls away naturally */}
+        
         {trendingNow.length > 0 && !search && (
           <div
             data-testid="trending-now-row"

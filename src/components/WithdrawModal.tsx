@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useEffect } from "react";
 import { useEvmWallet } from "@/hooks/useEvmWallet";
+import { shouldOfferAsterEnableTrading, toUserFacingError } from "@/lib/userFacingErrors";
 import { parseAsterBalances } from "@/lib/asterBalanceParse";
 import { asterWalletHeaders } from "@/lib/asterClientHeaders";
 
@@ -31,11 +32,12 @@ function Row({ label, value }: { label: string; value: string }) {
 }
 
 export function WithdrawModal({
-  open, onClose, defaultProtocol,
+  open, onClose, defaultProtocol, onEnableTrading,
 }: {
   open: boolean;
   onClose: () => void;
   defaultProtocol?: Protocol;
+  onEnableTrading?: () => void;
 }) {
   const { evmAddress, isEvmConnected, isArbitrum, switchToArbitrum, getEvmSigner } = useEvmWallet();
 
@@ -71,8 +73,7 @@ export function WithdrawModal({
     const load = async () => {
       try {
         if (protocol === "aster" && evmAddress) {
-          const uid = encodeURIComponent(evmAddress);
-          const res = await fetch(`/api/aster/balance?userId=${uid}`, {
+          const res = await fetch("/api/aster/balance", {
             headers: asterWalletHeaders(evmAddress),
           });
           const data = await res.json();
@@ -85,7 +86,7 @@ export function WithdrawModal({
             setPlatformBalance(null);
             setAsterTotalEquity(null);
             setBalanceLoadError(
-              typeof data.error === "string" ? data.error : "Could not load Aster balance"
+              typeof data.error === "string" ? data.error : "Could not load Aster balance",
             );
             return;
           }
@@ -118,7 +119,7 @@ export function WithdrawModal({
       } catch {
         if (!cancelled) {
           setPlatformBalance(null);
-          setBalanceLoadError("Could not load balance");
+          setBalanceLoadError(toUserFacingError(null, "withdraw"));
         }
       }
     };
@@ -156,7 +157,7 @@ export function WithdrawModal({
       if (protocol === "aster")            await handleAsterWithdraw();
       else if (protocol === "hyperliquid") await handleHlWithdraw();
     } catch (e: unknown) {
-      setErrorMsg(e instanceof Error ? e.message : "Withdrawal failed");
+      setErrorMsg(toUserFacingError(e, "withdraw"));
       setStep("error");
     }
   };
@@ -171,7 +172,7 @@ export function WithdrawModal({
       body: JSON.stringify({ userAddress: evmAddress, amount: parseFloat(amount), asset: asterWithdrawAsset }),
     });
     const data = await res.json();
-    if (!res.ok) throw new Error(data.error || "Failed to prepare withdrawal");
+    if (!res.ok) throw new Error(toUserFacingError(data.error || "Failed to prepare withdrawal", "withdraw"));
 
     const signer = await getEvmSigner();
     if (!signer) throw new Error("Could not get EVM signer");
@@ -204,7 +205,7 @@ export function WithdrawModal({
       }),
     });
     const submitData = await submitRes.json();
-    if (!submitRes.ok) throw new Error(submitData.error || "Withdrawal submission failed");
+    if (!submitRes.ok) throw new Error(toUserFacingError(submitData.error || "Withdrawal submission failed", "withdraw"));
 
     setTxHash("aster-" + (submitData.withdrawId || Date.now()));
     setStep("success");
@@ -236,11 +237,10 @@ export function WithdrawModal({
 
   if (!open) return null;
 
-  const explorerUrl = txHash
-    ? txHash.startsWith("HL:")
-      ? `https://app.hyperliquid.xyz/portfolio`
-      : `https://arbiscan.io/tx/${txHash}`
-    : null;
+  const explorerUrl =
+    txHash && !txHash.startsWith("HL:")
+      ? `https://arbiscan.io/tx/${txHash}`
+      : null;
 
   return (
     <div
@@ -263,7 +263,7 @@ export function WithdrawModal({
           borderRadius: 16, overflow: "hidden",
         }}
       >
-        {/* Header */}
+        
         <div style={{
           padding: "16px 20px",
           borderBottom: "1px solid rgba(255,255,255,0.06)",
@@ -303,10 +303,10 @@ export function WithdrawModal({
 
         <div style={{ padding: "16px 20px" }}>
 
-          {/* Step: Amount */}
+          
           {step === "amount" && selected && (
             <div>
-              {/* Inline protocol toggle */}
+              
               <div style={{ display: "flex", gap: 6, marginBottom: 14 }}>
                 {PROTOCOLS.map(p => (
                   <button
@@ -339,7 +339,7 @@ export function WithdrawModal({
                 </div>
               )}
 
-              {/* Platform balance */}
+              
               <div style={{
                 padding: "10px 14px", borderRadius: 8, marginBottom: 14,
                 background: balanceLoadError ? "rgba(239,68,68,0.06)" : "rgba(51,255,136,0.04)",
@@ -377,13 +377,38 @@ export function WithdrawModal({
                     </p>
                   )}
                 {balanceLoadError && protocol === "aster" && (
-                  <p style={{ margin: 0, fontSize: 10, color: "#F87171", fontFamily: SANS, lineHeight: 1.45 }}>
-                    {balanceLoadError}
-                  </p>
+                  shouldOfferAsterEnableTrading(balanceLoadError) ? (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        onClose();
+                        onEnableTrading?.();
+                      }}
+                      style={{
+                        margin: 0,
+                        padding: 0,
+                        border: "none",
+                        background: "transparent",
+                        color: "#F87171",
+                        fontSize: 11,
+                        fontWeight: 600,
+                        fontFamily: SANS,
+                        lineHeight: 1.45,
+                        cursor: "pointer",
+                        textAlign: "left",
+                      }}
+                    >
+                      Enable trading
+                    </button>
+                  ) : (
+                    <p style={{ margin: 0, fontSize: 10, color: "#F87171", fontFamily: SANS, lineHeight: 1.45 }}>
+                      {toUserFacingError(balanceLoadError, "withdraw")}
+                    </p>
+                  )
                 )}
               </div>
 
-              {/* Amount input */}
+              
               <div style={{ marginBottom: 14 }}>
                 <div style={{ fontSize: 10, color: "#6B7280", fontFamily: SANS, marginBottom: 6 }}>
                   Amount ({selected.asset})
@@ -413,7 +438,7 @@ export function WithdrawModal({
                 </div>
               </div>
 
-              {/* Quick % buttons */}
+              
               <div style={{ display: "flex", gap: 6, marginBottom: 18 }}>
                 {QUICK_PCT.map(pct => (
                   <button
@@ -435,7 +460,7 @@ export function WithdrawModal({
                 ))}
               </div>
 
-              {/* Info rows */}
+              
               <div style={{
                 padding: "10px 14px", borderRadius: 8, marginBottom: 14,
                 background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.04)",
@@ -455,7 +480,7 @@ export function WithdrawModal({
                 )}
               </div>
 
-              {/* Destination */}
+              
               <div style={{
                 padding: "10px 14px", borderRadius: 8, marginBottom: 16,
                 background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.04)",
@@ -488,7 +513,7 @@ export function WithdrawModal({
             </div>
           )}
 
-          {/* Step: Confirm */}
+          
           {step === "confirm" && selected && (
             <div>
               <div style={{
@@ -535,7 +560,7 @@ export function WithdrawModal({
             </div>
           )}
 
-          {/* Step: Processing */}
+          
           {step === "processing" && (
             <div style={{ textAlign: "center", padding: "24px 0" }}>
               <div style={{
@@ -552,7 +577,7 @@ export function WithdrawModal({
             </div>
           )}
 
-          {/* Step: Success */}
+          
           {step === "success" && selected && (
             <div style={{ textAlign: "center", padding: "16px 0" }}>
               <div style={{
@@ -582,7 +607,7 @@ export function WithdrawModal({
                     marginBottom: 12,
                   }}
                 >
-                  {protocol === "hyperliquid" ? "View Portfolio" : "View on Explorer ↗"}
+                  View on Explorer ↗
                 </a>
               )}
               <button
@@ -599,7 +624,7 @@ export function WithdrawModal({
             </div>
           )}
 
-          {/* Step: Error */}
+          
           {step === "error" && (
             <div style={{ textAlign: "center", padding: "16px 0" }}>
               <div style={{

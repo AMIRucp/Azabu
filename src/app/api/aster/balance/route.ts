@@ -1,78 +1,98 @@
-import { NextRequest, NextResponse } from "next/server";
-import { ethers } from "ethers";
-import { assertWalletMatchesUser } from "@/lib/asterApiUser";
+import { NextRequest } from "next/server";
+import { resolveAsterFapiUserFromRequest } from "@/lib/asterApiUser";
 import { checkAsterWalletSeparation } from "@/lib/asterDeployWalletCheck";
+import { coerceAsterFapiArray } from "@/lib/asterPositionRiskFilter";
 import { asterFapiV3UserSignedGet } from "@/lib/asterFapiV3UserSignedGet";
 import { resolveAgentSignerForUser } from "@/lib/asterUserAgentSigner";
+import { asterPrivateJson } from "@/lib/asterUserApiResponse";
+import {
+  asterFapiErrorNeedsTradingSetup,
+  ASTER_ENABLE_TRADING_MESSAGE,
+} from "@/lib/asterTradingSetupError";
+
+export const dynamic = "force-dynamic";
 
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = request.nextUrl;
-    const userAddress = searchParams.get("userId");
+    const queryUserId = searchParams.get("userId");
+    const headerWalletRaw = request.headers.get("x-evm-address") || null;
 
-    if (!userAddress) {
-      return NextResponse.json({ error: "userId required", balances: [] }, { status: 200 });
+    const resolvedUser = resolveAsterFapiUserFromRequest(request, queryUserId);
+    if (!resolvedUser.ok) {
+      return asterPrivateJson({
+        balances: [],
+        error: resolvedUser.error,
+        queriedUser: null,
+        debug: { headerWallet: headerWalletRaw, queryUserId },
+      });
     }
-
-    const walletCheck = assertWalletMatchesUser(request, userAddress);
-    if (!walletCheck.ok) {
-      let user = userAddress;
-      try {
-        user = ethers.getAddress(String(userAddress).trim());
-      } catch {
-      }
-      return NextResponse.json({ balances: [], error: "Unauthorized", user }, { status: 200 });
-    }
-    const user = walletCheck.user;
+    const user = resolvedUser.user;
     const separation = checkAsterWalletSeparation(user);
-    const meta = {
+    const baseMeta = {
       user: separation.user,
-      signer: separation.signer,
       builder: separation.builder,
-      userIsSigner: separation.userIsSigner,
       userIsBuilder: separation.userIsBuilder,
       warning: separation.warning,
     };
 
     const signerResolved = await resolveAgentSignerForUser(user);
     if (!signerResolved) {
-      return NextResponse.json(
-        {
-          balances: [],
-          error:
-            "Aster signer not configured. Set ASTER_SIGNER_PRIVATE_KEY or ASTER_API_PRIVATE_KEY on the server.",
-          ...meta,
-        },
-        { status: 200 }
-      );
+      return asterPrivateJson({
+        balances: [],
+        error:
+          "Aster signer not configured. Set ASTER_SIGNER_PRIVATE_KEY or ASTER_API_PRIVATE_KEY on the server.",
+        ...baseMeta,
+        signer: null,
+        userIsSigner: false,
+        debug: { headerWallet: headerWalletRaw, queryUserId },
+      });
     }
 
+    const signer = signerResolved.address;
+    const userIsSigner = user.toLowerCase() === signer.toLowerCase();
+    const meta = {
+      ...baseMeta,
+      signer,
+      userIsSigner,
+    };
+
     const result = await asterFapiV3UserSignedGet("balance", user, {
-      address: signerResolved.address,
+      address: signer,
       privateKey: signerResolved.privateKey,
     });
 
     if (!result.ok) {
-      return NextResponse.json(
-        { balances: [], error: result.error, code: result.code, ...meta },
-        { status: 200 }
-      );
+      const needsApproval = asterFapiErrorNeedsTradingSetup(result.error);
+      return asterPrivateJson({
+        balances: [],
+        error: needsApproval ? ASTER_ENABLE_TRADING_MESSAGE : result.error,
+        code: result.code,
+        ...meta,
+        debug: { headerWallet: headerWalletRaw, queryUserId },
+      });
     }
 
-    const raw = result.data;
-
-    if (Array.isArray(raw)) {
-      return NextResponse.json({ balances: raw, ...meta });
+    const arr = coerceAsterFapiArray(result.data);
+    if (arr) {
+      return asterPrivateJson({
+        balances: arr,
+        ...meta,
+        debug: { headerWallet: headerWalletRaw, queryUserId },
+      });
     }
 
-    return NextResponse.json(
-      { balances: [], error: "Unexpected balance response shape", ...meta },
-      { status: 200 }
-    );
+    return asterPrivateJson({
+      balances: [],
+      error: "Unexpected balance response shape",
+      ...meta,
+      debug: { headerWallet: headerWalletRaw, queryUserId },
+    });
   } catch (error) {
-    return NextResponse.json(
-      { balances: [], error: error instanceof Error ? error.message : "Unknown error" },
-      { status: 200 }
-    );
+    return asterPrivateJson({
+      balances: [],
+      error: error instanceof Error ? error.message : "Unknown error",
+      queriedUser: null,
+    });
   }
 }

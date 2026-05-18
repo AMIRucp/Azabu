@@ -4,6 +4,7 @@ import {
   formatHlPerpPrice,
   formatHlSize,
 } from "@/lib/hyperliquidOrderFormat";
+import { toUserFacingError } from "@/lib/userFacingErrors";
 import { getWalletClient } from "@wagmi/core";
 import { wagmiConfig } from "@/config/wagmiConfig";
 import { toAccount } from "viem/accounts";
@@ -120,20 +121,19 @@ export async function executeHyperliquidClose(
       setTxState("success");
       onSuccess?.();
     } else {
-      const errorMsg = JSON.stringify(result);
-      setTxMsg(`Close failed: ${errorMsg}`);
+      setTxMsg(toUserFacingError("Could not close position.", "close"));
       setTxState("error");
-      throw new Error(`Close failed: ${errorMsg}`);
+      throw new Error(toUserFacingError(null, "close"));
     }
   } catch (e: unknown) {
     const code =
       e && typeof e === "object" && "code" in e ? (e as { code?: number | string }).code : undefined;
     if (code === 4001 || code === "ACTION_REJECTED") {
-      setTxMsg("Transaction rejected");
+      setTxMsg(toUserFacingError("Transaction cancelled.", "close"));
       setTxState("error");
-      throw new Error("Transaction rejected");
+      throw new Error(toUserFacingError("Transaction cancelled.", "close"));
     }
-    const msg = extractHyperliquidErrorMessage(e);
+    const msg = toUserFacingError(extractHyperliquidErrorMessage(e), "close");
     setTxMsg(msg);
     setTxState("error");
     throw new Error(msg);

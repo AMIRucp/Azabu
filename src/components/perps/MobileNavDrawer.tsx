@@ -4,10 +4,6 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import { mono } from "./terminalTheme";
 import { MarketsIcon, TradeIcon, SwapIcon, PortfolioIcon, LeaderboardIcon, SettingsIcon } from "../navIcons";
 
-/* ─── Seigaiha canvas ─────────────────────────────────────────────────────────
-   Classic Japanese overlapping wave-scale pattern at reduced opacity (~6%)
-   for "quiet wealth" depth without distraction.
-────────────────────────────────────────────────────────────────────────────── */
 const R   = 28;
 const CW  = R * 2;
 const RH  = R * 0.80;
@@ -55,7 +51,6 @@ function drawSeigaiha(ctx: CanvasRenderingContext2D, W: number, H: number, oy: n
   }
 }
 
-/* ─── Particles — monochrome dust ─────────────────────────────────────────── */
 interface Particle {
   x: number; y: number;
   r: number; vy: number; vx: number;
@@ -135,7 +130,6 @@ function AzabuBackground() {
 
 const SANS = "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif";
 
-/* ─── NavItem — monochrome active state ──────────────────────────────────── */
 function NavItem({ icon, label, onClick, active, badge }: {
   icon: ReactNode; label: string; onClick: () => void; active?: boolean; badge?: string;
 }) {
@@ -169,7 +163,7 @@ function NavItem({ icon, label, onClick, active, badge }: {
             : "none",
         }}
       >
-        {/* Icon */}
+        
         <span style={{
           color: active ? "rgba(255,255,255,0.9)" : "rgba(255,255,255,0.32)",
           flexShrink: 0,
@@ -179,7 +173,7 @@ function NavItem({ icon, label, onClick, active, badge }: {
           {icon}
         </span>
 
-        {/* Label */}
+        
         <span style={{
           fontSize: 15,
           fontWeight: active ? 500 : 400,
@@ -205,7 +199,7 @@ function NavItem({ icon, label, onClick, active, badge }: {
           </span>
         )}
 
-        {/* Active dot */}
+        
         {active && (
           <span style={{
             width: 4, height: 4, borderRadius: "50%",
@@ -251,7 +245,7 @@ export default function MobileNavDrawer({
 
   return (
     <>
-      {/* Backdrop */}
+      
       <div
         onClick={onClose}
         style={{
@@ -265,7 +259,7 @@ export default function MobileNavDrawer({
         }}
       />
 
-      {/* Drawer */}
+      
       <div
         style={{
           position: "fixed", top: 0, left: 0, bottom: 0, zIndex: 201,
@@ -281,18 +275,18 @@ export default function MobileNavDrawer({
           overflow: "hidden",
         }}
       >
-        {/* ── Background layers ────────────────────────────────────────────── */}
+        
         <div style={{ position: "absolute", inset: 0, pointerEvents: "none", zIndex: 0, overflow: "hidden" }}>
           <AzabuBackground />
 
-          {/* Edge darkening gradient */}
+          
           <div style={{
             position: "absolute", inset: 0,
             background: "radial-gradient(ellipse at 50% 40%, transparent 0%, rgba(0,0,0,0.55) 100%)",
           }} />
         </div>
 
-        {/* ── Header ───────────────────────────────────────────────────────── */}
+        
         <div style={{
           display: "flex", alignItems: "center", justifyContent: "space-between",
           padding: "22px 18px 18px",
@@ -350,7 +344,7 @@ export default function MobileNavDrawer({
           </button>
         </div>
 
-        {/* ── Nav items ────────────────────────────────────────────────────── */}
+        
         <div style={{ flex: 1, overflowY: "auto", paddingTop: 12, paddingBottom: 8, position: "relative", zIndex: 1 }}>
 
           <NavItem
@@ -381,7 +375,7 @@ export default function MobileNavDrawer({
             icon={<SwapIcon active={isSwap} size={17} />}
           />
 
-          {/* Divider */}
+          
           <div style={{ margin: "9px 26px", height: 1, background: "rgba(255,255,255,0.05)" }} />
 
           <NavItem
@@ -400,7 +394,7 @@ export default function MobileNavDrawer({
 
         </div>
 
-        {/* ── Footer ───────────────────────────────────────────────────────── */}
+        
         <div style={{ flexShrink: 0, position: "relative", zIndex: 1 }}>
           <div style={{ height: 1, background: "rgba(255,255,255,0.05)" }} />
 

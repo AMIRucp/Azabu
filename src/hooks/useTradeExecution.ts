@@ -7,6 +7,7 @@ import { executeLighterTrade } from "./executors/executeLighterTrade";
 import type { TpSlRetryParams } from "./executors/executeAsterTrade";
 import { useEvmWallet } from "./useEvmWallet";
 import type { TxState } from "./executors/shared";
+import { toUserFacingError } from "@/lib/userFacingErrors";
 export type { TxState } from "./executors/shared";
 
 type ChainType = "arbitrum" | "hyperliquid" | "lighter";
@@ -55,7 +56,7 @@ export function useTradeExecution() {
       );
     } else if (params.chain === "hyperliquid") {
       if (!evmAddress) {
-        setTxMsg("Connect your EVM wallet to trade on Hyperliquid");
+        setTxMsg(toUserFacingError("Connect your wallet to continue.", "trade"));
         setTxState("error");
         return;
       }
@@ -81,7 +82,7 @@ export function useTradeExecution() {
     pendingTpSlRetry.current = null;
 
     if (!params.sizeNum || params.sizeNum <= 0 || params.market.price <= 0) {
-      setTxMsg("Enter a valid size");
+      setTxMsg(toUserFacingError("Enter a valid amount.", "trade"));
       setTxState("error");
       return;
     }

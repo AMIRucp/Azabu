@@ -37,7 +37,6 @@ function getBrowserWindow(): BrowserWindow {
   return window as unknown as BrowserWindow;
 }
 
-/** Detect if running inside a mobile wallet's in-app browser */
 function detectMobileWalletBrowser(): "metamask" | "trust" | "coinbase" | "phantom" | null {
   if (typeof window === "undefined") return null;
   const ua = navigator.userAgent || "";
@@ -51,7 +50,6 @@ function detectMobileWalletBrowser(): "metamask" | "trust" | "coinbase" | "phant
   return null;
 }
 
-/** Build a deep link to open the dapp inside a wallet's browser */
 function buildDeepLink(wallet: string, url: string): string {
   const encoded = encodeURIComponent(url);
   const host = url.replace(/^https?:\/\//, "");
@@ -276,7 +274,6 @@ export function WalletSelectModal({ open, onClose }: { open: boolean; onClose: (
 
   const isMobile = typeof window !== "undefined" && /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
 
-  // Detect mobile wallet browser and auto-prioritise that wallet
   const mobileWalletBrowser = useMemo(() => detectMobileWalletBrowser(), []);
 
   const sortedWallets = useMemo(() => {
@@ -305,7 +302,7 @@ export function WalletSelectModal({ open, onClose }: { open: boolean; onClose: (
 
   useEffect(() => {
     if (connectingId && !isEvmConnected) {
-      // Close modal immediately when connecting starts so WalletConnect popup can appear
+
       onClose();
     }
   }, [connectingId, isEvmConnected, onClose]);
@@ -325,7 +322,6 @@ export function WalletSelectModal({ open, onClose }: { open: boolean; onClose: (
     return () => window.removeEventListener("keydown", handler);
   }, [open, onClose]);
 
-  // Lock body scroll when open
   useEffect(() => {
     if (open) { document.body.style.overflow = "hidden"; }
     else { document.body.style.overflow = ""; }
@@ -363,8 +359,6 @@ export function WalletSelectModal({ open, onClose }: { open: boolean; onClose: (
 
     const targetConnector = connector || eip6963Match || injectedFallback;
 
-    // On mobile browser: wallet not injected → use WalletConnect if available
-    // WalletConnect will show a deep link that opens the wallet app for approval only
     if (isMobileBrowser && !isDetected && !entry.isWalletConnect) {
       const wcConnector = evmConnectors.find(c => c.id === "walletConnect");
       if (wcConnector) {
@@ -380,7 +374,7 @@ export function WalletSelectModal({ open, onClose }: { open: boolean; onClose: (
         }
         return;
       }
-      // No WalletConnect configured — show download view
+
       setDownloadView({ name: entry.name, icon: entry.icon, url: entry.downloadUrl, deepLinkWallet: entry.deepLinkWallet });
       return;
     }
@@ -429,7 +423,7 @@ export function WalletSelectModal({ open, onClose }: { open: boolean; onClose: (
              (lid === "phantom" && rdns.includes("phantom"));
     });
     if (eip6963) return { text: "Available", color: "#22C55E" };
-    // On mobile, show "Connect via WalletConnect" for non-injected wallets
+
     const isMobileBrowser = typeof window !== "undefined" && /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
     if (isMobileBrowser && entry.deepLinkWallet) return { text: "Tap to connect via WalletConnect", color: "#D4A574" };
     return { text: "Not installed", color: "#6B7280" };
@@ -452,7 +446,7 @@ export function WalletSelectModal({ open, onClose }: { open: boolean; onClose: (
       style={{ zIndex: 99999 }}
       data-testid="wallet-select-modal"
     >
-      {/* Backdrop */}
+      
       <div
         className="absolute inset-0"
         style={{ background: "rgba(0,0,0,0.75)", backdropFilter: "blur(8px)" }}
@@ -460,7 +454,7 @@ export function WalletSelectModal({ open, onClose }: { open: boolean; onClose: (
         data-testid="wallet-modal-backdrop"
       />
 
-      {/* Sheet — bottom sheet on mobile, centered modal on desktop */}
+      
       <div
         className="relative w-full sm:max-w-sm sm:mx-4 sm:rounded-2xl rounded-t-2xl overflow-hidden"
         style={{
@@ -471,12 +465,12 @@ export function WalletSelectModal({ open, onClose }: { open: boolean; onClose: (
           paddingBottom: "env(safe-area-inset-bottom, 0px)",
         }}
       >
-        {/* Drag handle (mobile only) */}
+        
         <div className="flex justify-center pt-3 pb-1 sm:hidden">
           <div style={{ width: 36, height: 4, borderRadius: 2, background: "rgba(255,255,255,0.15)" }} />
         </div>
 
-        {/* Header */}
+        
         <div className="flex items-center justify-between px-5 pt-3 pb-3 sm:pt-5">
           <h2 className="text-base font-medium" style={{ color: "#E6EDF3", letterSpacing: "0.01em" }}
             data-testid="text-modal-title">
@@ -490,7 +484,7 @@ export function WalletSelectModal({ open, onClose }: { open: boolean; onClose: (
           </button>
         </div>
 
-        {/* Mobile wallet browser banner */}
+        
         {mobileWalletBrowser && !downloadView && (
           <div className="mx-5 mb-3 px-3 py-2 rounded-lg flex items-center gap-2"
             style={{ background: "rgba(212,165,116,0.08)", border: "1px solid rgba(212,165,116,0.2)" }}>
@@ -500,7 +494,7 @@ export function WalletSelectModal({ open, onClose }: { open: boolean; onClose: (
           </div>
         )}
 
-        {/* Chain tabs */}
+        
         {!downloadView && (
           <div className="px-5 pb-2">
             <div className="flex rounded-lg p-0.5" style={{ background: "rgba(255,255,255,0.04)" }}
@@ -524,7 +518,7 @@ export function WalletSelectModal({ open, onClose }: { open: boolean; onClose: (
           </div>
         )}
 
-        {/* Content */}
+        
         <div className="px-5 pb-5 overflow-y-auto" style={{ maxHeight: "calc(92vh - 160px)", WebkitOverflowScrolling: "touch" }}>
           {downloadView ? (
             <DownloadView
@@ -577,7 +571,7 @@ export function WalletSelectModal({ open, onClose }: { open: boolean; onClose: (
                 </span>
               </div>
 
-              {/* Mobile: single WalletConnect button — opens wallet chooser directly */}
+              
               {isMobile && hasWalletConnect && !isEvmConnected && (
                 <div className="flex flex-col gap-2 mb-3">
                   <button
@@ -613,7 +607,7 @@ export function WalletSelectModal({ open, onClose }: { open: boolean; onClose: (
                 </div>
               )}
 
-              {/* Desktop: full wallet list */}
+              
               {!isMobile && (
                 <div className="flex flex-col gap-1.5" data-testid={`${tab}-wallet-list`}>
                   {sortedWallets.map(entry => {

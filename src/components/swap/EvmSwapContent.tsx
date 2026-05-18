@@ -8,8 +8,7 @@ import { SuccessView } from "./SwapShared";
 import TokenSelectorModal from "./TokenSelectorModal";
 import { SwapPreviewModal } from "./SwapPreviewModal";
 import { Settings2, ChevronDown, ArrowDownUp } from "lucide-react";
-
-
+import { toUserFacingError } from "@/lib/userFacingErrors";
 
 const NATIVE_ETH = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE";
 
@@ -42,10 +41,10 @@ function TokenPanel({
       boxShadow: CARD_SHADOW,
       padding: "16px 18px 14px",
     }}>
-      {/* "You pay" / "You receive" */}
+      
       <div style={{ fontSize: 12, color: LABEL, fontFamily: SANS, marginBottom: 12 }}>{label}</div>
 
-      {/* Token selector + Amount */}
+      
       <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
         <button
           data-testid={`button-select-${testIdPrefix}-token`}
@@ -74,7 +73,7 @@ function TokenPanel({
           <ChevronDown size={13} color={LABEL} />
         </button>
 
-        {/* Amount */}
+        
         <div style={{ flex: 1, textAlign: "right" }}>
           {readOnly || loading ? (
             loading ? (
@@ -123,10 +122,10 @@ function TokenPanel({
         </div>
       </div>
 
-      {/* Balance row */}
+      
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 10 }}>
         <span style={{ fontSize: 11, color: DIM, fontFamily: MONO }}>
-          {/* USD value placeholder */}
+          
           {hasAmount ? "" : ""}
         </span>
         {balNum != null ? (
@@ -373,8 +372,7 @@ export function EvmSwapContent({ onComplete }: { onComplete?: () => void }) {
       const outputAmount = formatUnits(quoteData.auctionEndAmount, toToken.decimals);
       setToAmount(parseFloat(outputAmount).toLocaleString(undefined, { maximumFractionDigits: 6 }));
     } catch (e: unknown) {
-      const errMsg = e instanceof Error ? e.message : "Quote failed";
-      setQuoteError(errMsg);
+      setQuoteError(toUserFacingError(e, "swap"));
       setToAmount(""); setQuote(null);
     } finally { setQuoting(false); }
   }
@@ -571,13 +569,7 @@ export function EvmSwapContent({ onComplete }: { onComplete?: () => void }) {
       }
       setCountdown(0);
       setSwapProgress("");
-      let msg = e instanceof Error ? e.message : "Swap failed";
-      if (msg.includes("user rejected") || msg.includes("User rejected") || msg.includes("denied")) {
-        msg = "Transaction was rejected";
-      } else if (msg.includes("insufficient funds") || msg.includes("insufficient gas")) {
-        msg = "Insufficient funds for gas";
-      }
-      setSwapError(msg);
+      setSwapError(toUserFacingError(e, "swap"));
       setStage("idle");
       setShowPreview(false);
     }
@@ -854,7 +846,7 @@ export function EvmSwapContent({ onComplete }: { onComplete?: () => void }) {
         </div>
       )}
       
-      {/* Progress indicator during swap */}
+      
       {swapProgress && isBusy && (
         <div style={{ marginTop: 8 }}>
           <div style={{ fontSize: 11, color: ORANGE, fontFamily: MONO, padding: "8px 12px", background: "rgba(212,165,116,0.06)", borderRadius: 10, border: "1px solid rgba(212,165,116,0.12)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
@@ -879,7 +871,7 @@ export function EvmSwapContent({ onComplete }: { onComplete?: () => void }) {
               </div>
             )}
           </div>
-          {/* Progress bar for countdown */}
+          
           {countdown > 0 && (
             <div style={{ 
               marginTop: 6, 

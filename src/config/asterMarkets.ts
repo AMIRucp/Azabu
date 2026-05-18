@@ -546,7 +546,7 @@ export interface PerpMarket {
   };
 
   export const ASTER_MARKET_LIST: PerpMarket[] = [
-  // CRYPTO MAJOR
+
   { symbol: "BTCUSDT",           name: "Bitcoin",           category: "crypto_major",      price: 0, change24h: 0, funding: 0, maxLev: 200, vol24h: 0 },
   { symbol: "ETHUSDT",           name: "Ethereum",          category: "crypto_major",      price: 0, change24h: 0, funding: 0, maxLev: 200, vol24h: 0 },
   { symbol: "SOLUSDT",           name: "Solana",            category: "crypto_major",      price: 0, change24h: 0, funding: 0, maxLev: 100, vol24h: 0 },
@@ -573,7 +573,6 @@ export interface PerpMarket {
   { symbol: "STXUSDT",           name: "Stacks",            category: "crypto_major",      price: 0, change24h: 0, funding: 0, maxLev: 25,  vol24h: 0 },
   { symbol: "HBARUSDT",          name: "Hedera",            category: "crypto_major",      price: 0, change24h: 0, funding: 0, maxLev: 25,  vol24h: 0 },
 
-  // MEME
   { symbol: "DOGEUSDT",          name: "Dogecoin",          category: "meme",              price: 0, change24h: 0, funding: 0, maxLev: 75,  vol24h: 0 },
   { symbol: "PIPPINUSDT",        name: "Pippin",            category: "meme",              price: 0, change24h: 0, funding: 0, maxLev: 25,  vol24h: 0 },
   { symbol: "BULLAUSDT",         name: "Bulla",             category: "meme",              price: 0, change24h: 0, funding: 0, maxLev: 25,  vol24h: 0 },
@@ -603,7 +602,6 @@ export interface PerpMarket {
   { symbol: "WIFUSDT",           name: "dogwifhat",         category: "meme",              price: 0, change24h: 0, funding: 0, maxLev: 25,  vol24h: 0 },
   { symbol: "BONKUSDT",          name: "Bonk",              category: "meme",              price: 0, change24h: 0, funding: 0, maxLev: 25,  vol24h: 0 },
 
-  // DEFI
   { symbol: "HYPEUSDT",          name: "Hyperliquid",       category: "defi",              price: 0, change24h: 0, funding: 0, maxLev: 300, vol24h: 0 },
   { symbol: "TAOUSDT",           name: "Bittensor",         category: "defi",              price: 0, change24h: 0, funding: 0, maxLev: 20,  vol24h: 0 },
   { symbol: "LINKUSDT",          name: "Chainlink",         category: "defi",              price: 0, change24h: 0, funding: 0, maxLev: 75,  vol24h: 0 },
@@ -831,7 +829,6 @@ export interface PerpMarket {
   { symbol: "MKRUSDT",           name: "Maker",             category: "defi",              price: 0, change24h: 0, funding: 0, maxLev: 25,  vol24h: 0 },
   { symbol: "FTMUSDT",           name: "Fantom",            category: "defi",              price: 0, change24h: 0, funding: 0, maxLev: 25,  vol24h: 0 },
 
-  // STOCK
   { symbol: "QQQUSDT",           name: "Nasdaq 100",        category: "stock",             price: 0, change24h: 0, funding: 0, maxLev: 10,  vol24h: 0 },
   { symbol: "TSLAUSDT",          name: "Tesla",             category: "stock",             price: 0, change24h: 0, funding: 0, maxLev: 10,  vol24h: 0 },
   { symbol: "NVDAUSDT",          name: "NVIDIA",            category: "stock",             price: 0, change24h: 0, funding: 0, maxLev: 10,  vol24h: 0 },
@@ -849,7 +846,6 @@ export interface PerpMarket {
   { symbol: "MUUSDT",            name: "Micron",            category: "stock",             price: 0, change24h: 0, funding: 0, maxLev: 3,  vol24h: 0 },
   { symbol: "SNDKUSDT",          name: "Western Digital",   category: "stock",             price: 0, change24h: 0, funding: 0, maxLev: 3,  vol24h: 0 },
 
-  // COMMODITY
   { symbol: "XAGUSDT",           name: "Silver",            category: "commodity",         price: 0, change24h: 0, funding: 0, maxLev: 100, vol24h: 0 },
   { symbol: "XAUUSDT",           name: "Gold",              category: "commodity",         price: 0, change24h: 0, funding: 0, maxLev: 75,  vol24h: 0 },
   { symbol: "CLUSDT",            name: "Crude Oil",         category: "commodity",         price: 0, change24h: 0, funding: 0, maxLev: 50,  vol24h: 0 },
@@ -859,11 +855,9 @@ export interface PerpMarket {
   { symbol: "XCUUSDT",           name: "Copper",            category: "commodity",         price: 0, change24h: 0, funding: 0, maxLev: 3,  vol24h: 0 },
   { symbol: "XPDUSDT",           name: "Palladium",         category: "commodity",         price: 0, change24h: 0, funding: 0, maxLev: 3,  vol24h: 0 },
 
-  // POLITICAL
   { symbol: "WLFIUSDT",          name: "WLFI",              category: "political",         price: 0, change24h: 0, funding: 0, maxLev: 20,  vol24h: 0 },
   { symbol: "TRUMPUSDT",         name: "Trump",             category: "political",         price: 0, change24h: 0, funding: 0, maxLev: 50,  vol24h: 0 },
 
-  // EXCHANGE TOKEN
   { symbol: "ASTERUSDT",         name: "Aster",             category: "exchange_token",    price: 0, change24h: 0, funding: 0, maxLev: 200, vol24h: 0 },
   { symbol: "CAKEUSDT",          name: "PancakeSwap",       category: "exchange_token",    price: 0, change24h: 0, funding: 0, maxLev: 25,  vol24h: 0 },
   { symbol: "OPNUSDT",           name: "OPN",               category: "exchange_token",    price: 0, change24h: 0, funding: 0, maxLev: 25,  vol24h: 0 },

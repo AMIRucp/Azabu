@@ -5,13 +5,13 @@ import { ASTER_MARKET_LIST, getAsterSymbolFromPerp } from "@/config/asterMarkets
 import type { UnifiedMarket } from "@/types/market";
 import { normalizeBaseAsset } from "@/services/marketDeduplicator";
 import useMarketStore from "@/stores/useMarketStore";
+import { useEvmWallet } from "@/hooks/useEvmWallet";
 import { getStockSwapSymbol } from "@/config/stockSwapMap";
 import TerminalHeader from "./TerminalHeader";
 import { MarketSelectorOverlay, DataPanelOverlay } from "./TerminalOverlays";
 import type { BookData, TradeEntry, DepthData } from "./TerminalPanels";
 import SimpleTradeCard from "@/components/trade/SimpleTradeCard";
 import ActivePositionCard from "@/components/trade/ActivePositionCard";
-
 
 const TerminalChart = dynamic(() => import("./TerminalChart"), { ssr: false });
 const TerminalTradePanel = dynamic(() => import("./TerminalTradePanel"), { ssr: false });
@@ -59,7 +59,7 @@ export default function PerpsTerminal() {
   const [trades, setTrades] = useState<TradeEntry[]>([]);
   const [depth, setDepth] = useState<DepthData | null>(null);
   const [posRefreshKey, setPosRefreshKey] = useState(0);
-  const [asterUserId, setAsterUserId] = useState<string | null>(null);
+  const { evmAddress } = useEvmWallet();
   const [mobileSide] = useState<"long" | "short">("long");
   const [mobileTab, setMobileTab] = useState<"trade" | "chart">("chart");
   const [browserMode, setBrowserMode] = useState(true);
@@ -68,8 +68,8 @@ export default function PerpsTerminal() {
 
   useEffect(() => {
     if (typeof window !== "undefined") {
-      const stored = localStorage.getItem("aster_user_id");
-      if (stored) setAsterUserId(stored);
+
+      localStorage.removeItem("aster_user_id");
 
       const preselect = localStorage.getItem("afx_preselect_market");
       const preselectProto = localStorage.getItem("afx_preselect_protocol");
@@ -159,7 +159,6 @@ export default function PerpsTerminal() {
     return () => { window.removeEventListener("resize", check); clearTimeout(timer); };
   }, []);
 
-
   useEffect(() => {
     if (skipChainReset.current) {
       skipChainReset.current = false;
@@ -201,7 +200,6 @@ export default function PerpsTerminal() {
     window.addEventListener('keydown', handleCmdK);
     return () => window.removeEventListener('keydown', handleCmdK);
   }, []);
-
 
   useEffect(() => {
     const mid = currentPrice > 0 ? currentPrice : 2000;
@@ -373,7 +371,7 @@ export default function PerpsTerminal() {
   const isViewOnly = false;
   const tradePanelProps = {
     market: tradeMarket, chain,
-    asterUserId: asterUserId || undefined,
+    asterUserId: evmAddress || undefined,
     onTradeSuccess: handleTradeSuccess,
     viewOnly: isViewOnly,
     isMobile,
@@ -404,7 +402,7 @@ export default function PerpsTerminal() {
         </div>
       ) : (
         <>
-          {/* Clean TradePage-style header for desktop market view */}
+          
           <div
             data-testid="perps-market-header"
             style={{
@@ -477,7 +475,7 @@ export default function PerpsTerminal() {
             )}
           </div>
 
-          {/* Desktop: chart left with data tabs, SimpleTradeCard right */}
+          
           <div style={{ flexGrow: 1, flexShrink: 1, flexBasis: 0, display: "flex", overflow: "hidden" }}>
             <div style={{ flexGrow: 1, flexShrink: 1, flexBasis: 0, display: "flex", flexDirection: "column", minWidth: 0, overflow: "hidden" }}>
               <div style={{ flexGrow: 1, flexShrink: 1, flexBasis: 0, minHeight: 0, overflow: "hidden", background: T.bg }}>
@@ -538,7 +536,7 @@ export default function PerpsTerminal() {
           posRefreshKey={posRefreshKey}
           chainForPositions={chainForPositions}
           livePrices={livePrices}
-          asterUserId={asterUserId}
+          asterUserId={evmAddress}
           setDataTab={setDataTab}
           setBottomTab={setBottomTab}
           onClose={() => setShowDataPanel(false)}

@@ -14,7 +14,6 @@ const TF_TO_SERVICE: Record<Timeframe, string> = {
   '1m': '1M', '5m': '5M', '15m': '15M', '1h': '1H', '4h': '4H', '1d': '1D', '1w': '1W',
 };
 
-// How often to poll for the latest candle (ms)
 const TF_POLL_INTERVAL: Record<Timeframe, number> = {
   '1m': 5000,
   '5m': 10000,
@@ -215,7 +214,6 @@ function TerminalChartInner({ symbol, currentPrice, onTimeframeChange, chain }: 
     }
   }, [currentPrice, loading]);
 
-  // Live polling — fetch latest candle and update the last bar
   useEffect(() => {
     if (!isLive) return;
     const isAsterSym = symbol.toUpperCase().endsWith('USDT');
@@ -228,7 +226,7 @@ function TerminalChartInner({ symbol, currentPrice, onTimeframeChange, chain }: 
       try {
         const result = await fetchCandles(rawSymbol, TF_TO_SERVICE[tf], chain);
         if (!result || result.candles.length === 0) return;
-        // Only update the last candle to avoid re-rendering the whole chart
+
         const last = result.candles[result.candles.length - 1];
         candleSeriesRef.current.update({
           time: last.time as Time,
@@ -242,7 +240,7 @@ function TerminalChartInner({ symbol, currentPrice, onTimeframeChange, chain }: 
           value: last.volume || 0,
           color: last.close >= last.open ? 'rgba(14,203,129,0.25)' : 'rgba(246,70,93,0.25)',
         });
-      } catch { /* silent */ }
+      } catch {  }
     };
 
     const interval = setInterval(poll, TF_POLL_INTERVAL[tf]);

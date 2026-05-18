@@ -5,6 +5,7 @@ import {
   formatHlPerpPrice,
   formatHlSize,
 } from "@/lib/hyperliquidOrderFormat";
+import { toUserFacingError } from "@/lib/userFacingErrors";
 import { getWalletClient } from "@wagmi/core";
 import { wagmiConfig } from "@/config/wagmiConfig";
 import { toAccount } from "viem/accounts";
@@ -152,16 +153,16 @@ export async function executeHyperliquidTrade(
 
       onTradeSuccess?.();
     } else {
-      setTxMsg(`Order failed: ${JSON.stringify(result)}`);
+      setTxMsg(toUserFacingError("Order could not be placed.", "trade"));
       setTxState("error");
     }
   } catch (e: unknown) {
     const code =
       e && typeof e === "object" && "code" in e ? (e as { code?: number | string }).code : undefined;
     if (code === 4001 || code === "ACTION_REJECTED") {
-      setTxMsg("Transaction rejected");
+      setTxMsg(toUserFacingError("Transaction cancelled.", "trade"));
     } else {
-      setTxMsg(extractHyperliquidErrorMessage(e));
+      setTxMsg(toUserFacingError(extractHyperliquidErrorMessage(e), "trade"));
     }
     setTxState("error");
   }

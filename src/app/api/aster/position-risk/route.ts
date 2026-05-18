@@ -1,33 +1,43 @@
-import { NextRequest, NextResponse } from "next/server";
-import { assertWalletMatchesUser } from "@/lib/asterApiUser";
+import { NextRequest } from "next/server";
+import { resolveAsterFapiUserFromRequest } from "@/lib/asterApiUser";
+import { coerceAsterPositionRiskRows } from "@/lib/asterPositionRiskFilter";
+import { asterPositionRowIsOpen, mapAsterPositionRiskRows } from "@/lib/asterPositionMap";
 import { asterFapiV3UserSignedGet } from "@/lib/asterFapiV3UserSignedGet";
 import { resolveAgentSignerForUser } from "@/lib/asterUserAgentSigner";
+import { asterPrivateJson } from "@/lib/asterUserApiResponse";
+import {
+  asterFapiErrorNeedsTradingSetup,
+  ASTER_ENABLE_TRADING_MESSAGE,
+} from "@/lib/asterTradingSetupError";
+
+export const dynamic = "force-dynamic";
 
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = request.nextUrl;
-    const userAddress = searchParams.get("userId");
+    const queryUserId = searchParams.get("userId");
+    const headerWalletRaw = request.headers.get("x-evm-address") || null;
 
-    if (!userAddress) {
-      return NextResponse.json({ error: "userId required", positions: [] }, { status: 200 });
+    const resolvedUser = resolveAsterFapiUserFromRequest(request, queryUserId);
+    if (!resolvedUser.ok) {
+      return asterPrivateJson({
+        positions: [],
+        error: resolvedUser.error,
+        user: null,
+        debug: { headerWallet: headerWalletRaw, queryUserId },
+      });
     }
-
-    const walletCheck = assertWalletMatchesUser(request, userAddress);
-    if (!walletCheck.ok) {
-      return NextResponse.json({ positions: [], error: "Unauthorized" }, { status: 200 });
-    }
-    const user = walletCheck.user;
+    const user = resolvedUser.user;
 
     const signerResolved = await resolveAgentSignerForUser(user);
     if (!signerResolved) {
-      return NextResponse.json(
-        {
-          positions: [],
-          error:
-            "Aster signer not configured. Set ASTER_SIGNER_PRIVATE_KEY or ASTER_API_PRIVATE_KEY on the server.",
-        },
-        { status: 200 }
-      );
+      return asterPrivateJson({
+        positions: [],
+        error:
+          "Aster signer not configured. Set ASTER_SIGNER_PRIVATE_KEY or ASTER_API_PRIVATE_KEY on the server.",
+        user,
+        debug: { headerWallet: headerWalletRaw, queryUserId },
+      });
     }
 
     const result = await asterFapiV3UserSignedGet("positionRisk", user, {
@@ -36,19 +46,44 @@ export async function GET(request: NextRequest) {
     });
 
     if (!result.ok) {
-      return NextResponse.json({ positions: [], error: result.error, code: result.code }, { status: 200 });
+      const needsApproval = asterFapiErrorNeedsTradingSetup(result.error);
+      return asterPrivateJson({
+        positions: [],
+        error: needsApproval ? ASTER_ENABLE_TRADING_MESSAGE : result.error,
+        code: result.code,
+        user,
+        signer: signerResolved.address,
+        debug: { headerWallet: headerWalletRaw, queryUserId },
+      });
     }
 
-    const raw = result.data;
-    if (Array.isArray(raw)) {
-      return NextResponse.json({ positions: raw });
+    const arr = coerceAsterPositionRiskRows(result.data);
+    if (arr) {
+      const openRows = arr.filter(
+        (row) => row && typeof row === "object" && asterPositionRowIsOpen(row as Record<string, unknown>)
+      );
+      const mapped = mapAsterPositionRiskRows(openRows);
+      return asterPrivateJson({
+        positions: openRows,
+        mappedPositions: mapped,
+        user,
+        signer: signerResolved.address,
+        debug: { headerWallet: headerWalletRaw, queryUserId },
+      });
     }
 
-    return NextResponse.json({ positions: [], error: "Unexpected positionRisk response shape" }, { status: 200 });
+    return asterPrivateJson({
+      positions: [],
+      error: "Unexpected positionRisk response shape",
+      user,
+      signer: signerResolved.address,
+      debug: { headerWallet: headerWalletRaw, queryUserId },
+    });
   } catch (error) {
-    return NextResponse.json(
-      { positions: [], error: error instanceof Error ? error.message : "Unknown error" },
-      { status: 200 }
-    );
+    return asterPrivateJson({
+      positions: [],
+      error: error instanceof Error ? error.message : "Unknown error",
+      user: null,
+    });
   }
 }

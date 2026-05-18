@@ -74,7 +74,6 @@ export function useEvmWallet() {
   const isPolygon = chainId === POLYGON_CHAIN_ID;
   const isHyperliquid = chainId === HYPERLIQUID_CHAIN_ID;
 
-  // Auto-reconnect when user returns to the app
   useEffect(() => {
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
@@ -95,7 +94,6 @@ export function useEvmWallet() {
     };
   }, [reconnect]);
 
-  // Auto-switch to supported chain if connected to unsupported chain
   useEffect(() => {
     if (isConnected && chainId !== undefined && !SUPPORTED_CHAIN_IDS.has(chainId)) {
       switchChainAsync({ chainId: ARBITRUM_CHAIN_ID as number }).catch(() => {});

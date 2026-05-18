@@ -15,14 +15,14 @@ export interface BadgeDefinition {
 }
 
 export const BADGE_DEFINITIONS: BadgeDefinition[] = [
-  // Tier badges
+
   { id: 'tier-novice',     name: 'Novice',          japanese: '初心者',   romaji: 'Shoshinsha',  rarity: 'common',    category: 'tier',      earnCondition: 'Make your first trade.' },
   { id: 'tier-challenger', name: 'Challenger',       japanese: '挑戦者',   romaji: 'Chōsensha',   rarity: 'uncommon',  category: 'tier',      earnCondition: 'Reach Level 6 (500 XP).' },
   { id: 'tier-trader',     name: 'Trader',           japanese: '商人',     romaji: 'Shōnin',      rarity: 'rare',      category: 'tier',      earnCondition: 'Reach Level 16 (2,000 XP).' },
   { id: 'tier-pro',        name: 'Pro',              japanese: '達人',     romaji: 'Tatsujin',    rarity: 'epic',      category: 'tier',      earnCondition: 'Reach Level 31 (10,000 XP).' },
   { id: 'tier-elite',      name: 'Elite',            japanese: '精鋭',     romaji: 'Seiei',       rarity: 'legendary', category: 'tier',      earnCondition: 'Reach Level 51 (50,000 XP).' },
   { id: 'tier-legend',     name: 'Legend',           japanese: '伝説',     romaji: 'Densetsu',    rarity: 'mythic',    category: 'tier',      earnCondition: 'Reach Level 76 (200,000 XP).' },
-  // Achievement badges
+
   { id: 'first-blood',     name: 'First Blood',      japanese: '初戦',     romaji: 'Shosen',      rarity: 'common',    category: 'milestone', earnCondition: 'Execute your first ever trade.' },
   { id: 'century',         name: 'Century',          japanese: '百',       romaji: 'Hyaku',       rarity: 'rare',      category: 'milestone', earnCondition: 'Execute 100 total trades.' },
   { id: 'thousand-cuts',   name: 'Thousand Cuts',    japanese: '千',       romaji: 'Sen',         rarity: 'epic',      category: 'milestone', earnCondition: 'Execute 1,000 total trades.' },
@@ -101,7 +101,7 @@ export default function Badge({ id, earned = false, earnedDate, size = 64, showT
       onMouseLeave={() => setTooltipVisible(false)}
       data-testid={`badge-${id}`}
     >
-      {/* Badge image */}
+      
       <div
         className={`rounded-full overflow-hidden ${ringCls} ${shadowCls} ${animationCls} transition-all duration-200`}
         style={{ width: size, height: size }}
@@ -117,7 +117,7 @@ export default function Badge({ id, earned = false, earnedDate, size = 64, showT
             transition: 'filter 0.3s ease',
           }}
         />
-        {/* Unearned question mark overlay */}
+        
         {!earned && (
           <div
             className="absolute inset-0 flex items-center justify-center rounded-full"
@@ -128,7 +128,7 @@ export default function Badge({ id, earned = false, earnedDate, size = 64, showT
         )}
       </div>
 
-      {/* Mythic animated border */}
+      
       {rarity === 'mythic' && earned && (
         <div
           className="absolute inset-0 rounded-full pointer-events-none"
@@ -142,7 +142,7 @@ export default function Badge({ id, earned = false, earnedDate, size = 64, showT
         />
       )}
 
-      {/* Tooltip */}
+      
       {showTooltip && tooltipVisible && (
         <div
           className="absolute z-50 pointer-events-none"
@@ -161,7 +161,7 @@ export default function Badge({ id, earned = false, earnedDate, size = 64, showT
               boxShadow: `0 0 12px ${RARITY_LABEL[rarity]}22`,
             }}
           >
-            {/* Rarity dot */}
+            
             <div className="flex items-center justify-center gap-1.5 mb-0.5">
               <div
                 className="w-1.5 h-1.5 rounded-full"
@@ -194,7 +194,7 @@ export default function Badge({ id, earned = false, earnedDate, size = 64, showT
               )}
             </div>
           </div>
-          {/* Tooltip arrow */}
+          
           <div
             className="w-0 h-0 mx-auto"
             style={{
@@ -209,7 +209,6 @@ export default function Badge({ id, earned = false, earnedDate, size = 64, showT
   );
 }
 
-// Tier badge helper — returns the current tier badge id based on level
 export function getTierBadgeId(level: number): string {
   if (level >= 76) return 'tier-legend';
   if (level >= 51) return 'tier-elite';

@@ -173,6 +173,31 @@ function ExchangeShell() {
     }
   }, [walletAddress]);
 
+  const lastWalletRef = useRef<string>("");
+  useEffect(() => {
+    const prev = lastWalletRef.current;
+    const next = walletAddress || "";
+    lastWalletRef.current = next;
+    if (!prev || prev === next) return;
+    if (prev.toLowerCase() === next.toLowerCase()) return;
+    try {
+      localStorage.removeItem("aster_user_id");
+      const cleanupKeys: string[] = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (!k) continue;
+        if (k.startsWith(`afx-user-${prev}`)) cleanupKeys.push(k);
+      }
+      cleanupKeys.forEach((k) => localStorage.removeItem(k));
+    } catch {}
+    try {
+      usePositionStore.getState().setPositions([]);
+    } catch {}
+    window.dispatchEvent(
+      new CustomEvent("afx-wallet-changed", { detail: { from: prev, to: next } }),
+    );
+  }, [walletAddress]);
+
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key === 'S') {
@@ -203,7 +228,6 @@ function ExchangeShell() {
     window.addEventListener("afx-navigate", handler);
     return () => window.removeEventListener("afx-navigate", handler);
   }, []);
-
 
   const handleSelectMarket = useCallback((market: UnifiedMarket) => {
     localStorage.setItem('afx_preselect_market', market.symbol);
@@ -239,7 +263,7 @@ function ExchangeShell() {
         }}
         data-testid="exchange-header"
       >
-        {/* Logo - positioned absolutely on left */}
+        
         <div className="absolute left-4 flex items-center" style={{ gap: 10, flexShrink: 0 }}>
           <img
             src="/azabu-logo.png"
@@ -249,7 +273,7 @@ function ExchangeShell() {
           />
         </div>
 
-        {/* Desktop inline nav - truly centered */}
+        
         <nav className="flex items-center" style={{ gap: 2 }}>
           {[...PRIMARY_NAV, ...SECONDARY_NAV].map(({ id, label }) => {
             const active = activePage === id;
@@ -284,7 +308,7 @@ function ExchangeShell() {
           })}
         </nav>
 
-        {/* User header + Wallet - positioned absolutely on right */}
+        
         <div className="absolute right-4 flex items-center shrink-0" style={{ gap: 6 }}>
           <UserHeader
             onDisconnect={() => {
@@ -358,7 +382,7 @@ function ExchangeShell() {
 
           {activePage === "perps" && (
             <div className="afx-page-enter" style={{ height: "100%", overflow: "hidden" }} data-testid="page-perps">
-              <PerpsTerminal />
+              <PerpsTerminal key={`perps:${walletAddress || "guest"}`} />
             </div>
           )}
 
@@ -370,7 +394,7 @@ function ExchangeShell() {
 
           {activePage === "portfolio" && (
             <div className="afx-page-enter h-full overflow-y-auto" data-testid="page-portfolio">
-              <PortfolioPage />
+              <PortfolioPage key={`portfolio:${walletAddress || "guest"}`} />
             </div>
           )}
 
@@ -388,7 +412,6 @@ function ExchangeShell() {
 
         </ErrorBoundary>
       </main>
-
 
       <MobileBottomNav
         activePage={activePage}

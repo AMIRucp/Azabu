@@ -1,4 +1,5 @@
 import type { TxCallbacks } from "./shared";
+import { toUserFacingError } from "@/lib/userFacingErrors";
 import { getWalletClient } from "@wagmi/core";
 import { wagmiConfig } from "@/config/wagmiConfig";
 import { toAccount } from "viem/accounts";
@@ -86,20 +87,24 @@ export async function executeHyperliquidWithdraw(
       setTxState("success");
       onSuccess?.();
     } else {
-      const errorMsg = JSON.stringify(result);
-      setTxMsg(`Withdrawal failed: ${errorMsg}`);
+      setTxMsg(toUserFacingError("Withdrawal could not be completed.", "withdraw"));
       setTxState("error");
-      throw new Error(`Withdrawal failed: ${errorMsg}`);
+      throw new Error(toUserFacingError(null, "withdraw"));
     }
-  } catch (e: any) {
-    if (e?.code === 4001 || e?.code === "ACTION_REJECTED") {
-      setTxMsg("Transaction rejected");
+  } catch (e: unknown) {
+    if (
+      e &&
+      typeof e === "object" &&
+      "code" in e &&
+      ((e as { code?: number | string }).code === 4001 ||
+        (e as { code?: string }).code === "ACTION_REJECTED")
+    ) {
+      setTxMsg(toUserFacingError("Transaction cancelled.", "withdraw"));
       setTxState("error");
-      throw new Error("Transaction rejected");
-    } else {
-      setTxMsg(e.message || "Failed to initiate withdrawal");
-      setTxState("error");
-      throw e;
+      throw new Error(toUserFacingError("Transaction cancelled.", "withdraw"));
     }
+    setTxMsg(toUserFacingError(e, "withdraw"));
+    setTxState("error");
+    throw new Error(toUserFacingError(e, "withdraw"));
   }
 }

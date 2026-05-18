@@ -5,6 +5,7 @@ import { useHyperliquidPortfolio } from "@/hooks/useHyperliquidPortfolio";
 import { T, mono } from "@/components/perps/terminalTheme";
 import { executeHyperliquidClose } from "@/hooks/executors/executeHyperliquidClose";
 import type { TxState } from "@/hooks/executors/shared";
+import { toUserFacingError } from "@/lib/userFacingErrors";
 
 const sans = "'Inter', -apple-system, sans-serif";
 
@@ -39,7 +40,7 @@ export default function HyperliquidPositions({ address }: HyperliquidPositionsPr
       );
 
       if (!market || market.assetId === undefined) {
-        setTxMsg(`Could not find market for ${position.coin}`);
+        setTxMsg(toUserFacingError("Could not close position.", "close"));
         setTxState("error");
         setTimeout(() => {
           setClosingPositionIndex(null);
@@ -72,7 +73,7 @@ export default function HyperliquidPositions({ address }: HyperliquidPositionsPr
         }
       );
     } catch (err) {
-      setTxMsg("Failed to close position");
+      setTxMsg(toUserFacingError(err, "close"));
       setTxState("error");
       setTimeout(() => {
         setClosingPositionIndex(null);

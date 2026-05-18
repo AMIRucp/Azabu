@@ -1,14 +1,4 @@
-/**
- * Maps perpetual market stock tickers to their tokenized counterparts
- * available on Jupiter (Solana) via Backed Finance xStocks.
- *
- * When a user clicks a stock market in the perps list, they are routed
- * to the Swap page pre-filled with the corresponding xStock symbol so
- * they can buy the tokenized equity via Jupiter.
- *
- * Keys: base asset ticker as it appears in the perp market (e.g. "TSLA")
- * Values: the exact Jupiter/xStock token symbol to pre-select in Swap
- */
+
 export const STOCK_SWAP_MAP: Record<string, string> = {
   TSLA:   "xTSLA",
   NVDA:   "xNVDA",
@@ -143,18 +133,10 @@ export const STOCK_SWAP_MAP: Record<string, string> = {
   HANMI:  "xHANMI",
 };
 
-/**
- * Returns true if the given base asset ticker has a known tokenized
- * equivalent available to buy on Jupiter (Solana).
- */
 export function hasStockSwap(baseAsset: string): boolean {
   return baseAsset.toUpperCase() in STOCK_SWAP_MAP;
 }
 
-/**
- * Returns the Jupiter token symbol to pre-select in Swap for the given
- * stock ticker, or undefined if not mapped.
- */
 export function getStockSwapSymbol(baseAsset: string): string | undefined {
   return STOCK_SWAP_MAP[baseAsset.toUpperCase()];
 }

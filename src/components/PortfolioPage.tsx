@@ -18,6 +18,8 @@ import useSettingsStore from "@/stores/useSettingsStore";
 import { getIconWithJupiter } from "@/config/tokenIcons";
 import { useJupiterLogos } from "@/hooks/useJupiterLogos";
 import { ConnectWalletEmblem } from "./ConnectWalletEmblem";
+import { shouldOfferAsterEnableTrading, toUserFacingError } from "@/lib/userFacingErrors";
+import { AsterAgentApprovalModal, useAsterAgentApproval } from "./AsterAgentApprovalModal";
 
 const MONO = "'IBM Plex Mono', 'SF Mono', monospace";
 const SANS = "Inter, -apple-system, sans-serif";
@@ -151,7 +153,6 @@ function ChainPill({ label, value, current, logo, onClick }: {
   );
 }
 
-/* Stat pill inside the portfolio card */
 function StatPill({ label, value, valueColor = MID }: { label: string; value: string; valueColor?: string }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
@@ -161,7 +162,6 @@ function StatPill({ label, value, valueColor = MID }: { label: string; value: st
   );
 }
 
-/* Action button — slim horizontal row */
 function ActionBtn({ label, icon, onClick, testId }: { label: string; icon: React.ReactNode; onClick: () => void; testId: string }) {
   const [hov, setHov] = useState(false);
   return (
@@ -187,7 +187,6 @@ function ActionBtn({ label, icon, onClick, testId }: { label: string; icon: Reac
   );
 }
 
-/* Overview tab */
 function OverviewTab({ positions, unrealizedPnl, freeMargin, usedCollateral }: {
   positions: any[]; unrealizedPnl: number; freeMargin: number; usedCollateral: number;
 }) {
@@ -222,7 +221,7 @@ export default function PortfolioPage() {
     loading, balancesLoading, noWallet, evmAddress, chainFilter, setChainFilter, fetchPortfolio,
     walletBalance, protocolDeposits, freeMargin, usedCollateral,
     totalNetWorth, totalPnl, unrealizedPnl, hlEquity, asterEquity,
-    asterWarning, asterLoadError, asterQueriedUser, asterWalletMismatch,
+    asterWarning, asterLoadError, asterPositionLoadError, asterPositionHint, asterQueriedUser, asterWalletMismatch,
     walletTokens, deposits, positions, data,
     perpPositionCount,
   } = usePortfolioData();
@@ -238,6 +237,12 @@ export default function PortfolioPage() {
       : null;
 
   const refreshPositions = usePositionStore((s) => s.refresh);
+  const {
+    showModal: showAsterApproval,
+    openEnableTradingModal: openAsterApprovalModal,
+    handleApproved: handleAsterApproved,
+    closeModal: closeAsterApprovalModal,
+  } = useAsterAgentApproval();
   const [walletModalOpen, setWalletModalOpen] = useState(false);
   const [depositModalOpen, setDepositModalOpen] = useState(false);
   const [withdrawModalOpen, setWithdrawModalOpen] = useState(false);
@@ -269,15 +274,15 @@ export default function PortfolioPage() {
     { label: "Withdraw", icon: <ArrowUpFromLine size={14} />,  action: () => setWithdrawModalOpen(true), testId: "button-withdraw-portfolio" },
   ] as const;
 
-  /* ─── NO WALLET STATE ───────────────────────────────────────────────── */
+  
   if (noWallet) {
     return (
       <div style={{ maxWidth: 860, margin: "0 auto", padding: mobile ? "12px 12px" : "32px 28px", display: "flex", flexDirection: "column", gap: 8 }}>
 
-        {/* Top row: portfolio card + watch */}
+        
         <div style={{ display: "grid", gridTemplateColumns: mobile ? "1fr" : "3fr 2fr", gap: 8 }}>
 
-          {/* Portfolio card */}
+          
           <div data-testid="card-portfolio-hero" style={{
             background: CARD, border: `1px solid ${BORDER}`, borderRadius: 14, padding: mobile ? "12px 12px 10px" : "24px 24px 20px",
           }}>
@@ -291,7 +296,7 @@ export default function PortfolioPage() {
             <span style={{ fontSize: 10, color: DIM, fontFamily: SANS }}>Connect wallet to view portfolio</span>
           </div>
 
-          {/* Watch */}
+          
           {!mobile && (
             <div style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 14, padding: "24px 24px 20px" }}>
               <div style={{ fontSize: 9, fontWeight: 700, color: DIM, fontFamily: SANS, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 20 }}>
@@ -324,14 +329,14 @@ export default function PortfolioPage() {
           )}
         </div>
 
-        {/* Action buttons */}
+        
         <div style={{ display: "flex", gap: 6 }}>
           {actionButtons.map((btn) => (
             <ActionBtn key={btn.label} label={btn.label} icon={btn.icon} onClick={btn.action} testId={btn.testId} />
           ))}
         </div>
 
-        {/* Connect CTA */}
+        
         <div style={{ display: "flex", justifyContent: "center", paddingTop: 6, paddingBottom: 6 }}>
           <ConnectWalletEmblem
             variant="full"
@@ -344,11 +349,11 @@ export default function PortfolioPage() {
     );
   }
 
-  /* ─── CONNECTED STATE ───────────────────────────────────────────────── */
+  
   return (
     <div style={{ maxWidth: 860, margin: "0 auto", padding: mobile ? "0" : "32px 28px", display: "flex", flexDirection: "column", gap: mobile ? 0 : 8 }}>
 
-      {/* ── PORTFOLIO VALUE CARD ─────────────────────────────────────── */}
+      
       <div
         data-testid="card-portfolio-hero"
         style={{
@@ -359,7 +364,7 @@ export default function PortfolioPage() {
           margin: mobile ? "12px 12px 0" : "0",
         }}
       >
-        {/* Header row */}
+        
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
           <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
@@ -375,7 +380,7 @@ export default function PortfolioPage() {
               </span>
             )}
           </div>
-          {/* Refresh */}
+          
           <button
             onClick={handleRefresh}
             data-testid="button-refresh-portfolio"
@@ -389,7 +394,7 @@ export default function PortfolioPage() {
           </button>
         </div>
 
-        {/* Big value */}
+        
         <div style={{ marginBottom: 12 }}>
           {balancesLoading ? (
             <div style={{ width: 160, height: 32, background: "#1A1A1A", borderRadius: 6 }} />
@@ -444,9 +449,100 @@ export default function PortfolioPage() {
               lineHeight: 1.45,
               color: "#F87171",
               fontFamily: SANS,
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              flexWrap: "wrap",
             }}
           >
-            {asterLoadError}
+            {shouldOfferAsterEnableTrading(asterLoadError) ? (
+              <button
+                type="button"
+                onClick={openAsterApprovalModal}
+                style={{
+                  width: "100%",
+                  padding: 0,
+                  border: "none",
+                  background: "transparent",
+                  color: "#F87171",
+                  fontSize: 12,
+                  fontWeight: 600,
+                  cursor: "pointer",
+                  fontFamily: SANS,
+                  textAlign: "center",
+                }}
+              >
+                Enable trading
+              </button>
+            ) : (
+              <span>{toUserFacingError(asterLoadError, "portfolio")}</span>
+            )}
+          </div>
+        )}
+        {asterPositionHint &&
+          !asterWalletMismatch &&
+          !asterLoadError &&
+          !asterPositionLoadError &&
+          perpPositionCount === 0 && (
+          <div
+            style={{
+              marginBottom: 10,
+              padding: "8px 10px",
+              borderRadius: 8,
+              background: "rgba(255,255,255,0.04)",
+              border: "1px solid rgba(255,255,255,0.08)",
+              fontSize: 10,
+              lineHeight: 1.45,
+              color: "#9BA4AE",
+              fontFamily: SANS,
+            }}
+          >
+            {asterPositionHint}
+          </div>
+        )}
+        {asterPositionLoadError &&
+          !asterWalletMismatch &&
+          !asterLoadError &&
+          perpPositionCount === 0 && (
+          <div
+            style={{
+              marginBottom: 10,
+              padding: "8px 10px",
+              borderRadius: 8,
+              background: "rgba(249, 115, 22, 0.1)",
+              border: "1px solid rgba(249, 115, 22, 0.35)",
+              fontSize: 10,
+              lineHeight: 1.45,
+              color: "#FB923C",
+              fontFamily: SANS,
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              flexWrap: "wrap",
+            }}
+          >
+            {shouldOfferAsterEnableTrading(asterPositionLoadError) ? (
+              <button
+                type="button"
+                onClick={openAsterApprovalModal}
+                style={{
+                  width: "100%",
+                  padding: 0,
+                  border: "none",
+                  background: "transparent",
+                  color: "#FB923C",
+                  fontSize: 12,
+                  fontWeight: 600,
+                  cursor: "pointer",
+                  fontFamily: SANS,
+                  textAlign: "center",
+                }}
+              >
+                Enable trading
+              </button>
+            ) : (
+              <span>{toUserFacingError(asterPositionLoadError, "portfolio")}</span>
+            )}
           </div>
         )}
         {asterWarning && !asterWalletMismatch && !asterLoadError && (
@@ -472,7 +568,7 @@ export default function PortfolioPage() {
           </p>
         )}
 
-        {/* Stats row */}
+        
         <div style={{ height: 1, background: BORDER, marginBottom: 10 }} />
         <div style={{ display: "grid", gridTemplateColumns: mobile ? "1fr 1fr" : "repeat(3, 1fr)", gap: mobile ? 8 : 12 }}>
           <StatPill label="Wallet" value={balancesLoading ? "—" : formatBigUsd(walletBalance)} />
@@ -481,7 +577,7 @@ export default function PortfolioPage() {
         </div>
       </div>
 
-      {/* ── ACTION BUTTONS ───────────────────────────────────────────── */}
+      
       <div style={{ display: "flex", gap: 6, padding: mobile ? "8px 12px" : "0" }}>
         {actionButtons.map((btn, i) => (
           <ActionBtn
@@ -494,7 +590,7 @@ export default function PortfolioPage() {
         ))}
       </div>
 
-      {/* ── DESKTOP WATCH STRIP ──────────────────────────────────────── */}
+      
       {!mobile && (
         <div style={{
           background: CARD, border: `1px solid ${BORDER}`, borderRadius: 14,
@@ -536,7 +632,7 @@ export default function PortfolioPage() {
         </div>
       )}
 
-      {/* ── HOLDINGS GRID ────────────────────────────────────────────── */}
+      
       {walletTokens.filter((t) => (t.valueUsd || 0) > 0.01).length > 0 && (
         <div style={{ padding: mobile ? "4px 12px" : "0" }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
@@ -581,7 +677,7 @@ export default function PortfolioPage() {
         </div>
       )}
 
-      {/* ── TABS ─────────────────────────────────────────────────────── */}
+      
       <div style={{
         display: "flex", borderBottom: `1px solid ${BORDER}`,
         overflowX: "auto", background: "transparent",
@@ -628,7 +724,19 @@ export default function PortfolioPage() {
 
       <WalletSelectModal open={walletModalOpen} onClose={() => setWalletModalOpen(false)} />
       <DepositModal open={depositModalOpen} onClose={() => setDepositModalOpen(false)} />
-      <WithdrawModal open={withdrawModalOpen} onClose={() => setWithdrawModalOpen(false)} />
+      <WithdrawModal
+        open={withdrawModalOpen}
+        onClose={() => setWithdrawModalOpen(false)}
+        onEnableTrading={openAsterApprovalModal}
+      />
+      <AsterAgentApprovalModal
+        open={showAsterApproval}
+        onClose={closeAsterApprovalModal}
+        onApproved={() => {
+          handleAsterApproved();
+          fetchPortfolio();
+        }}
+      />
       <SendModal
         open={sendModalOpen}
         onClose={() => { setSendModalOpen(false); setSendDefaultToken(undefined); setSendDefaultChain(undefined); }}

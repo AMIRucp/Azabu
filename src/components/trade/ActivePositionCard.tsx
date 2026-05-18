@@ -201,7 +201,7 @@ export default function ActivePositionCard({ assetSym }: ActivePositionCardProps
         fontFamily: SANS,
       }}
     >
-      {/* Header row: direction badge + PnL */}
+      
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           {isLong ? <TrendingUp size={14} style={{ color: "#22C55E" }} /> : <TrendingDown size={14} style={{ color: "#EF4444" }} />}
@@ -228,7 +228,7 @@ export default function ActivePositionCard({ assetSym }: ActivePositionCardProps
         </div>
       </div>
 
-      {/* Stats row */}
+      
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginBottom: 10 }}>
         {[
           { l: "Size", v: `$${position.sizeUsd.toFixed(0)}` },
@@ -242,7 +242,7 @@ export default function ActivePositionCard({ assetSym }: ActivePositionCardProps
         ))}
       </div>
 
-      {/* Action buttons */}
+      
       <div style={{ display: "flex", gap: 6 }}>
         <button
           data-testid="active-position-add"
@@ -289,7 +289,7 @@ export default function ActivePositionCard({ assetSym }: ActivePositionCardProps
         </button>
       </div>
 
-      {/* Add Panel */}
+      
       {panel === "add" && (
         <div style={{
           marginTop: 10, padding: "12px 10px", borderRadius: 10,
@@ -350,7 +350,7 @@ export default function ActivePositionCard({ assetSym }: ActivePositionCardProps
         </div>
       )}
 
-      {/* Reduce Panel */}
+      
       {panel === "reduce" && position && (
         <div style={{
           marginTop: 10, padding: "12px 10px", borderRadius: 10,

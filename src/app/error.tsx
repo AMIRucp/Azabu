@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { AlertTriangle, RotateCcw } from "lucide-react";
+import { toUserFacingError } from "@/lib/userFacingErrors";
 
 export default function Error({
   error,
@@ -11,7 +12,7 @@ export default function Error({
   reset: () => void;
 }) {
   useEffect(() => {
-    // error is logged by Next.js internally
+
   }, [error]);
 
   return (
@@ -54,7 +55,7 @@ export default function Error({
             lineHeight: 1.5,
           }}
         >
-          {error.message || "An unexpected error occurred."}
+          {toUserFacingError(error, "generic")}
         </p>
         <button
           onClick={reset}

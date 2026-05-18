@@ -1,94 +1,170 @@
 import { NextRequest, NextResponse } from "next/server";
+import { ethers } from "ethers";
+import {
+  asterWeb3CreateApiKey,
+  asterWeb3GetNonce,
+  asterWeb3SignInMessage,
+  getAsterWeb3IpWhitelist,
+} from "@/lib/asterWeb3CreateApiKey";
+import { getAsterSetupStatus } from "@/lib/asterSetupStatus";
+import { deriveAgentSignerForUser } from "@/lib/asterUserAgentSigner";
+import { ASTER_WEB3_SIGN_CHAIN_ID, verifyAsterWeb3SignMessage } from "@/lib/asterWeb3Sign";
+import { stashAsterWeb3Nonce, takeAsterWeb3Nonce } from "@/lib/asterWeb3NonceSession";
 
-const ASTER_BASE = "https://www.asterdex.com";
-const SOURCE_CODE = process.env.ASTER_SOURCE_CODE || "azabu";
+export const dynamic = "force-dynamic";
+
+function normalizeWallet(walletAddress: string): string | null {
+  try {
+    return ethers.getAddress(walletAddress.trim());
+  } catch {
+    return null;
+  }
+}
+
+function derivedAgentPayload(userNorm: string) {
+  const signer = deriveAgentSignerForUser(userNorm);
+  if (!signer) return null;
+  return { agentAddress: signer.address };
+}
 
 export async function GET(request: NextRequest) {
-  const { searchParams } = request.nextUrl;
-  const walletAddress = searchParams.get("walletAddress");
-
+  const walletAddress = request.nextUrl.searchParams.get("walletAddress");
   if (!walletAddress) {
     return NextResponse.json({ error: "walletAddress required" }, { status: 400 });
   }
 
-  const res = await fetch(`${ASTER_BASE}/bapi/futures/v1/public/future/web3/get-nonce`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ sourceAddr: walletAddress, type: "CREATE_API_KEY" }),
-    signal: AbortSignal.timeout(8000),
-  });
+  const userNorm = normalizeWallet(walletAddress);
+  if (!userNorm) {
+    return NextResponse.json({ error: "Invalid walletAddress" }, { status: 400 });
+  }
 
-  const data = await res.json().catch(() => ({}));
-  const d = data as { success?: boolean; data?: { nonce?: string }; message?: string };
+  const forceWeb3 = request.nextUrl.searchParams.get("forceWeb3") === "1";
+  const agent = derivedAgentPayload(userNorm);
 
-  if (!res.ok || !d.success || !d.data?.nonce) {
-    return NextResponse.json(
-      { error: d.message || "Failed to get nonce" },
-      { status: 400 }
-    );
+  if (!forceWeb3) {
+    const status = await getAsterSetupStatus(userNorm);
+    if (!status.needsCreateApiWallet && status.hasAsterAccount && agent) {
+      return NextResponse.json({
+        alreadyExists: true,
+        agentAddress: agent.agentAddress,
+      });
+    }
   }
 
   return NextResponse.json({
-    nonce: d.data.nonce,
-    message: `You are signing into Astherus ${d.data.nonce}`,
+    needsCreate: true,
+    flow: "CREATE_API_KEY",
+    ip: getAsterWeb3IpWhitelist(),
+    agentAddress: agent?.agentAddress,
   });
 }
 
 export async function POST(request: NextRequest) {
   try {
-    const { walletAddress, signature } = await request.json();
-
-    if (!walletAddress || !signature) {
-      return NextResponse.json({ error: "walletAddress and signature required" }, { status: 400 });
-    }
-
-    const res = await fetch(
-      `${ASTER_BASE}/bapi/futures/v1/public/future/web3/broker-create-api-key`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "clientType": "broker",
-          "accept": "*/*",
-        },
-        body: JSON.stringify({
-          desc: "azabu-platform",
-          ip: "",
-          network: "ETH",
-          signature,
-          sourceAddr: walletAddress,
-          type: "CREATE_API_KEY",
-          sourceCode: SOURCE_CODE,
-        }),
-        signal: AbortSignal.timeout(15000),
-      }
-    );
-
-    const data = await res.json().catch(() => ({}));
-    const d = data as {
-      success?: boolean;
-      data?: { apiKey?: string; apiSecret?: string; keyId?: string; apiName?: string };
-      message?: string;
-      code?: string;
+    const body = await request.json();
+    const { walletAddress, prepare, signature, nonce } = body as {
+      walletAddress?: string;
+      prepare?: boolean;
+      signature?: string;
+      nonce?: string;
     };
 
-    if (!res.ok || !d.success || !d.data?.apiKey) {
+    if (!walletAddress) {
+      return NextResponse.json({ error: "walletAddress required" }, { status: 400 });
+    }
+
+    const userNorm = normalizeWallet(walletAddress);
+    if (!userNorm) {
+      return NextResponse.json({ error: "Invalid walletAddress" }, { status: 400 });
+    }
+
+    const forceWeb3 = (body as { forceWeb3?: boolean }).forceWeb3 === true;
+    const agent = derivedAgentPayload(userNorm);
+    const clientMessage =
+      typeof (body as { message?: string }).message === "string"
+        ? (body as { message: string }).message
+        : null;
+
+    if (prepare === true || (!signature && !nonce)) {
+      if (!forceWeb3) {
+        const status = await getAsterSetupStatus(userNorm);
+        if (!status.needsCreateApiWallet && status.hasAsterAccount && agent) {
+          return NextResponse.json({
+            success: true,
+            alreadyExists: true,
+            agentAddress: agent.agentAddress,
+          });
+        }
+      }
+
+      const freshNonce = await asterWeb3GetNonce(userNorm, "CREATE_API_KEY");
+      const { message } = stashAsterWeb3Nonce(userNorm, freshNonce);
+      return NextResponse.json({
+        prepare: true,
+        nonce: freshNonce,
+        message,
+        ip: getAsterWeb3IpWhitelist(),
+        flow: "CREATE_API_KEY",
+        signMethod: "signMessage",
+        chainId: ASTER_WEB3_SIGN_CHAIN_ID,
+        agentAddress: agent?.agentAddress,
+      });
+    }
+
+    if (!signature || !nonce) {
       return NextResponse.json(
-        { error: d.message || "Failed to create API key" },
+        { error: "Call POST with prepare:true for a fresh nonce, sign, then POST signature + nonce" },
         { status: 400 }
       );
     }
 
+    const session = takeAsterWeb3Nonce(userNorm);
+    const resolvedNonce = session?.nonce ?? String(nonce);
+    const message =
+      session?.message ??
+      (clientMessage && clientMessage.includes(resolvedNonce)
+        ? clientMessage
+        : asterWeb3SignInMessage(resolvedNonce));
+
+    if (!verifyAsterWeb3SignMessage(message, String(signature), userNorm)) {
+      return NextResponse.json(
+        {
+          error:
+            "Signature does not match wallet or message. Sign the exact Astherus text when prompted.",
+        },
+        { status: 400 }
+      );
+    }
+
+    await asterWeb3CreateApiKey({
+      walletAddress: userNorm,
+      signature: String(signature),
+      ip: getAsterWeb3IpWhitelist(),
+      uniqueDesc: forceWeb3,
+    });
+
+    const derived = deriveAgentSignerForUser(userNorm);
+    if (!derived) {
+      return NextResponse.json({ error: "Aster signer not configured on server" }, { status: 500 });
+    }
+
     return NextResponse.json({
       success: true,
-      apiKey: d.data.apiKey,
-      apiSecret: d.data.apiSecret,
-      keyId: d.data.keyId,
+      agentAddress: derived.address,
     });
   } catch (error) {
+    const msg = error instanceof Error ? error.message : "Unknown error";
+    const nonceExpired = /nonce expired/i.test(msg);
+    const duplicate = /duplicate|label is duplicated/i.test(msg);
+    const status = nonceExpired ? 410 : duplicate ? 409 : 500;
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Unknown error" },
-      { status: 500 }
+      {
+        error: msg,
+        nonceExpired,
+        duplicateLabel: duplicate,
+        needsNewSign: nonceExpired || duplicate,
+      },
+      { status },
     );
   }
 }

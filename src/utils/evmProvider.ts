@@ -1,7 +1,4 @@
-/**
- * @deprecated Use `useEvmWallet` hook from `@/hooks/useEvmWallet` instead.
- * This file is kept only for backward compatibility with non-hook contexts.
- */
+
 
 export async function getEvmAddress(): Promise<string | null> {
   if (typeof window === "undefined") return null;

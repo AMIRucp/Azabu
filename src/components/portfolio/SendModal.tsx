@@ -3,6 +3,7 @@
 import { useState, useCallback, useMemo, useEffect } from "react";
 import { X, Send, ChevronDown, AlertTriangle, ExternalLink, Check, Loader2 } from "lucide-react";
 import { useEvmWallet } from "@/hooks/useEvmWallet";
+import { toUserFacingError } from "@/lib/userFacingErrors";
 import { useToast } from "@/hooks/use-toast";
 import type { WalletToken } from "@/hooks/usePortfolioData";
 import { ARBITRUM_TOKEN_ADDRESSES, HYPERLIQUID_TOKEN_ADDRESSES, ERC20_ABI_MINIMAL } from "@/config/tokenAddresses";
@@ -156,13 +157,7 @@ export function SendModal({ open, onClose, walletTokens, defaultChain, defaultTo
     } catch (e: unknown) {
       const err = e as Error & { code?: number };
       setStatus("error");
-      let msg = err.message || "Unknown error";
-      if (err.code === 4001 || msg.toLowerCase().includes("rejected") || msg.toLowerCase().includes("user rejected")) {
-        msg = "Transaction cancelled. No funds were sent.";
-      } else if (msg.toLowerCase().includes("insufficient")) {
-        msg = "Insufficient balance for this transfer.";
-      }
-      setErrorMsg(msg);
+      setErrorMsg(toUserFacingError(err, "send"));
     }
   };
 

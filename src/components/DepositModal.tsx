@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useEffect } from "react";
 import { useEvmWallet } from "@/hooks/useEvmWallet";
+import { toUserFacingError } from "@/lib/userFacingErrors";
 
 const MONO = "'IBM Plex Mono', 'SF Mono', monospace";
 const SANS = "Inter, -apple-system, sans-serif";
@@ -16,7 +17,6 @@ type AssetDef = {
   routeLabel: string;
 };
 
-/** Native Arbitrum USDC for both venues — Aster treasury expects this bridged USDC (same permit domain as HL). */
 const ARB_NATIVE_USDC = "0xaf88d065e77c8cC2239327C5EDb3A432268e5831";
 
 const DEPOSIT_ASSETS: AssetDef[] = [
@@ -27,7 +27,6 @@ const DEPOSIT_ASSETS: AssetDef[] = [
 const QUICK_AMOUNTS = [25, 50, 100, 250, 500, 1000];
 const ACCENT = "#D4A574";
 
-/** EIP-2612 sig as 0x + 65 bytes — do not slice hex manually; r/s can be <32 hex chars without leading zeros. */
 function permitSignatureToRsV(
   ethersMod: { Signature: { from(hex: string): { r: string; s: string; v: number } } },
   sigHex: string,
@@ -36,10 +35,74 @@ function permitSignatureToRsV(
   return { r: sig.r, s: sig.s, v: sig.v };
 }
 
-/** Circle USDC `permit` expects recovery id 27 or 28; some wallets return 0/1. */
 function normalizePermitV(v: number): number {
   if (v === 0 || v === 1) return v + 27;
   return v;
+}
+
+function extractTxHashFromWalletError(err: unknown): string | null {
+  if (!err || typeof err !== "object") return null;
+  const o = err as { transaction?: { hash?: string }; hash?: string };
+  if (typeof o.transaction?.hash === "string" && o.transaction.hash.startsWith("0x")) {
+    return o.transaction.hash;
+  }
+  if (typeof o.hash === "string" && o.hash.startsWith("0x")) return o.hash;
+  const msg = err instanceof Error ? err.message : String(err);
+  const m = msg.match(/hash[=:\s"]+(0x[a-fA-F0-9]{64})/);
+  return m?.[1] ?? null;
+}
+
+type EvmJsonProvider = {
+  send: (method: string, params: unknown[]) => Promise<unknown>;
+  getTransactionReceipt: (hash: string) => Promise<{ status: number | null; hash: string } | null>;
+};
+
+async function sendEvmContractTx(
+  provider: EvmJsonProvider,
+  from: string,
+  to: string,
+  data: string,
+  gas: string,
+): Promise<string> {
+  const hash = await provider.send("eth_sendTransaction", [{ from, to, data, gas }]);
+  if (typeof hash !== "string" || !hash.startsWith("0x")) {
+    throw new Error("Wallet did not return a transaction hash");
+  }
+  return hash;
+}
+
+async function waitEvmTxConfirmed(
+  provider: EvmJsonProvider,
+  hash: string,
+): Promise<{ status: number | null; hash: string }> {
+  const deadline = Date.now() + 180_000;
+  while (Date.now() < deadline) {
+    const receipt = await provider.getTransactionReceipt(hash);
+    if (receipt) {
+      if (receipt.status === 0) throw new Error("Transaction reverted on-chain");
+      return receipt;
+    }
+    await new Promise(r => setTimeout(r, 2000));
+  }
+  throw new Error("Transaction confirmation timed out");
+}
+
+async function sendAndConfirmEvmTx(
+  provider: EvmJsonProvider,
+  from: string,
+  to: string,
+  data: string,
+  gas: string,
+): Promise<{ hash: string }> {
+  let hash: string | null = null;
+  try {
+    hash = await sendEvmContractTx(provider, from, to, data, gas);
+  } catch (sendErr) {
+    hash = extractTxHashFromWalletError(sendErr);
+    if (!hash) throw sendErr;
+  }
+  const receipt = await waitEvmTxConfirmed(provider, hash);
+  return { hash: receipt.hash };
 }
 
 export function DepositModal({ open, onClose, defaultProtocol }: { open: boolean; onClose: () => void; defaultProtocol?: "aster" | "hyperliquid" }) {
@@ -123,7 +186,7 @@ export function DepositModal({ open, onClose, defaultProtocol }: { open: boolean
         await handleHyperliquidDeposit();
       }
     } catch (e: unknown) {
-      setErrorMsg(e instanceof Error ? e.message : "Transaction failed");
+      setErrorMsg(toUserFacingError(e, "deposit"));
       setStep("error");
     }
   };
@@ -149,7 +212,7 @@ export function DepositModal({ open, onClose, defaultProtocol }: { open: boolean
 
     if (!response.ok) {
       const error = await response.json();
-      throw new Error(error.error || "Failed to prepare deposit");
+      throw new Error(toUserFacingError(error.error || "Failed to prepare deposit", "deposit"));
     }
 
     const data = await response.json();
@@ -171,30 +234,47 @@ export function DepositModal({ open, onClose, defaultProtocol }: { open: boolean
     const tokenRead = new ethers.Contract(data.tokenAddress, erc20ReadAbi, provider);
     const allowance = await tokenRead.allowance(owner, spender);
 
+    const evmProvider = provider as unknown as EvmJsonProvider;
+
     if (allowance < amountWei) {
       setStatus("Approve USDC for Aster (one-time)...");
-      const approveAbi = ["function approve(address spender, uint256 amount) returns (bool)"];
-      const tokenApprove = new ethers.Contract(data.tokenAddress, approveAbi, signer);
-      const approveTx = await tokenApprove.approve(spender, ethers.MaxUint256, { gasLimit: 80_000n });
+      const approveIface = new ethers.Interface([
+        "function approve(address spender, uint256 amount) returns (bool)",
+      ]);
+      const approveData = approveIface.encodeFunctionData("approve", [spender, ethers.MaxUint256]);
       setStatus("Confirming approval...");
-      await approveTx.wait();
+      try {
+        await sendAndConfirmEvmTx(
+          evmProvider,
+          owner,
+          data.tokenAddress,
+          approveData,
+          "0x13880",
+        );
+      } catch (approveErr) {
+        const allowanceAfter = await tokenRead.allowance(owner, spender);
+        if (allowanceAfter < amountWei) throw approveErr;
+      }
     } else {
       setStatus("Allowance ready, submitting deposit...");
     }
 
     setStatus("Submitting treasury deposit...");
-    const treasury = new ethers.Contract(data.treasuryAddress, data.treasuryAbi, signer);
-
-    const depositTx = await treasury.deposit(
+    const treasuryIface = new ethers.Interface(data.treasuryAbi);
+    const depositData = treasuryIface.encodeFunctionData("deposit", [
       data.tokenAddress,
       BigInt(data.amountWei),
       BigInt(data.brokerId),
-      { gasLimit: 200000n }
-    );
-
+    ]);
     setStatus("Confirming transaction...");
-    const receipt = await depositTx.wait();
-    setTxHash(receipt.hash);
+    const { hash: depositHash } = await sendAndConfirmEvmTx(
+      evmProvider,
+      owner,
+      data.treasuryAddress,
+      depositData,
+      "0x30d40",
+    );
+    setTxHash(depositHash);
     setStep("success");
   };
 
@@ -221,7 +301,7 @@ export function DepositModal({ open, onClose, defaultProtocol }: { open: boolean
 
     if (!response.ok) {
       const error = await response.json();
-      throw new Error(error.error || "Failed to prepare deposit");
+      throw new Error(toUserFacingError(error.error || "Failed to prepare deposit", "deposit"));
     }
 
     const data = await response.json();
@@ -232,7 +312,8 @@ export function DepositModal({ open, onClose, defaultProtocol }: { open: boolean
     if (!signer) throw new Error("Could not get wallet signer");
 
     const { ethers } = await import("ethers");
-    
+    const owner = ethers.getAddress(evmAddress);
+
     const signature = await signer.signTypedData(
       data.domain,
       data.types,
@@ -248,21 +329,30 @@ export function DepositModal({ open, onClose, defaultProtocol }: { open: boolean
     const { r, s, v } = permitSignatureToRsV(ethers, signature);
 
     setStatus("Submitting deposit transaction...");
-    
-    const bridge = new ethers.Contract(data.bridgeAddress, data.bridgeAbi, signer);
 
-    const depositTx = await bridge.batchedDepositWithPermit([
-      {
-        user: evmAddress,
-        usd: BigInt(data.amountUsd),
-        deadline: BigInt(data.message.deadline),
-        signature: { r: BigInt(r), s: BigInt(s), v: normalizePermitV(v) },
-      },
+    const bridgeIface = new ethers.Interface(data.bridgeAbi);
+    const depositData = bridgeIface.encodeFunctionData("batchedDepositWithPermit", [
+      [
+        {
+          user: evmAddress,
+          usd: BigInt(data.amountUsd),
+          deadline: BigInt(data.message.deadline),
+          signature: { r: BigInt(r), s: BigInt(s), v: normalizePermitV(v) },
+        },
+      ],
     ]);
 
+    const hlProvider = signer.provider;
+    if (!hlProvider) throw new Error("Wallet provider unavailable");
     setStatus("Confirming transaction...");
-    const receipt = await depositTx.wait();
-    setTxHash(receipt.hash);
+    const { hash: depositHash } = await sendAndConfirmEvmTx(
+      hlProvider as unknown as EvmJsonProvider,
+      owner,
+      data.bridgeAddress,
+      depositData,
+      "0x7a120",
+    );
+    setTxHash(depositHash);
     setStep("success");
   };
 
@@ -292,7 +382,7 @@ export function DepositModal({ open, onClose, defaultProtocol }: { open: boolean
           borderRadius: 16, overflow: "hidden",
         }}
       >
-        {/* Header */}
+        
         <div style={{
           padding: "16px 20px",
           borderBottom: "1px solid rgba(255,255,255,0.06)",
@@ -333,7 +423,7 @@ export function DepositModal({ open, onClose, defaultProtocol }: { open: boolean
 
         <div style={{ padding: "16px 20px" }}>
 
-          {/* ── STEP: AMOUNT ── */}
+          
           {step === "amount" && (
             <div>
               {!isEvmConnected && (
@@ -346,7 +436,7 @@ export function DepositModal({ open, onClose, defaultProtocol }: { open: boolean
                 </div>
               )}
 
-              {/* Token selector */}
+              
               <div style={{ marginBottom: 14 }}>
                 <div style={{ fontSize: 10, color: "#6B7280", fontFamily: SANS, marginBottom: 6 }}>Select token</div>
                 <div style={{ display: "flex", gap: 6 }}>
@@ -380,7 +470,7 @@ export function DepositModal({ open, onClose, defaultProtocol }: { open: boolean
                 </div>
               </div>
 
-              {/* Amount input */}
+              
               <div style={{ marginBottom: 14 }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
                   <span style={{ fontSize: 10, color: "#6B7280", fontFamily: SANS }}>Amount</span>
@@ -446,7 +536,7 @@ export function DepositModal({ open, onClose, defaultProtocol }: { open: boolean
                 )}
               </div>
 
-              {/* Quick amounts */}
+              
               <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 16 }}>
                 {QUICK_AMOUNTS.map(a => (
                   <button
@@ -466,7 +556,7 @@ export function DepositModal({ open, onClose, defaultProtocol }: { open: boolean
                 ))}
               </div>
 
-              {/* Route indicator */}
+              
               <div style={{
                 padding: "8px 12px", borderRadius: 8, marginBottom: 16,
                 background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.04)",
@@ -516,7 +606,7 @@ export function DepositModal({ open, onClose, defaultProtocol }: { open: boolean
             </div>
           )}
 
-          {/* ── STEP: CONFIRM ── */}
+          
           {step === "confirm" && (
             <div>
               <div style={{
@@ -568,7 +658,7 @@ export function DepositModal({ open, onClose, defaultProtocol }: { open: boolean
             </div>
           )}
 
-          {/* ── STEP: PROCESSING ── */}
+          
           {step === "processing" && (
             <div style={{ textAlign: "center", padding: "30px 0" }}>
               <div style={{
@@ -582,7 +672,7 @@ export function DepositModal({ open, onClose, defaultProtocol }: { open: boolean
             </div>
           )}
 
-          {/* ── STEP: SUCCESS ── */}
+          
           {step === "success" && (
             <div style={{ textAlign: "center", padding: "24px 0" }}>
               <div style={{
@@ -622,7 +712,7 @@ export function DepositModal({ open, onClose, defaultProtocol }: { open: boolean
             </div>
           )}
 
-          {/* ── STEP: ERROR ── */}
+          
           {step === "error" && (
             <div style={{ textAlign: "center", padding: "24px 0" }}>
               <div style={{

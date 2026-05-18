@@ -1,6 +1,7 @@
 import type { TxCallbacks } from './shared';
 import { recordTradeToDb } from './shared';
 import { LIGHTER_MARKET_BY_SYMBOL } from '@/config/lighterMarkets';
+import { toUserFacingError } from '@/lib/userFacingErrors';
 
 export interface LighterTradeParams {
   market: { sym: string; price: number; maxLev: number; marketName?: string; category?: string };
@@ -61,7 +62,7 @@ export async function executeLighterTrade(
     const data = await res.json();
 
     if (!res.ok || data.error) {
-      setTxMsg(data.error || 'Lighter order failed');
+      setTxMsg(toUserFacingError(data.error || 'Lighter order failed', 'trade'));
       setTxState('error');
       return;
     }
@@ -105,8 +106,8 @@ export async function executeLighterTrade(
     });
 
     onTradeSuccess?.();
-  } catch (e: any) {
-    setTxMsg(e.message || 'Lighter trade failed');
+  } catch (e: unknown) {
+    setTxMsg(toUserFacingError(e, 'trade'));
     setTxState('error');
   }
 }

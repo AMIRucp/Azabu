@@ -164,7 +164,6 @@ export async function getCoinGeckoPrice(query: string): Promise<CoinGeckoPriceRe
     const url = `${CG_BASE}/coins/${cgId}?localization=false&tickers=false&community_data=false&developer_data=false`;
     const res = await fetch(url, { headers: cgHeaders, signal: AbortSignal.timeout(10000) });
     if (!res.ok) {
-      if (res.status === 429) console.warn('CoinGecko rate limited (price)');
       return null;
     }
     const data = await res.json();
@@ -182,8 +181,7 @@ export async function getCoinGeckoPrice(query: string): Promise<CoinGeckoPriceRe
     };
     cgPriceCache.set(cacheKey, { data: result, ts: Date.now() });
     return result;
-  } catch (err) {
-    console.error('CoinGecko price fetch failed:', err);
+  } catch {
     cgPriceCache.set(cacheKey, { data: null, ts: Date.now() });
     return null;
   }
@@ -221,7 +219,6 @@ export async function getMarketChart(query: string, days: number = 7): Promise<M
     const res = await fetch(url, { headers: cgHeaders, signal: AbortSignal.timeout(12000) });
 
     if (!res.ok) {
-      if (res.status === 429) console.warn('CoinGecko rate limited (chart)');
       return null;
     }
 
@@ -250,8 +247,7 @@ export async function getMarketChart(query: string, days: number = 7): Promise<M
     };
     cgChartCache.set(chartKey, { data: result, ts: Date.now() });
     return result;
-  } catch (err) {
-    console.error('CoinGecko chart fetch failed:', err);
+  } catch {
     cgChartCache.set(chartKey, { data: null, ts: Date.now() });
     return null;
   }

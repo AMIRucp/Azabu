@@ -48,3 +48,61 @@ export function assertWalletMatchesUser(
 
   return { ok: true, user };
 }
+
+export function resolveAsterFapiUserFromRequest(
+  request: NextRequest,
+  queryUserId: string | null
+): { ok: true; user: string } | { ok: false; error: string } {
+  const rawQuery = queryUserId?.trim() || null;
+  const headerWallet = getWalletFromRequest(request);
+
+  if (process.env.ASTER_SKIP_WALLET_BIND === "1") {
+
+    if (headerWallet) {
+      if (rawQuery) {
+        let queryAddr: string;
+        try {
+          queryAddr = ethers.getAddress(rawQuery);
+        } catch {
+          return { ok: false, error: "Invalid userId" };
+        }
+        if (queryAddr.toLowerCase() !== headerWallet.toLowerCase()) {
+          return {
+            ok: false,
+            error: "userId query param does not match x-evm-address (remove userId to use the connected wallet)",
+          };
+        }
+      }
+      return { ok: true, user: headerWallet };
+    }
+    if (!rawQuery?.trim()) {
+      return { ok: false, error: "userId query param or x-evm-address header required" };
+    }
+    try {
+      return { ok: true, user: ethers.getAddress(rawQuery.trim()) };
+    } catch {
+      return { ok: false, error: "Invalid userId address" };
+    }
+  }
+
+  if (!headerWallet) {
+    return { ok: false, error: "Missing x-evm-address header (connect wallet)" };
+  }
+
+  if (!rawQuery) {
+    return { ok: true, user: headerWallet };
+  }
+
+  let queryAddr: string;
+  try {
+    queryAddr = ethers.getAddress(rawQuery);
+  } catch {
+    return { ok: false, error: "Invalid userId" };
+  }
+
+  if (queryAddr.toLowerCase() !== headerWallet.toLowerCase()) {
+    return { ok: false, error: "userId must match connected wallet (x-evm-address)" };
+  }
+
+  return { ok: true, user: queryAddr };
+}

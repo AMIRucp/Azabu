@@ -79,13 +79,13 @@ function intervalToLookbackMs(interval: string): number {
   const Y = 365 * 24 * 60 * 60 * 1000;
   const D = 24 * 60 * 60 * 1000;
   switch (interval) {
-    case '1M':  return now - 15  * D;      // 15 days (API limit ~4320 candles)
-    case '5M':  return now - 30  * D;      // 30 days
-    case '15M': return now - 45  * D;      // 45 days
-    case '1H':  return now - 180 * D;      // 6 months
-    case '4H':  return now - 2   * Y;      // 2 years
-    case '1D':  return now - 4   * Y;      // 4 years
-    case '1W':  return now - 6   * Y;      // 6 years
+    case '1M':  return now - 15  * D;
+    case '5M':  return now - 30  * D;
+    case '15M': return now - 45  * D;
+    case '1H':  return now - 180 * D;
+    case '4H':  return now - 2   * Y;
+    case '1D':  return now - 4   * Y;
+    case '1W':  return now - 6   * Y;
     default:    return now - 30  * D;
   }
 }
@@ -118,13 +118,13 @@ function intervalToMinHistoryDays(interval: string): number {
 
 function intervalToAsterLimit(interval: string): number {
   switch (interval) {
-    case '1M':  return 4320;  // 3 days
-    case '5M':  return 4320;  // 15 days
-    case '15M': return 4320;  // 45 days
-    case '1H':  return 4320;  // 6 months
-    case '4H':  return 4380;  // 2 years
-    case '1D':  return 1460;  // 4 years
-    case '1W':  return 312;   // 6 years
+    case '1M':  return 4320;
+    case '5M':  return 4320;
+    case '15M': return 4320;
+    case '1H':  return 4320;
+    case '4H':  return 4380;
+    case '1D':  return 1460;
+    case '1W':  return 312;
     default:    return 2000;
   }
 }

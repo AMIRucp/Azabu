@@ -11,6 +11,7 @@ import { crossedThreshold } from "@/lib/tradeAnimations";
 import { executeHyperliquidClose } from "@/hooks/executors/executeHyperliquidClose";
 import { useEvmWallet } from "@/hooks/useEvmWallet";
 import { asterWalletHeaders } from "@/lib/asterClientHeaders";
+import { toUserFacingError } from "@/lib/userFacingErrors";
 
 const SANS = "Inter, -apple-system, sans-serif";
 const MONO = "'IBM Plex Mono', 'SF Mono', monospace";
@@ -314,8 +315,11 @@ export default function PositionsTable({
         throw new Error(`Close not supported for ${pos.protocol}`);
       }
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "Failed to close position";
-      setCloseResult({ posId: pos.id, success: false, message: msg });
+      setCloseResult({
+        posId: pos.id,
+        success: false,
+        message: toUserFacingError(err, "close"),
+      });
     }
 
     setClosingId(null);

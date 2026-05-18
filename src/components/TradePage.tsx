@@ -153,7 +153,7 @@ export default function TradePage({ fromMarkets = false }: TradePageProps) {
     </div>
   );
 
-  /* ── Data pill buttons (shared between mobile and desktop) ─────────── */
+  
   const dataPills = (
     <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
       {DATA_BUTTONS.map(({ key, label, icon: Icon }) => {
@@ -184,7 +184,7 @@ export default function TradePage({ fromMarkets = false }: TradePageProps) {
     </div>
   );
 
-  /* ── Data Modal Overlay ────────────────────────────────────────────── */
+  
   const dataModalOverlay = dataModal && (
     <div
       data-testid="data-modal-backdrop"
@@ -221,7 +221,7 @@ export default function TradePage({ fromMarkets = false }: TradePageProps) {
           animation: "slideIn 0.2s ease",
         }}
       >
-        {/* Modal header */}
+        
         <div style={{
           flexShrink: 0,
           display: "flex", alignItems: "center", justifyContent: "space-between",
@@ -232,7 +232,7 @@ export default function TradePage({ fromMarkets = false }: TradePageProps) {
             <span style={{ fontSize: 13, fontWeight: 700, color: "#E6EDF3", fontFamily: SANS }}>
               {selectedAsset}-PERP
             </span>
-            {/* Tab switcher inside modal */}
+            
             <div style={{ display: "flex", gap: 2, marginLeft: 6 }}>
               {DATA_BUTTONS.map(({ key, label }) => {
                 const active = dataModal === key;
@@ -274,7 +274,7 @@ export default function TradePage({ fromMarkets = false }: TradePageProps) {
           </button>
         </div>
 
-        {/* Modal body */}
+        
         <div style={{ flex: 1, minHeight: 0, overflow: "auto" }}>
           <MarketDataPanel
             symbol={rawSym} protocol={assetProtocol}
@@ -286,7 +286,7 @@ export default function TradePage({ fromMarkets = false }: TradePageProps) {
     </div>
   );
 
-  /* ── Shared header ─────────────────────────────────────────────────── */
+  
   const header = (
     <div data-testid="trade-page-header" style={{
       flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "space-between",
@@ -372,9 +372,7 @@ export default function TradePage({ fromMarkets = false }: TradePageProps) {
     </div>
   );
 
-  /* ══════════════════════════════════════════════════════════════════════
-     MOBILE LAYOUT
-  ══════════════════════════════════════════════════════════════════════ */
+  
   if (isMobile) {
     return (
       <div
@@ -408,9 +406,7 @@ export default function TradePage({ fromMarkets = false }: TradePageProps) {
     );
   }
 
-  /* ══════════════════════════════════════════════════════════════════════
-     DESKTOP LAYOUT
-  ══════════════════════════════════════════════════════════════════════ */
+  
   return (
     <div
       data-testid="trade-page"

@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect, useMemo, useCallback } from "react";
-import { ChevronDown, ChevronUp, AlertTriangle } from "lucide-react";
+import { useState, useEffect, useMemo, useCallback, useRef } from "react";
+import { ChevronDown, ChevronUp, AlertTriangle, Check } from "lucide-react";
 import useMarketStore from "@/stores/useMarketStore";
 import { useEvmWallet } from "@/hooks/useEvmWallet";
 import { useTradeExecution } from "@/hooks/useTradeExecution";
@@ -99,8 +99,15 @@ const FALLBACK_ASSETS: TopAsset[] = [
   { sym: "SOL", label: "Solana" },
 ];
 
-const SIZE_PRESETS = [25, 100, 250];
+const BASE_SIZE_PRESETS = [0.001, 0.01, 0.1] as const;
+const QUOTE_SIZE_PRESETS = [10, 50, 100] as const;
+const AMOUNT_UNIT_OPTIONS = ["USDT", "USDC", "base"] as const;
 
+type AmountEntryUnit = (typeof AMOUNT_UNIT_OPTIONS)[number];
+
+function amountUnitLabel(unit: AmountEntryUnit, baseAssetSym: string): string {
+  return unit === "base" ? baseAssetSym : unit;
+}
 
 interface SimpleTradeCardProps {
   selectedAsset?: string;
@@ -115,7 +122,14 @@ export default function SimpleTradeCard({ selectedAsset, assetId, forcedProtocol
   
   const { evmAddress, isEvmConnected, connectEvm } = useEvmWallet();
   const { txState, txMsg, execute, dismiss } = useTradeExecution();
-  const { showModal: showAgentModal, requireApproval, handleApproved, closeModal: closeAgentModal } = useAsterAgentApproval();
+  const {
+    showModal: showAgentModal,
+    requireApproval,
+    openEnableTradingModal,
+    handleApproved,
+    closeModal: closeAgentModal,
+    approved: asterTradingEnabled,
+  } = useAsterAgentApproval();
 
   const allAssets = useMemo(
     () => { const a = buildAssetsFromMarkets(markets); return a.length > 0 ? a : FALLBACK_ASSETS; },
@@ -134,6 +148,9 @@ export default function SimpleTradeCard({ selectedAsset, assetId, forcedProtocol
   const [collateral, setCollateral] = useState<Collateral>("USDC");
   const [side, setSide] = useState<"long" | "short">("long");
   const [sizeUsd, setSizeUsd] = useState<string>("");
+  const [amountUnit, setAmountUnit] = useState<AmountEntryUnit>("base");
+  const [amountUnitMenuOpen, setAmountUnitMenuOpen] = useState(false);
+  const amountUnitRef = useRef<HTMLDivElement>(null);
   const [leverage, setLeverage] = useState(5);
   const [protectOpen, setProtectOpen] = useState(false);
   const [tpEnabled, setTpEnabled] = useState(true);
@@ -229,8 +246,42 @@ export default function SimpleTradeCard({ selectedAsset, assetId, forcedProtocol
     ?? livePrices[`${assetSym}-PERP`]?.change24h
     ?? 0;
 
-  const assetQty = parseFloat(sizeUsd) || 0;
-  const sizeNum = livePrice > 0 ? assetQty * livePrice : 0;
+  const baseAssetSym = assetSym.split("-")[0].toUpperCase();
+  const inputAmount = parseFloat(sizeUsd) || 0;
+  const assetQty =
+    amountUnit === "base"
+      ? inputAmount
+      : livePrice > 0
+        ? inputAmount / livePrice
+        : 0;
+  const sizeNum = livePrice > 0 ? assetQty * livePrice : amountUnit !== "base" ? inputAmount : 0;
+
+  const switchAmountUnit = useCallback(
+    (next: AmountEntryUnit) => {
+      if (next === amountUnit) return;
+      const n = parseFloat(sizeUsd) || 0;
+      if (n > 0 && livePrice > 0) {
+        if (amountUnit === "base" && next !== "base") {
+          setSizeUsd((n * livePrice).toFixed(2));
+        } else if (amountUnit !== "base" && next === "base") {
+          setSizeUsd((n / livePrice).toFixed(6));
+        }
+      }
+      setAmountUnit(next);
+    },
+    [amountUnit, livePrice, sizeUsd]
+  );
+
+  useEffect(() => {
+    if (!amountUnitMenuOpen) return;
+    const onPointerDown = (e: PointerEvent) => {
+      if (amountUnitRef.current && !amountUnitRef.current.contains(e.target as Node)) {
+        setAmountUnitMenuOpen(false);
+      }
+    };
+    document.addEventListener("pointerdown", onPointerDown);
+    return () => document.removeEventListener("pointerdown", onPointerDown);
+  }, [amountUnitMenuOpen]);
   const collateralRequired = effectiveLeverage > 0 ? sizeNum / effectiveLeverage : sizeNum;
   const positionSize = sizeNum;
 
@@ -392,7 +443,7 @@ export default function SimpleTradeCard({ selectedAsset, assetId, forcedProtocol
         }
       `}</style>
 
-      {/* Asset Picker Row */}
+      
       <div style={sectionStyle}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <button
@@ -427,7 +478,7 @@ export default function SimpleTradeCard({ selectedAsset, assetId, forcedProtocol
           </div>
         </div>
 
-        {/* Asset Picker Dropdown */}
+        
         {showAssetPicker && (
           <div style={{
             marginTop: 10, background: "#0A0B0E", border: "1px solid #1A1D24",
@@ -483,7 +534,7 @@ export default function SimpleTradeCard({ selectedAsset, assetId, forcedProtocol
         )}
       </div>
 
-      {/* Direction Toggle */}
+      
       <div style={{
         display: "flex", borderRadius: 14, overflow: "hidden",
         border: "1px solid #1A1D24",
@@ -532,9 +583,11 @@ export default function SimpleTradeCard({ selectedAsset, assetId, forcedProtocol
         </button>
       </div>
 
-      {/* Amount Input — token amount with USD value below */}
+      
       <div style={sectionStyle}>
-        <div style={{ fontSize: 10, color: "#555B6A", marginBottom: 8, letterSpacing: "0.05em", textTransform: "uppercase", fontFamily: MONO }}>Amount</div>
+        <div style={{ fontSize: 10, color: "#555B6A", marginBottom: 8, letterSpacing: "0.05em", textTransform: "uppercase", fontFamily: MONO }}>
+          Amount
+        </div>
         <div style={{
           display: "flex", alignItems: "center",
           background: "rgba(255,255,255,0.025)", borderRadius: 10,
@@ -555,48 +608,140 @@ export default function SimpleTradeCard({ selectedAsset, assetId, forcedProtocol
               minWidth: 0,
             }}
           />
-          {/* Token pill showing current asset */}
-          <div style={{
-            display: "flex", alignItems: "center", gap: 6,
-            background: "#0C0D10", borderRadius: 8,
-            border: "1px solid rgba(255,255,255,0.08)",
-            padding: "6px 10px", flexShrink: 0,
-          }}>
-            <TokenIcon symbol={assetSym} size={16} />
-            <span style={{ fontSize: 12, fontWeight: 700, fontFamily: MONO, color: "#E6EDF3", letterSpacing: "0.03em" }}>
-              {assetSym.split("-")[0].toUpperCase()}
-            </span>
+          <div ref={amountUnitRef} style={{ position: "relative", flexShrink: 0 }}>
+            <button
+              type="button"
+              data-testid="simple-amount-unit-trigger"
+              onClick={() => setAmountUnitMenuOpen(open => !open)}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 6,
+                background: "#1A1D24",
+                borderRadius: 8,
+                border: amountUnitMenuOpen ? "1px solid rgba(212,165,116,0.35)" : "1px solid rgba(255,255,255,0.1)",
+                padding: "7px 10px",
+                cursor: "pointer",
+                fontFamily: MONO,
+              }}
+            >
+              <span style={{ fontSize: 12, fontWeight: 700, color: "#E6EDF3", letterSpacing: "0.03em" }}>
+                {amountUnitLabel(amountUnit, baseAssetSym)}
+              </span>
+              <ChevronUp
+                size={12}
+                style={{
+                  color: "#9BA4AE",
+                  transform: amountUnitMenuOpen ? "rotate(0deg)" : "rotate(180deg)",
+                  transition: "transform 0.15s",
+                }}
+              />
+            </button>
+            {amountUnitMenuOpen && (
+              <div
+                data-testid="simple-amount-unit-menu"
+                style={{
+                  position: "absolute",
+                  top: "calc(100% + 6px)",
+                  right: 0,
+                  minWidth: 120,
+                  zIndex: 40,
+                  background: "#1A1D24",
+                  border: "1px solid rgba(255,255,255,0.1)",
+                  borderRadius: 10,
+                  padding: "4px 0",
+                  boxShadow: "0 10px 28px rgba(0,0,0,0.45)",
+                }}
+              >
+                {AMOUNT_UNIT_OPTIONS.map(unit => {
+                  const selected = amountUnit === unit;
+                  const label = amountUnitLabel(unit, baseAssetSym);
+                  return (
+                    <button
+                      key={unit}
+                      type="button"
+                      data-testid={`simple-amount-unit-${unit}`}
+                      onClick={() => {
+                        switchAmountUnit(unit);
+                        setAmountUnitMenuOpen(false);
+                      }}
+                      style={{
+                        width: "100%",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        gap: 12,
+                        padding: "10px 14px",
+                        border: "none",
+                        background: "transparent",
+                        cursor: "pointer",
+                        fontFamily: MONO,
+                        fontSize: 12,
+                        fontWeight: 600,
+                        color: selected ? "#D4A574" : "#E6EDF3",
+                      }}
+                      onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.04)"; }}
+                      onMouseLeave={e => { e.currentTarget.style.background = "transparent"; }}
+                    >
+                      <span>{label}</span>
+                      {selected && <Check size={14} strokeWidth={2.5} color="#E6EDF3" />}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
           </div>
         </div>
-        {/* USD value below */}
         <div style={{ fontSize: 11, color: "#4A5568", fontFamily: MONO, marginBottom: 10, minHeight: 16 }}>
-          {assetQty > 0 && livePrice > 0
-            ? <span>≈ <span style={{ color: "#6B7280" }}>${sizeNum.toFixed(2)}</span> USD</span>
-            : <span style={{ color: "#2A3040" }}>Enter amount in {assetSym.split("-")[0].toUpperCase()}</span>
-          }
+          {inputAmount > 0 && livePrice > 0 ? (
+            amountUnit === "base" ? (
+              <span>≈ <span style={{ color: "#6B7280" }}>${sizeNum.toFixed(2)}</span> USD</span>
+            ) : (
+              <span>
+                ≈ <span style={{ color: "#6B7280" }}>{assetQty.toFixed(6)}</span> {baseAssetSym}
+              </span>
+            )
+          ) : (
+            <span style={{ color: "#2A3040" }}>
+              Enter amount in {amountUnitLabel(amountUnit, baseAssetSym)}
+            </span>
+          )}
         </div>
         <div style={{ display: "flex", gap: 5 }}>
-          {[0.001, 0.01, 0.1].map(preset => (
-            <button
-              key={preset}
-              data-testid={`simple-preset-${preset}`}
-              onClick={() => setSizeUsd(String(preset))}
-              style={{
-                flex: 1, padding: "7px 0", borderRadius: 7, cursor: "pointer",
-                background: assetQty === preset ? "rgba(212,165,116,0.1)" : "rgba(255,255,255,0.03)",
-                border: assetQty === preset ? "1px solid rgba(212,165,116,0.3)" : "1px solid rgba(255,255,255,0.05)",
-                color: assetQty === preset ? "#D4A574" : "#555B6A",
-                fontSize: 11, fontWeight: 600, fontFamily: MONO,
-                transition: "all 0.12s",
-              }}
-            >{preset}</button>
-          ))}
+          {(amountUnit === "base" ? BASE_SIZE_PRESETS : QUOTE_SIZE_PRESETS).map(preset => {
+            const active =
+              amountUnit === "base"
+                ? Math.abs(assetQty - preset) < 1e-9
+                : Math.abs(inputAmount - preset) < 0.01;
+            return (
+              <button
+                key={preset}
+                type="button"
+                data-testid={`simple-preset-${preset}`}
+                onClick={() => setSizeUsd(String(preset))}
+                style={{
+                  flex: 1, padding: "7px 0", borderRadius: 7, cursor: "pointer",
+                  background: active ? "rgba(212,165,116,0.1)" : "rgba(255,255,255,0.03)",
+                  border: active ? "1px solid rgba(212,165,116,0.3)" : "1px solid rgba(255,255,255,0.05)",
+                  color: active ? "#D4A574" : "#555B6A",
+                  fontSize: 11, fontWeight: 600, fontFamily: MONO,
+                  transition: "all 0.12s",
+                }}
+              >
+                {amountUnit === "base" ? preset : `$${preset}`}
+              </button>
+            );
+          })}
           <button
+            type="button"
             data-testid="simple-preset-max"
             onClick={() => {
-              if (balance !== null && balance > 0 && livePrice > 0) {
-                const maxTokens = (balance * effectiveLeverage) / livePrice;
-                setSizeUsd(maxTokens.toFixed(6));
+              if (balance === null || balance <= 0 || livePrice <= 0) return;
+              const maxNotional = balance * effectiveLeverage;
+              if (amountUnit === "base") {
+                setSizeUsd((maxNotional / livePrice).toFixed(6));
+              } else {
+                setSizeUsd(maxNotional.toFixed(2));
               }
             }}
             style={{
@@ -611,7 +756,7 @@ export default function SimpleTradeCard({ selectedAsset, assetId, forcedProtocol
         </div>
       </div>
 
-      {/* Leverage Slider */}
+      
       {(() => {
         const pct = maxLev > 1 ? ((effectiveLeverage - 1) / (maxLev - 1)) * 100 : 0;
         return (
@@ -639,7 +784,7 @@ export default function SimpleTradeCard({ selectedAsset, assetId, forcedProtocol
         );
       })()}
 
-      {/* ── Protect Trade — compact trigger row ── */}
+      
       <button
         data-testid="simple-protect-toggle"
         onClick={() => setProtectOpen(true)}
@@ -668,10 +813,10 @@ export default function SimpleTradeCard({ selectedAsset, assetId, forcedProtocol
         </div>
       </button>
 
-      {/* ── Protect Trade — slide-up bottom sheet ── */}
+      
       {protectOpen && (
         <>
-          {/* Backdrop */}
+          
           <div
             onClick={() => setProtectOpen(false)}
             style={{
@@ -682,7 +827,7 @@ export default function SimpleTradeCard({ selectedAsset, assetId, forcedProtocol
               animation: "fadeIn 0.2s ease",
             }}
           />
-          {/* Sheet */}
+          
           <div style={{
             position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 501,
             background: "#0A0C10",
@@ -697,12 +842,12 @@ export default function SimpleTradeCard({ selectedAsset, assetId, forcedProtocol
               @keyframes fadeIn  { from { opacity: 0; } to { opacity: 1; } }
             `}</style>
 
-            {/* Drag handle */}
+            
             <div style={{ display: "flex", justifyContent: "center", padding: "10px 0 4px" }}>
               <div style={{ width: 36, height: 4, borderRadius: 2, background: "rgba(255,255,255,0.10)" }} />
             </div>
 
-            {/* Sheet header */}
+            
             <div style={{
               display: "flex", alignItems: "center", justifyContent: "space-between",
               padding: "10px 18px 16px",
@@ -729,10 +874,10 @@ export default function SimpleTradeCard({ selectedAsset, assetId, forcedProtocol
               </button>
             </div>
 
-            {/* TP / SL controls */}
+            
             <div style={{ padding: "18px 18px 0", display: "flex", flexDirection: "column", gap: 20 }}>
 
-              {/* Take Profit */}
+              
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -779,10 +924,10 @@ export default function SimpleTradeCard({ selectedAsset, assetId, forcedProtocol
                 />
               </div>
 
-              {/* Separator */}
+              
               <div style={{ height: 1, background: "rgba(255,255,255,0.05)" }} />
 
-              {/* Stop Loss */}
+              
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -829,7 +974,7 @@ export default function SimpleTradeCard({ selectedAsset, assetId, forcedProtocol
                 />
               </div>
 
-              {/* Done button */}
+              
               <button
                 onClick={() => setProtectOpen(false)}
                 style={{
@@ -851,7 +996,7 @@ export default function SimpleTradeCard({ selectedAsset, assetId, forcedProtocol
         </>
       )}
 
-      {/* Outcome Summary */}
+      
       {sizeNum > 0 && livePrice > 0 && (
         <div style={{
           ...sectionStyle,
@@ -875,7 +1020,7 @@ export default function SimpleTradeCard({ selectedAsset, assetId, forcedProtocol
         </div>
       )}
 
-      {/* Collateral Warning */}
+      
       {isEvmConnected && sizeNum > 0 && deficit > 0 && !balLoading && (
         <div
           data-testid="simple-fund-banner"
@@ -909,7 +1054,7 @@ export default function SimpleTradeCard({ selectedAsset, assetId, forcedProtocol
         </div>
       )}
 
-      {/* Action Button */}
+      
       <button
         data-testid="simple-trade-button"
         onClick={isEvmConnected ? handleTrade : () => connectEvm()}
@@ -937,7 +1082,41 @@ export default function SimpleTradeCard({ selectedAsset, assetId, forcedProtocol
         }
       </button>
 
-      {/* Venue Chip */}
+      {venue === "aster" && (
+        <button
+          type="button"
+          data-testid="simple-enable-aster-trading"
+          onClick={() => {
+            if (!isEvmConnected) {
+              void connectEvm();
+              return;
+            }
+            openEnableTradingModal();
+          }}
+          style={{
+            width: "100%",
+            padding: "10px 12px",
+            borderRadius: 10,
+            border: "1px solid rgba(212,165,116,0.22)",
+            background: "rgba(212,165,116,0.06)",
+            color: asterTradingEnabled ? "rgba(212,165,116,0.85)" : "#C9A882",
+            fontSize: 12,
+            fontWeight: 600,
+            fontFamily: MONO,
+            letterSpacing: "0.04em",
+            cursor: "pointer",
+            transition: "background 0.15s, border-color 0.15s",
+          }}
+        >
+          {!isEvmConnected
+            ? "Connect wallet to enable trading"
+            : asterTradingEnabled
+              ? "Re-run enable trading setup"
+              : "Enable trading"}
+        </button>
+      )}
+
+      
       <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 6 }}>
         <span data-testid="simple-venue-chip" style={{ fontSize: 11, color: "#3A4050", fontFamily: MONO }}>
           via {venueLabel}
@@ -949,7 +1128,7 @@ export default function SimpleTradeCard({ selectedAsset, assetId, forcedProtocol
         )}
       </div>
 
-      {/* TX Status */}
+      
       {txState !== "idle" && (
         <div
           data-testid="simple-tx-status"

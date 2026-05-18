@@ -6,75 +6,18 @@ import usePositionStore, { type UnifiedPosition } from "@/stores/usePositionStor
 import { useHyperliquidPortfolio } from "./useHyperliquidPortfolio";
 import { asterWalletHeaders } from "@/lib/asterClientHeaders";
 import { parseAsterBalances, type AsterBalRow } from "@/lib/asterBalanceParse";
+import { coerceAsterPositionRiskRows } from "@/lib/asterPositionRiskFilter";
+import {
+  mapAsterPositionRiskRows,
+  mergeAsterPositionsIntoStore,
+} from "@/lib/asterPositionMap";
 
-const QUOTE_SUFFIXES = ["USDT", "USDC", "BUSD", "FDUSD"] as const;
-
-function asterSymbolBase(symbol: string): { base: string; quote: string } {
-  const s = String(symbol).toUpperCase();
-  for (const q of QUOTE_SUFFIXES) {
-    if (s.endsWith(q)) {
-      return { base: s.slice(0, -q.length), quote: q };
-    }
-  }
-  return { base: s, quote: "USDT" };
-}
-
-function mapAsterPositionRiskRows(rows: unknown[]): UnifiedPosition[] {
-  const out: UnifiedPosition[] = [];
-  for (const row of rows) {
-    if (!row || typeof row !== "object") continue;
-    const r = row as Record<string, unknown>;
-    const positionAmt = parseFloat(String(r.positionAmt ?? r.positionAMT ?? "0"));
-    if (!Number.isFinite(positionAmt) || positionAmt === 0) continue;
-
-    const symbolPair = String(r.symbol ?? "");
-    const { base, quote } = asterSymbolBase(symbolPair);
-    const entryPrice = parseFloat(String(r.entryPrice ?? "0"));
-    const markPrice = parseFloat(String(r.markPrice ?? r.entryPrice ?? "0"));
-    const lev = parseFloat(String(r.leverage ?? "1")) || 1;
-    const absBase = Math.abs(positionAmt);
-    const px = Number.isFinite(markPrice) && markPrice > 0 ? markPrice : entryPrice;
-    const sizeUsd = absBase * (Number.isFinite(px) ? px : 0);
-    const margin = lev > 0 ? sizeUsd / lev : sizeUsd;
-    const liq = parseFloat(String(r.liquidationPrice ?? "0"));
-    const uPnl = parseFloat(String(r.unRealizedProfit ?? r.unrealizedProfit ?? "0"));
-    const roePct = margin > 0 && Number.isFinite(uPnl) ? (uPnl / margin) * 100 : 0;
-
-    out.push({
-      id: `aster-${symbolPair}`,
-      protocol: "aster",
-      chain: "Arbitrum",
-      type: "perp",
-      symbol: base,
-      baseAsset: base,
-      quoteAsset: quote,
-      side: positionAmt > 0 ? "LONG" : "SHORT",
-      leverage: lev,
-      sizeBase: absBase,
-      sizeUsd,
-      margin,
-      marginUsed: margin,
-      marginRatio: 0,
-      entryPrice: Number.isFinite(entryPrice) ? entryPrice : 0,
-      markPrice: Number.isFinite(markPrice) ? markPrice : entryPrice,
-      liquidationPrice: Number.isFinite(liq) ? liq : 0,
-      liquidationDistance:
-        markPrice > 0 && liq > 0 ? Math.abs((markPrice - liq) / markPrice) * 100 : 0,
-      unrealizedPnl: Number.isFinite(uPnl) ? uPnl : 0,
-      unrealizedPnlPercent: roePct,
-      realizedPnl: 0,
-      fundingPaid: 0,
-      feesPaid: 0,
-      totalPnl: Number.isFinite(uPnl) ? uPnl : 0,
-      openedAt: Date.now(),
-      duration: "Active",
-      isCloseable: true,
-      closeMethod: "api",
-      isAtRisk: false,
-      isCritical: false,
-    });
-  }
-  return out;
+function extractAsterPositionsFromApiBody(body: unknown): unknown[] {
+  if (!body || typeof body !== "object") return [];
+  const o = body as Record<string, unknown>;
+  if (Array.isArray(o.positions)) return o.positions;
+  const coerced = coerceAsterPositionRiskRows(o);
+  return coerced ?? [];
 }
 
 export interface WalletToken {
@@ -128,12 +71,22 @@ export function usePortfolioData() {
     pollInterval: 30000,
   });
 
-  const hlAccount = useMemo(() => {
-    if (!evmAddress) return null;
+  const hlDataMatchesWallet = useMemo(() => {
+    if (!evmAddress) return false;
     const respAddr = hlPortfolioData?.address;
-    if (respAddr && respAddr.toLowerCase() !== evmAddress.toLowerCase()) return null;
+    if (!respAddr) return false;
+    return respAddr.toLowerCase() === evmAddress.toLowerCase();
+  }, [evmAddress, hlPortfolioData?.address]);
+
+  const hlPositionsScoped = useMemo(() => {
+    if (!hlDataMatchesWallet) return [];
+    return hlPositions;
+  }, [hlDataMatchesWallet, hlPositions]);
+
+  const hlAccount = useMemo(() => {
+    if (!hlDataMatchesWallet) return null;
     return hlAccountRaw;
-  }, [evmAddress, hlPortfolioData?.address, hlAccountRaw]);
+  }, [hlDataMatchesWallet, hlAccountRaw]);
   
   const [data, setData] = useState<PortfolioData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -148,13 +101,22 @@ export function usePortfolioData() {
   const [asterPositionPayload, setAsterPositionPayload] = useState<{
     rows: unknown[];
     error: string | null;
-  }>({ rows: [], error: null });
+    queriedUser: string | null;
+  }>({ rows: [], error: null, queriedUser: null });
 
   const noWallet = !evmAddress;
 
   useEffect(() => {
-    if (hlPositions.length > 0) {
-      const hlPositionsMapped = hlPositions.map(hlPos => {
+    if (!evmAddress || !hlDataMatchesWallet) {
+      const { positions, setPositions } = usePositionStore.getState();
+      if (positions.some((p) => p.protocol === "hyperliquid")) {
+        setPositions(positions.filter((p) => p.protocol !== "hyperliquid"));
+      }
+      return;
+    }
+    const { positions, setPositions } = usePositionStore.getState();
+    if (hlPositionsScoped.length > 0) {
+      const hlPositionsMapped = hlPositionsScoped.map(hlPos => {
         const markPrice = hlPos.markPrice || hlPos.entryPrice;
         const sizeUsd = hlPos.size * markPrice;
         
@@ -193,12 +155,15 @@ export function usePortfolioData() {
           isCritical: false,
         };
       });
-      const otherPositions = positions.filter(p => p.protocol !== "hyperliquid");
-      setPositions([...otherPositions, ...hlPositionsMapped]);
-    } else if (positions.some(p => p.protocol === "hyperliquid")) {
-      setPositions(positions.filter(p => p.protocol !== "hyperliquid"));
+      const asterKeep = positions.filter((p) => p.protocol === "aster");
+      const otherPositions = positions.filter(
+        (p) => p.protocol !== "hyperliquid" && p.protocol !== "aster"
+      );
+      setPositions([...otherPositions, ...asterKeep, ...hlPositionsMapped]);
+    } else if (positions.some((p) => p.protocol === "hyperliquid")) {
+      setPositions(positions.filter((p) => p.protocol !== "hyperliquid"));
     }
-  }, [hlPositions]);
+  }, [hlPositionsScoped, evmAddress, hlDataMatchesWallet]);
 
   const asterMappedPositions = useMemo(
     () => mapAsterPositionRiskRows(asterPositionPayload.rows),
@@ -206,18 +171,30 @@ export function usePortfolioData() {
   );
 
   useEffect(() => {
+    if (!evmAddress) return;
     const { positions, setPositions } = usePositionStore.getState();
-    const asterOk =
-      evmAddress &&
-      asterBalancePayload.queriedUser &&
-      asterBalancePayload.queriedUser.toLowerCase() === evmAddress.toLowerCase();
+    const posOk =
+      !!asterPositionPayload.queriedUser &&
+      asterPositionPayload.queriedUser.toLowerCase() === evmAddress.toLowerCase();
 
-    if (asterOk && asterMappedPositions.length > 0) {
-      setPositions([...positions.filter((p) => p.protocol !== "aster"), ...asterMappedPositions]);
+    const hlKeep = hlDataMatchesWallet
+      ? positions.filter((p) => p.protocol === "hyperliquid")
+      : [];
+    const otherKeep = positions.filter(
+      (p) => p.protocol !== "aster" && p.protocol !== "hyperliquid"
+    );
+
+    if (posOk) {
+      setPositions([...otherKeep, ...hlKeep, ...asterMappedPositions]);
     } else {
-      setPositions(positions.filter((p) => p.protocol !== "aster"));
+      setPositions([...otherKeep, ...hlKeep]);
     }
-  }, [asterMappedPositions, evmAddress, asterBalancePayload.queriedUser]);
+  }, [
+    asterMappedPositions,
+    evmAddress,
+    asterPositionPayload.queriedUser,
+    hlDataMatchesWallet,
+  ]);
 
   const asterAccount = useMemo(() => {
     if (
@@ -250,81 +227,114 @@ export function usePortfolioData() {
 
   const activeWalletRef = useRef<string | null>(null);
   const fetchGenRef = useRef(0);
+  const inFlightAbortRef = useRef<AbortController | null>(null);
   activeWalletRef.current = evmAddress ?? null;
 
   const fetchPortfolio = useCallback(async () => {
     const wallet = evmAddress;
     if (!wallet) {
+      inFlightAbortRef.current?.abort();
+      inFlightAbortRef.current = null;
       setData(null);
       setAsterBalancePayload({ rows: [], error: null, warning: null, queriedUser: null });
-      setAsterPositionPayload({ rows: [], error: null });
+      setAsterPositionPayload({ rows: [], error: null, queriedUser: null });
       setLoading(false);
       return;
     }
 
+    inFlightAbortRef.current?.abort();
+    const ac = new AbortController();
+    inFlightAbortRef.current = ac;
+
     const gen = ++fetchGenRef.current;
 
     const isObsolete = () =>
+      ac.signal.aborted ||
       gen !== fetchGenRef.current ||
       activeWalletRef.current?.toLowerCase() !== wallet.toLowerCase();
 
     setError(null);
     void refetchHl();
     try {
-      const uid = encodeURIComponent(wallet);
       const fetchOpts: RequestInit = {
         headers: asterWalletHeaders(wallet),
         cache: "no-store",
+        signal: ac.signal,
       };
+      const cv = typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID() : String(Date.now());
+      const walletParam = `&w=${encodeURIComponent(wallet)}`;
       const [balJson, posJson] = await Promise.all([
-        fetch(`/api/aster/balance?userId=${uid}`, fetchOpts).then((r) => r.json().catch(() => ({}))),
-        fetch(`/api/aster/position-risk?userId=${uid}`, fetchOpts).then((r) => r.json().catch(() => ({}))),
+        fetch(`/api/aster/balance?cv=${encodeURIComponent(cv)}${walletParam}`, fetchOpts).then((r) => r.json().catch(() => ({}))),
+        fetch(`/api/aster/position-risk?cv=${encodeURIComponent(cv)}${walletParam}`, fetchOpts).then((r) => r.json().catch(() => ({}))),
       ]);
 
       if (isObsolete()) return;
 
-      const apiUser =
-        typeof balJson?.user === "string"
-          ? balJson.user
-          : wallet;
-
-      if (apiUser.toLowerCase() !== wallet.toLowerCase()) {
-        if (!isObsolete()) setLoading(false);
-        return;
-      }
-
+      const balApiUser =
+        typeof balJson?.user === "string" ? (balJson.user as string) : wallet;
       const balErr = typeof balJson?.error === "string" ? balJson.error : null;
+      const balWalletOk = balApiUser.toLowerCase() === wallet.toLowerCase();
+
+      const posApiUser =
+        typeof posJson?.user === "string" ? (posJson.user as string) : wallet;
       const posErr = typeof posJson?.error === "string" ? posJson.error : null;
+      const rawPosRows = extractAsterPositionsFromApiBody(posJson);
+      const posWalletOk = posApiUser.toLowerCase() === wallet.toLowerCase();
+
       setAsterBalancePayload({
-        rows: Array.isArray(balJson?.balances) ? balJson.balances : [],
-        error: balErr,
-        warning: typeof balJson?.warning === "string" ? balJson.warning : null,
-        queriedUser: apiUser,
+        rows: balWalletOk && Array.isArray(balJson?.balances) ? balJson.balances : [],
+        error: balWalletOk
+          ? balErr
+          : balErr || "Could not verify account for the connected wallet.",
+        warning: balWalletOk && typeof balJson?.warning === "string" ? balJson.warning : null,
+        queriedUser: balWalletOk ? balApiUser : null,
       });
+
       setAsterPositionPayload({
-        rows: Array.isArray(posJson?.positions) ? posJson.positions : [],
-        error: posErr,
+        rows: posWalletOk ? rawPosRows : [],
+        error: posWalletOk
+          ? posErr
+          : posErr || "Could not verify positions for the connected wallet.",
+        queriedUser: posWalletOk ? posApiUser : null,
       });
+
+      if (posWalletOk && !isObsolete()) {
+        const mappedFromApi = Array.isArray((posJson as { mappedPositions?: unknown }).mappedPositions)
+          ? ((posJson as { mappedPositions: UnifiedPosition[] }).mappedPositions)
+          : null;
+        if (mappedFromApi && mappedFromApi.length > 0) {
+          const current = usePositionStore.getState().positions;
+          usePositionStore.getState().setPositions([
+            ...current.filter((p) => p.protocol !== "aster"),
+            ...mappedFromApi,
+          ]);
+        } else {
+          mergeAsterPositionsIntoStore(rawPosRows);
+        }
+      }
     } catch {
       if (!isObsolete()) {
         setAsterBalancePayload({
           rows: [],
-          error: "Failed to load Aster data",
+          error: "Could not load account data. Please try again.",
           warning: null,
           queriedUser: null,
         });
-        setAsterPositionPayload({ rows: [], error: null });
+        setAsterPositionPayload({ rows: [], error: null, queriedUser: null });
       }
     }
     if (!isObsolete()) setLoading(false);
   }, [evmAddress, refetchHl]);
 
   useEffect(() => {
+    inFlightAbortRef.current?.abort();
+    inFlightAbortRef.current = null;
     fetchGenRef.current += 1;
     setData(null);
     setAsterBalancePayload({ rows: [], error: null, warning: null, queriedUser: null });
-    setAsterPositionPayload({ rows: [], error: null });
+    setAsterPositionPayload({ rows: [], error: null, queriedUser: null });
     setError(null);
+    usePositionStore.getState().setPositions([]);
 
     if (!evmAddress) {
       setLoading(false);
@@ -332,15 +342,25 @@ export function usePortfolioData() {
     }
 
     setLoading(true);
-    fetchPortfolio();
-    const interval = setInterval(fetchPortfolio, 30000);
-    return () => clearInterval(interval);
-  }, [evmAddress, fetchPortfolio]);
+    void refetchHl();
+    void fetchPortfolio();
+    const interval = setInterval(() => {
+      void refetchHl();
+      void fetchPortfolio();
+    }, 30000);
+    return () => {
+      clearInterval(interval);
+      inFlightAbortRef.current?.abort();
+      inFlightAbortRef.current = null;
+    };
+  }, [evmAddress, fetchPortfolio, refetchHl]);
 
   const asterWalletMismatch = useMemo(() => {
     if (!evmAddress || !asterBalancePayload.queriedUser) return false;
     return asterBalancePayload.queriedUser.toLowerCase() !== evmAddress.toLowerCase();
   }, [evmAddress, asterBalancePayload.queriedUser]);
+
+  const asterPositionHint = useMemo<string | null>(() => null, []);
 
   const filteredWalletTokens = useMemo(() => {
     if (!data?.walletTokens) return [];
@@ -497,6 +517,8 @@ export function usePortfolioData() {
     asterEquity,
     asterWarning: asterBalancePayload.warning,
     asterLoadError: asterBalancePayload.error,
+    asterPositionLoadError: asterPositionPayload.error,
+    asterPositionHint,
     asterQueriedUser: asterBalancePayload.queriedUser,
     asterWalletMismatch,
 

@@ -29,6 +29,11 @@ export function getAsterSignerPrivateKey(): string {
   return (process.env.ASTER_SIGNER_PRIVATE_KEY || process.env.ASTER_API_PRIVATE_KEY || "").trim();
 }
 
+export function getAsterAgentName(): string {
+  if (typeof process === "undefined") return "Azabu";
+  return process.env.ASTER_AGENT_NAME?.trim() || "Azabu";
+}
+
 export function getAsterBuilderAddress(): string {
   const b = typeof process !== "undefined" && process.env.ASTER_BUILDER_ADDRESS?.trim();
   if (b) return b;
@@ -41,4 +46,9 @@ export function getAsterBuilderFeeRateString(): string {
 
 export function getAsterBuilderMaxFeeRateString(): string {
   return String(process.env.ASTER_BUILDER_MAX_FEE_RATE ?? process.env.ASTER_BUILDER_FEE_RATE ?? "0.00001");
+}
+
+export function getAsterAgentIpWhitelist(): string {
+  if (typeof process === "undefined") return "";
+  return process.env.ASTER_IP_WHITELIST?.trim() || "";
 }

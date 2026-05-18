@@ -10,6 +10,7 @@ vite.config.ts.*
 .env.local
 .next
 data/
+.data/
 *.tsbuildinfo
 public/afx-ad.mp4
 public/apriciti-ad.mp4

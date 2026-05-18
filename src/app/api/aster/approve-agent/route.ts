@@ -1,13 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import { ethers } from "ethers";
-import { ASTER_FAPI_BASE, getAsterBuilderAddress, getAsterBuilderMaxFeeRateString } from "@/config/asterFapi";
+import {
+  ASTER_FAPI_BASE,
+  getAsterAgentIpWhitelist,
+  getAsterAgentName,
+  getAsterBuilderAddress,
+  getAsterBuilderMaxFeeRateString,
+} from "@/config/asterFapi";
 import { asterSyncedNowMs, nextAsterAuthNonceV3 } from "@/lib/asterServerTime";
 import { resolveAgentSignerForUser } from "@/lib/asterUserAgentSigner";
 
 const ASTER_CHAIN = process.env.ASTER_CHAIN?.trim() || "Mainnet";
 const CHAIN_ID = 56;
 const AGENT_EXPIRED = 1867945395040;
-const AGENT_NAME = process.env.ASTER_AGENT_NAME?.trim() || "azabu";
 const BUILDER_NAME = process.env.ASTER_BUILDER_NAME?.trim() || "azabu";
 
 function inferType(v: unknown): string {
@@ -64,13 +69,13 @@ export async function GET(request: NextRequest) {
   const nonce = parseInt(nextAsterAuthNonceV3(serverMs), 10);
 
   const rawParams: Record<string, unknown> = {
-    agentName: AGENT_NAME,
+    agentName: getAsterAgentName(),
     agentAddress: resolved.address,
-    ipWhitelist: "",
+    ipWhitelist: getAsterAgentIpWhitelist(),
     expired: AGENT_EXPIRED,
     canSpotTrade: true,
     canPerpTrade: true,
-    canWithdraw: false,
+    canWithdraw: true,
     builder: builderAddr,
     maxFeeRate: maxFee,
     builderName: BUILDER_NAME,
@@ -125,7 +130,6 @@ export async function POST(request: NextRequest) {
     const allParams: Record<string, unknown> = { ...p, signature, signatureChainId };
     const queryString = buildQueryString(allParams);
     const url = `${ASTER_FAPI_BASE}/fapi/v3/approveAgent?${queryString}`;
-
 
     const res = await fetch(url, {
       method: "POST",

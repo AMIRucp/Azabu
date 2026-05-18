@@ -99,7 +99,7 @@ function TerminalMarketListInner({ chain, selectedSymbol, onSelect, livePrices, 
 
   return (
     <div style={{ background: T.bg, height: "100%", display: "flex", flexDirection: "column" }} data-testid="market-list-panel">
-      {/* Search + tab toggle — single row */}
+      
       <div style={{ padding: "8px 10px 0", flexShrink: 0 }}>
         <div style={{
           display: "flex", alignItems: "center",
@@ -151,7 +151,7 @@ function TerminalMarketListInner({ chain, selectedSymbol, onSelect, livePrices, 
         </div>
       </div>
 
-      {/* Collateral toggles + Category pills — single combined row */}
+      
       <div style={{
         display: "flex", alignItems: "center", gap: 0,
         padding: "5px 10px 4px",

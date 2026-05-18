@@ -14,16 +14,14 @@ export const XP_EVENTS = {
   BRIDGED_CROSS_CHAIN: 75,
 } as const;
 
-// Japanese tier system — matches the badge design doc exactly
-// L1-5=Novice, L6-15=Challenger, L16-30=Trader, L31-50=Pro, L51-75=Elite, L76+=Legend
 export const LEVELS = [
-  // Novice tier (L1-5)
+
   { level: 1,  xp: 0,       rank: 'Novice',     tier: 'novice',     color: '#9CA3AF' },
   { level: 2,  xp: 100,     rank: 'Novice',     tier: 'novice',     color: '#9CA3AF' },
   { level: 3,  xp: 200,     rank: 'Novice',     tier: 'novice',     color: '#9CA3AF' },
   { level: 4,  xp: 350,     rank: 'Novice',     tier: 'novice',     color: '#9CA3AF' },
   { level: 5,  xp: 500,     rank: 'Novice',     tier: 'novice',     color: '#9CA3AF' },
-  // Challenger tier (L6-15)
+
   { level: 6,  xp: 700,     rank: 'Challenger', tier: 'challenger', color: '#22C55E' },
   { level: 7,  xp: 950,     rank: 'Challenger', tier: 'challenger', color: '#22C55E' },
   { level: 8,  xp: 1200,    rank: 'Challenger', tier: 'challenger', color: '#22C55E' },
@@ -34,7 +32,7 @@ export const LEVELS = [
   { level: 13, xp: 3300,    rank: 'Challenger', tier: 'challenger', color: '#22C55E' },
   { level: 14, xp: 4000,    rank: 'Challenger', tier: 'challenger', color: '#22C55E' },
   { level: 15, xp: 5000,    rank: 'Challenger', tier: 'challenger', color: '#22C55E' },
-  // Trader tier (L16-30)
+
   { level: 16, xp: 6000,    rank: 'Trader',     tier: 'trader',     color: '#3B82F6' },
   { level: 17, xp: 7200,    rank: 'Trader',     tier: 'trader',     color: '#3B82F6' },
   { level: 18, xp: 8600,    rank: 'Trader',     tier: 'trader',     color: '#3B82F6' },
@@ -50,7 +48,7 @@ export const LEVELS = [
   { level: 28, xp: 51000,   rank: 'Trader',     tier: 'trader',     color: '#3B82F6' },
   { level: 29, xp: 60000,   rank: 'Trader',     tier: 'trader',     color: '#3B82F6' },
   { level: 30, xp: 70000,   rank: 'Trader',     tier: 'trader',     color: '#3B82F6' },
-  // Pro tier (L31-50)
+
   { level: 31, xp: 82000,   rank: 'Pro',        tier: 'pro',        color: '#A855F7' },
   { level: 32, xp: 96000,   rank: 'Pro',        tier: 'pro',        color: '#A855F7' },
   { level: 33, xp: 112000,  rank: 'Pro',        tier: 'pro',        color: '#A855F7' },
@@ -71,18 +69,18 @@ export const LEVELS = [
   { level: 48, xp: 850000,  rank: 'Pro',        tier: 'pro',        color: '#A855F7' },
   { level: 49, xp: 960000,  rank: 'Pro',        tier: 'pro',        color: '#A855F7' },
   { level: 50, xp: 1000000, rank: 'Pro',        tier: 'pro',        color: '#A855F7' },
-  // Elite tier (L51-75)
+
   { level: 51, xp: 1100000, rank: 'Elite',      tier: 'elite',      color: '#F59E0B' },
   { level: 60, xp: 2000000, rank: 'Elite',      tier: 'elite',      color: '#F59E0B' },
   { level: 75, xp: 5000000, rank: 'Elite',      tier: 'elite',      color: '#F59E0B' },
-  // Legend tier (L76+)
+
   { level: 76, xp: 6000000, rank: 'Legend',     tier: 'legend',     color: '#EF4444' },
 ] as const;
 
 type LevelEntry = typeof LEVELS[number];
 
 export function getLevelInfo(xp: number): { current: LevelEntry; next: LevelEntry | null; progress: number } {
-  // Find the highest level threshold that xp meets
+
   let current: LevelEntry = LEVELS[0];
   for (const l of LEVELS) {
     if (xp >= l.xp) current = l;

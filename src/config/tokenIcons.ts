@@ -1,9 +1,4 @@
-// ================================================================
-// THIS IS THE ONLY FILE THAT PROVIDES TOKEN ICONS.
-// THERE IS NO OTHER SOURCE. DO NOT CREATE ANOTHER SOURCE.
-// DO NOT FETCH ICONS FROM ANY URL NOT IN THIS FILE.
-// IF A TOKEN IS NOT IN THIS FILE, IT GETS A LETTER CIRCLE. PERIOD.
-// ================================================================
+
 
 const CMC = 'https://s2.coinmarketcap.com/static/img/coins/64x64';
 const CMD = '/icons/commodities';

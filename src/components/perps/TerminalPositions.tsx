@@ -2,7 +2,8 @@
 import { useState, useCallback, useMemo } from "react";
 import { Loader2 } from "lucide-react";
 import usePositionStore from "@/stores/usePositionStore";
-import { asterWalletHeaders } from "@/lib/asterClientHeaders";
+import { asterWalletHeaders, resolveAsterTradingUser } from "@/lib/asterClientHeaders";
+import { useEvmWallet } from "@/hooks/useEvmWallet";
 
 const T = {
   bg: "#08080c",
@@ -53,6 +54,8 @@ interface TerminalPositionsProps {
 }
 
 export default function TerminalPositions({ chain, livePrices, asterUserId }: TerminalPositionsProps) {
+  const { evmAddress } = useEvmWallet();
+  const tradingUserId = resolveAsterTradingUser(evmAddress, asterUserId);
   const storePositions = usePositionStore((s) => s.positions);
   const storeLoading = usePositionStore((s) => s.isLoading);
 
@@ -90,13 +93,13 @@ export default function TerminalPositions({ chain, livePrices, asterUserId }: Te
     setClosingMarket(pos.market);
     try {
       if (pos.protocol === "aster") {
-        if (!asterUserId) throw new Error("Connect wallet to close positions");
+        if (!tradingUserId) throw new Error("Connect wallet to close positions");
         const asterSymbol = `${pos.market}USDT`;
         const res = await fetch("/api/aster/close-position", {
           method: "POST",
-          headers: { "Content-Type": "application/json", ...asterWalletHeaders(asterUserId) },
+          headers: { "Content-Type": "application/json", ...asterWalletHeaders(tradingUserId) },
           body: JSON.stringify({
-            userId: asterUserId,
+            userId: tradingUserId,
             symbol: asterSymbol,
             side: pos.side === "long" ? "SELL" : "BUY",
             quantity: pos.size || pos.sizeBase || 0,
@@ -105,14 +108,13 @@ export default function TerminalPositions({ chain, livePrices, asterUserId }: Te
         const data = await res.json();
         if (!res.ok || data.error) throw new Error(data.error || "Failed to close");
       } else if (pos.protocol === "hyperliquid") {
-        const { address: hlAddress } = ((window as unknown) as Record<string, unknown>).__evmWallet as { address?: string } || {};
-        if (!hlAddress) throw new Error("Connect EVM wallet to close Hyperliquid positions");
+        if (!evmAddress) throw new Error("Connect EVM wallet to close Hyperliquid positions");
         const res = await fetch("/api/hyperliquid/order", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             action: "place",
-            userAddress: hlAddress,
+            userAddress: evmAddress,
             coin: pos.market,
             isBuy: pos.side !== "long",
             size: (pos.size || pos.sizeBase || 0).toString(),
@@ -127,22 +129,22 @@ export default function TerminalPositions({ chain, livePrices, asterUserId }: Te
     } catch {
       setClosingMarket(null);
     }
-  }, [asterUserId]);
+  }, [tradingUserId, evmAddress]);
 
   const handleTpSl = useCallback(async (pos: PositionData, _idx: number) => {
     if (!tpPrice && !slPrice) return;
     setTpslSubmitting(true);
     try {
       if (pos.protocol === "aster") {
-        if (!asterUserId) throw new Error("Connect wallet to set TP/SL");
+        if (!tradingUserId) throw new Error("Connect wallet to set TP/SL");
         const asterSymbol = `${pos.market}USDT`;
         const closeSide = pos.side === "long" ? "SELL" : "BUY";
         const qty = (pos.size || pos.sizeBase || 0).toString();
         const res = await fetch("/api/aster/tp-sl", {
           method: "POST",
-          headers: { "Content-Type": "application/json", ...asterWalletHeaders(asterUserId) },
+          headers: { "Content-Type": "application/json", ...asterWalletHeaders(tradingUserId) },
           body: JSON.stringify({
-            userId: asterUserId,
+            userId: tradingUserId,
             symbol: asterSymbol,
             side: closeSide,
             quantity: qty,
@@ -160,7 +162,7 @@ export default function TerminalPositions({ chain, livePrices, asterUserId }: Te
     setTpslOpen(null);
     setTpPrice("");
     setSlPrice("");
-  }, [tpPrice, slPrice, asterUserId]);
+  }, [tpPrice, slPrice, tradingUserId]);
 
   if (loading && positions.length === 0) {
     return (

@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { fusionSwapService } from "@/services/fusionSwapService";
 
-// Helper to convert BigInt to string for JSON serialization
 function serializeBigInt(obj: any): any {
   if (typeof obj === "bigint") {
     return obj.toString();

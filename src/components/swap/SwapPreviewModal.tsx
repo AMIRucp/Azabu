@@ -19,7 +19,7 @@ export function SwapPreviewModal({
   fromToken, toToken, fromAmount, toAmount, rate, preset, onConfirm, onClose,
 }: SwapPreviewModalProps) {
   const presetInfo = FUSION_PRESET_OPTIONS.find(p => p.key === preset);
-  const minReceived = (parseFloat(toAmount.replace(/,/g, "")) * 0.995) // Conservative 0.5% for display
+  const minReceived = (parseFloat(toAmount.replace(/,/g, "")) * 0.995)
     .toLocaleString(undefined, { maximumFractionDigits: 6 });
 
   return (
@@ -43,7 +43,7 @@ export function SwapPreviewModal({
           boxShadow: CARD_SHADOW,
         }}
       >
-        {/* Header */}
+        
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24 }}>
           <span style={{ fontSize: 16, fontWeight: 700, color: BRIGHT, fontFamily: SANS }}>Review swap</span>
           <button
@@ -54,10 +54,10 @@ export function SwapPreviewModal({
           </button>
         </div>
 
-        {/* From */}
+        
         <TokenRow token={fromToken} amount={fromAmount} label="You pay" />
 
-        {/* Arrow */}
+        
         <div style={{ display: "flex", justifyContent: "center", margin: "8px 0" }}>
           <div style={{
             width: 32, height: 32, borderRadius: "50%",
@@ -68,10 +68,10 @@ export function SwapPreviewModal({
           </div>
         </div>
 
-        {/* To */}
+        
         <TokenRow token={toToken} amount={toAmount} label="You receive" highlight />
 
-        {/* Details */}
+        
         <div style={{
           marginTop: 16, borderRadius: 14,
           background: CARD, border: `1px solid ${BORDER}`,
@@ -82,7 +82,7 @@ export function SwapPreviewModal({
           <Row label="Speed" value={presetInfo?.label || preset} last />
         </div>
 
-        {/* Confirm button */}
+        
         <button
           onClick={onConfirm}
           style={{

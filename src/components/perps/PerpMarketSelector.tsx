@@ -4,7 +4,6 @@ import { getIcon } from "@/config/tokenIcons";
 import { ASTER_MARKET_LIST } from "@/config/asterMarkets";
 import type { PerpMarket } from "@/config/asterMarkets";
 
-
 const CATEGORIES: Record<string, { label: string; color: string }> = {
   crypto_major:   { label: "Majors",             color: "#3B82F6" },
   meme:           { label: "Meme & Speculative", color: "#D4A574" },

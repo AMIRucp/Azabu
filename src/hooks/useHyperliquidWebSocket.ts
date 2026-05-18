@@ -30,8 +30,15 @@ export function useHyperliquidWebSocket({
 
   useEffect(() => {
     if (!enabled || !address) {
+      setData({ positions: [], openOrders: [], prices: {}, lastUpdate: 0 });
+      setIsConnected(false);
+      setError(null);
       return;
     }
+
+    setData({ positions: [], openOrders: [], prices: {}, lastUpdate: 0 });
+    setIsConnected(false);
+    setError(null);
 
     let mounted = true;
 
@@ -90,19 +97,10 @@ export function useHyperliquidWebSocket({
 
     return () => {
       mounted = false;
-      if (clientRef.current) {
-        try {
-          clientRef.current = null;
-        } catch (e) {
-        }
-      }
-      if (transportRef.current) {
-        try {
-          transportRef.current = null;
-        } catch (e) {
-        }
-      }
+      clientRef.current = null;
+      transportRef.current = null;
       setIsConnected(false);
+      setData({ positions: [], openOrders: [], prices: {}, lastUpdate: 0 });
     };
   }, [address, enabled]);
 

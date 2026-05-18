@@ -23,7 +23,7 @@ interface TopAsset {
 
 function buildAssetsFromMarkets(markets: UnifiedMarket[]): TopAsset[] {
   const seen = new Map<string, TopAsset>();
-  // Priority order: aster > hyperliquid > lighter
+
   const protocolOrder = ["aster", "hyperliquid", "lighter"];
   const sorted = [...markets].sort((a, b) => {
     return protocolOrder.indexOf(a.protocol) - protocolOrder.indexOf(b.protocol);
@@ -105,7 +105,7 @@ function formatCompact(n: number): string {
 
 function findAssetBySym(sym: string, allAssets: TopAsset[]): TopAsset | undefined {
   const upper = sym.toUpperCase();
-  // Try exact base match first, then strip USDT suffix
+
   return allAssets.find(a => a.sym.toUpperCase() === upper)
     || allAssets.find(a => a.sym.toUpperCase() === upper.replace(/USDT$/, '').replace(/-PERP$/, ''));
 }
@@ -169,7 +169,6 @@ export function PerpsSwapContent({ preselectedAsset }: PerpsSwapContentProps) {
   const [celebTrade, setCelebTrade] = useState<CelebrationTrade | null>(null);
   const [showChart, setShowChart] = useState(false);
 
-  // Sync asset when markets load (in case initialAsset was a fallback)
   useEffect(() => {
     if (allAssets.length > 0 && allAssets !== FALLBACK_ASSETS) {
       const current = findAssetBySym(asset.sym, allAssets);
@@ -361,7 +360,7 @@ export function PerpsSwapContent({ preselectedAsset }: PerpsSwapContentProps) {
         boxShadow: "0 4px 24px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.025)",
         overflow: "hidden",
       }}>
-        {/* ── LONG ── */}
+        
         <button
           data-testid="button-long"
           onClick={() => setSide("long")}
@@ -379,7 +378,7 @@ export function PerpsSwapContent({ preselectedAsset }: PerpsSwapContentProps) {
           }}
         >
           {isLong && <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 1, background: "rgba(212,165,116,0.7)", pointerEvents: "none" }} />}
-          {/* Bullish sparkline watermark */}
+          
           <svg width="90" height="44" viewBox="0 0 90 44" fill="none" aria-hidden="true"
             style={{ position: "absolute", right: -4, top: 8, opacity: isLong ? 0.22 : 0.07, transition: "opacity 0.2s", pointerEvents: "none" }}>
             <polyline points="0,42 14,34 26,38 38,24 52,18 64,12 76,6 90,2"
@@ -387,7 +386,7 @@ export function PerpsSwapContent({ preselectedAsset }: PerpsSwapContentProps) {
             <polygon points="0,42 14,34 26,38 38,24 52,18 64,12 76,6 90,2 90,44 0,44"
               fill={isLong ? "#D4A574" : "#fff"} opacity="0.25" />
           </svg>
-          {/* Content */}
+          
           <div style={{ display: "flex", alignItems: "center", gap: 9, position: "relative", zIndex: 1 }}>
             <span style={{
               display: "inline-flex", alignItems: "center", justifyContent: "center",
@@ -411,7 +410,7 @@ export function PerpsSwapContent({ preselectedAsset }: PerpsSwapContentProps) {
           </div>
         </button>
 
-        {/* ── SHORT ── */}
+        
         <button
           data-testid="button-short"
           onClick={() => setSide("short")}
@@ -428,7 +427,7 @@ export function PerpsSwapContent({ preselectedAsset }: PerpsSwapContentProps) {
           }}
         >
           {!isLong && <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 1, background: "rgba(239,68,97,0.7)", pointerEvents: "none" }} />}
-          {/* Bearish sparkline watermark */}
+          
           <svg width="90" height="44" viewBox="0 0 90 44" fill="none" aria-hidden="true"
             style={{ position: "absolute", right: -4, top: 8, opacity: !isLong ? 0.22 : 0.07, transition: "opacity 0.2s", pointerEvents: "none" }}>
             <polyline points="0,2 14,8 26,6 38,16 52,22 64,30 76,36 90,42"
@@ -436,7 +435,7 @@ export function PerpsSwapContent({ preselectedAsset }: PerpsSwapContentProps) {
             <polygon points="0,2 14,8 26,6 38,16 52,22 64,30 76,36 90,42 90,44 0,44"
               fill={!isLong ? "#ef4461" : "#fff"} opacity="0.25" />
           </svg>
-          {/* Content */}
+          
           <div style={{ display: "flex", alignItems: "center", gap: 9, position: "relative", zIndex: 1 }}>
             <span style={{
               display: "inline-flex", alignItems: "center", justifyContent: "center",
@@ -523,7 +522,7 @@ export function PerpsSwapContent({ preselectedAsset }: PerpsSwapContentProps) {
             marginTop: 6, borderRadius: 12,
             background: "#0E1014", border: "1px solid #1A1D24",
           }}>
-            {/* Search */}
+            
             <div style={{ padding: "8px 8px 6px", borderBottom: "1px solid #1A1D24", display: "flex", alignItems: "center", gap: 6 }}>
               <Search style={{ width: 12, height: 12, color: "#4A5568", flexShrink: 0 }} />
               <input
@@ -722,7 +721,7 @@ export function PerpsSwapContent({ preselectedAsset }: PerpsSwapContentProps) {
           padding: "10px 12px",
           boxShadow: `0 4px 24px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.025)`,
         }}>
-          {/* Title row */}
+          
           <div style={{
             fontSize: 11, fontWeight: 700, color: accentColor, fontFamily: SANS,
             marginBottom: 8, textAlign: "center", letterSpacing: "0.01em",
@@ -730,7 +729,7 @@ export function PerpsSwapContent({ preselectedAsset }: PerpsSwapContentProps) {
             {isLong ? "Long" : "Short"} {asset.sym}
           </div>
 
-          {/* 2×2 compact grid */}
+          
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "4px 8px", marginBottom: 8 }}>
             {[
               { label: "Entry", value: `$${formatPrice(livePrice)}`, id: "review-entry" },
@@ -745,7 +744,7 @@ export function PerpsSwapContent({ preselectedAsset }: PerpsSwapContentProps) {
             ))}
           </div>
 
-          {/* Liq + Max loss + PnL on one compact row */}
+          
           <div style={{
             display: "flex", alignItems: "center", justifyContent: "space-between",
             padding: "5px 7px", borderRadius: 6, background: "rgba(255,255,255,0.02)",
@@ -774,7 +773,7 @@ export function PerpsSwapContent({ preselectedAsset }: PerpsSwapContentProps) {
             </div>
           </div>
 
-          {/* Funding + venue on one line */}
+          
           <div style={{
             marginTop: 6, display: "flex", justifyContent: "space-between", alignItems: "center",
           }}>
@@ -885,7 +884,7 @@ export function PerpsSwapContent({ preselectedAsset }: PerpsSwapContentProps) {
         <TradeSuccessOverlay trade={celebTrade} onDismiss={handleDismissCeleb} />
       )}
 
-      {/* Chart popup modal */}
+      
       {showChart && (
         <div
           data-testid="chart-popup-overlay"
@@ -915,12 +914,12 @@ export function PerpsSwapContent({ preselectedAsset }: PerpsSwapContentProps) {
               boxShadow: "0 -12px 48px rgba(0,0,0,0.7)",
             }}
           >
-            {/* Handle bar */}
+            
             <div style={{ display: "flex", justifyContent: "center", padding: "12px 0 6px" }}>
               <div style={{ width: 36, height: 3, borderRadius: 2, background: "rgba(255,255,255,0.12)" }} />
             </div>
 
-            {/* Header */}
+            
             <div style={{
               display: "flex", alignItems: "center", justifyContent: "space-between",
               padding: "4px 18px 10px",
@@ -958,7 +957,7 @@ export function PerpsSwapContent({ preselectedAsset }: PerpsSwapContentProps) {
               </button>
             </div>
 
-            {/* TradingView chart — stock perps use real exchange feed, crypto uses Hyperliquid */}
+            
             <iframe
               src={(() => {
                 const s = asset.sym.toUpperCase();
@@ -967,7 +966,7 @@ export function PerpsSwapContent({ preselectedAsset }: PerpsSwapContentProps) {
                   "DKNG","COST","QQQ"]);
                 const NYSE_STOCKS = new Set(["TSM","BABA","ORCL","DASH","CRCL","HIMS","LLY"]);
                 const AMEX_ETFS = new Set(["EWY","EWJ","KWEB","USAR","URNM","SPY","IWM"]);
-                // Commodities: ISO metal codes + common word names → TVC feed
+
                 const TVC_COMMODITIES: Record<string, string> = {
                   XAU: "TVC:GOLD", GOLD: "TVC:GOLD",
                   XAG: "TVC:SILVER", SILVER: "TVC:SILVER",

@@ -2,7 +2,6 @@ import useUserStore, { saveUser } from '@/stores/useUserStore';
 import { getLevelInfo } from '@/services/xpService';
 import { BADGE_DEFINITIONS } from '@/components/Badge';
 
-// XP reward per achievement (keyed by badge id)
 const ACHIEVEMENT_XP: Record<string, number> = {
   'first-blood':      50,
   'century':          250,
@@ -28,7 +27,6 @@ const ACHIEVEMENT_XP: Record<string, number> = {
   'whale':            250,
 };
 
-// State for tracking per-session data (non-persisted across reloads)
 let _consecutiveWins = 0;
 let _lastLiquidatedAt: number | null = null;
 let _maxLeverageMarketsCount = 0;
@@ -42,10 +40,6 @@ export function recordLiquidation() {
   _lastLiquidatedAt = Date.now();
 }
 
-/**
- * Award an achievement by badge id.
- * Shows a rich achievement toast using the badge SVG art.
- */
 export function checkAchievement(id: string) {
   const store = useUserStore.getState();
   if (!store.initialized) return false;
@@ -66,10 +60,9 @@ export function checkAchievement(id: string) {
   });
   saveUser();
 
-  // Fire the rich achievement toast
   showAchievementToast(id, def.name, def.japanese, def.rarity, xpBonus);
 
-  return true; // newly earned
+  return true;
 }
 
 function rarityColor(rarity: string): string {
@@ -117,9 +110,6 @@ function showAchievementToast(id: string, name: string, japanese: string, rarity
   setTimeout(() => el.remove(), 4000);
 }
 
-/**
- * Main achievement check — call this after every trade with full params.
- */
 export function checkTradeAchievements(params: {
   leverage?: number;
   category?: string;
@@ -134,21 +124,18 @@ export function checkTradeAchievements(params: {
   const store = useUserStore.getState();
   if (!store.initialized) return;
 
-  // --- Trading milestones ---
   if (store.totalTrades >= 1)    checkAchievement('first-blood');
   if (store.totalTrades >= 100)  checkAchievement('century');
   if (store.totalTrades >= 1000) checkAchievement('thousand-cuts');
 
-  // --- Leverage ---
   if (params.leverage) {
     if (params.leverage >= 100) checkAchievement('degen');
     if (params.leverage >= 300) checkAchievement('max-degen');
 
-    // Leverage god: max leverage on 5 different markets
     if (params.market) {
       const maxLevMap: Record<string, number> = {
         'BTC': 125, 'ETH': 100, 'SOL': 75, 'BNB': 75,
-        // approximate max levs — any value >= known max
+
       };
       const knownMax = maxLevMap[params.market?.toUpperCase?.() ?? ''] ?? 125;
       if (params.leverage >= knownMax * 0.95) {
@@ -158,66 +145,52 @@ export function checkTradeAchievements(params: {
     }
   }
 
-  // --- Streaks ---
   if (store.streak >= 7)   checkAchievement('burning-spirit');
   if (store.streak >= 30)  checkAchievement('inferno');
   if (store.streak >= 100) checkAchievement('eternal-flame');
 
-  // --- Market exploration ---
   const marketsCount = store.marketsTraded.length;
   if (marketsCount >= 5)  checkAchievement('explorer');
   if (marketsCount >= 25) checkAchievement('globe-trotter');
 
-  // --- Protocol tourist (all 3 venues traded) ---
   const protocols = store.protocolsTraded;
   const hasAllVenues = ['aster', 'hyperliquid', 'lighter'].every(
     (v) => protocols.some((p) => p.toLowerCase().includes(v))
   );
   if (hasAllVenues) checkAchievement('protocol-tourist');
 
-  // --- Night owl: trade between midnight-4am UTC ---
   const utcHour = new Date().getUTCHours();
   if (utcHour < 4) checkAchievement('night-owl');
 
-  // --- Sniper: close within 0.5% of entry ---
   if (params.entryPrice && params.closePrice && params.entryPrice > 0) {
     const pctDiff = Math.abs(params.closePrice - params.entryPrice) / params.entryPrice;
     if (pctDiff <= 0.005 && pctDiff > 0) checkAchievement('sniper');
   }
 
-  // --- Whale: position >= $10k notional ---
   if (params.sizeUsd && params.sizeUsd >= 10000) checkAchievement('whale');
 
-  // --- Survivor: liquidated then traded again within 24h ---
   if (params.isLiquidated) {
     recordLiquidation();
   } else if (_lastLiquidatedAt && Date.now() - _lastLiquidatedAt < 86400000) {
     checkAchievement('survivor');
-    _lastLiquidatedAt = null; // reset after earning
+    _lastLiquidatedAt = null;
   }
 
-  // --- Win streaks ---
   if (params.winConsecutive === true) {
     _consecutiveWins += 1;
     if (_consecutiveWins >= 5)  checkAchievement('on-fire');
     if (_consecutiveWins >= 20) checkAchievement('untouchable');
   } else if (params.winConsecutive === false) {
-    _consecutiveWins = 0; // streak broken
+    _consecutiveWins = 0;
   }
 
-  // --- P&L based ---
   if (params.pnl !== undefined) {
-    // PnL checks don't directly award badges but are used by the recovery logic
-    // Comeback kid is handled externally when drawdown->breakeven is detected
+
   }
 }
 
-/**
- * Check if the user traded during the OG launch window.
- * Call this on first trade with a timestamp.
- */
 export function checkOgBadge(firstTradeTimestamp?: number) {
-  // Launch week: hard-coded start. Adjust to actual launch date.
+
   const LAUNCH_DATE = new Date('2025-01-01T00:00:00Z').getTime();
   const LAUNCH_WEEK_END = LAUNCH_DATE + 7 * 24 * 60 * 60 * 1000;
   const ts = firstTradeTimestamp ?? Date.now();
@@ -226,16 +199,10 @@ export function checkOgBadge(firstTradeTimestamp?: number) {
   }
 }
 
-/**
- * Check top-10 leaderboard badge (call when leaderboard rank is known).
- */
 export function checkLeaderboardBadge(rank: number) {
   if (rank <= 10) checkAchievement('top-10');
 }
 
-/**
- * Legacy compatibility shim for old achievement ids.
- */
 export const ACHIEVEMENTS = BADGE_DEFINITIONS.filter(
   (b) => b.category !== 'tier'
 ).map((b) => ({

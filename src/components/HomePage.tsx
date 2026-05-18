@@ -67,7 +67,6 @@ const TRENDING_PERPS = [
   { symbol: "HYPER", leverage: "300x", color: "#00E5A0" },
 ];
 
-
 const XSTOCK_SWAP_CATALOGUE = [
   { symbol: "AAPLx", name: "Apple" },
   { symbol: "NVDAx", name: "NVIDIA" },
@@ -942,7 +941,6 @@ function XStocksModal({ onClose, isMobile, jupiterLogos }: { onClose: () => void
   );
 }
 
-
 function BalanceStat({ label, value, highlight }: { label: string; value: number; highlight?: boolean }) {
   return (
     <div>
@@ -1233,7 +1231,6 @@ export default function HomePage() {
           </div>
 
         </div>
-
 
         <div style={{ marginBottom: 28 }}>
           <div style={{

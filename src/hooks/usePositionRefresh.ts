@@ -4,6 +4,7 @@ import { useEffect, useCallback, useRef } from "react";
 import usePositionStore from "@/stores/usePositionStore";
 import { fetchAllPositions } from "@/services/positionFetcher";
 import { useEvmWallet } from "./useEvmWallet";
+import { toUserFacingError } from "@/lib/userFacingErrors";
 
 const FRESHNESS_GUARD_MS = 5000;
 
@@ -25,9 +26,12 @@ export function usePositionRefresh(intervalMs = 30000) {
     setLoading(true);
     try {
       const positions = await fetchAllPositions(undefined, evmAddress);
-      setPositions(positions);
+
+      if (positions.length > 0) {
+        setPositions(positions);
+      }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load positions");
+      setError(toUserFacingError(err, "portfolio"));
     } finally {
       setLoading(false);
       fetchingRef.current = false;
@@ -37,10 +41,12 @@ export function usePositionRefresh(intervalMs = 30000) {
   const refreshToken = usePositionStore((s) => s.refreshToken);
 
   useEffect(() => {
+    if (!evmAddress) return;
+    usePositionStore.getState().setPositions([]);
     refresh(true);
     const iv = setInterval(() => refresh(), intervalMs);
     return () => clearInterval(iv);
-  }, [refresh, intervalMs]);
+  }, [evmAddress, refresh, intervalMs]);
 
   useEffect(() => {
     if (refreshToken > 0) refresh(true);

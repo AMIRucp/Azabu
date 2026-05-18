@@ -66,10 +66,10 @@ export default function SamuraiAvatar({
           ...style,
         }}
       >
-        {/* Layer 1: Background */}
+        
         <img src={`${L}/background/bg-${t.background}.svg`} alt="" style={imgStyle} loading="lazy" />
 
-        {/* Layer 9 (behind mask): Aura */}
+        
         {showAura && (
           <img
             src={`${L}/aura/aura-${t.aura}.svg`} alt=""
@@ -78,34 +78,34 @@ export default function SamuraiAvatar({
           />
         )}
 
-        {/* Layer 2+3: Mask shape + color */}
+        
         <img
           src={`${L}/mask/mask-${t.maskShape}.svg`} alt=""
           style={{ ...imgStyle, filter: [MASK_COLOR_FILTERS[t.maskColor], goldFilter].filter(Boolean).join(' ') || undefined }}
           loading="lazy"
         />
 
-        {/* Layer 5: Horns (drawn before eyes so eyes appear on top) */}
+        
         {showHorns && (
           <img src={`${L}/horns/horns-${t.horns}.svg`} alt="" style={imgStyle} loading="lazy" />
         )}
 
-        {/* Layer 4: Eyes */}
+        
         <img
           src={`${L}/eyes/eyes-${t.eyes}.svg`} alt=""
           style={{ ...imgStyle, filter: eyeGlowFilter }}
           loading="lazy"
         />
 
-        {/* Layer 6: Mouth */}
+        
         <img src={`${L}/mouth/mouth-${t.mouth}.svg`} alt="" style={imgStyle} loading="lazy" />
 
-        {/* Layer 7: Markings */}
+        
         {showMarkings && (
           <img src={`${L}/markings/mark-${t.markings}.svg`} alt="" style={imgStyle} loading="lazy" />
         )}
 
-        {/* Layer 8: Accessory */}
+        
         {showAccessory && (
           <img src={`${L}/accessory/acc-${t.accessory}.svg`} alt="" style={imgStyle} loading="lazy" />
         )}

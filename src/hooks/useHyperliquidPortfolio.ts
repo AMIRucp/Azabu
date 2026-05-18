@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useHyperliquidWebSocket } from "./useHyperliquidWebSocket";
+import { toUserFacingError } from "@/lib/userFacingErrors";
 
 export interface HyperliquidPosition {
   coin: string;
@@ -64,7 +65,6 @@ export function useHyperliquidPortfolio({
     enabled,
   });
 
-  // Keep wsPrices in a ref so fetchPortfolio doesn't need it as a dependency
   const wsPricesRef = useRef(wsPrices);
   const fetchGenRef = useRef(0);
   useEffect(() => {
@@ -84,13 +84,20 @@ export function useHyperliquidPortfolio({
 
     try {
       const uid = encodeURIComponent(fetchFor);
-      const res = await fetch(`/api/portfolio/hyperliquid?address=${uid}`, { cache: "no-store" });
+      const cv =
+        typeof crypto !== "undefined" && "randomUUID" in crypto
+          ? crypto.randomUUID()
+          : String(Date.now());
+      const res = await fetch(
+        `/api/portfolio/hyperliquid?address=${uid}&cv=${encodeURIComponent(cv)}`,
+        { cache: "no-store" }
+      );
       const json = await res.json();
 
       if (isObsolete()) return;
 
       if (!res.ok) {
-        setError(json.error || "Failed to fetch portfolio");
+        setError(toUserFacingError(json.error || "Failed to fetch portfolio", "portfolio"));
         return;
       }
 
@@ -118,16 +125,16 @@ export function useHyperliquidPortfolio({
           setData({ ...json, positions: updatedPositions });
         }
       } else {
-        setError(json.error || "Unknown error");
+        setError(toUserFacingError(json.error || "Unknown error", "portfolio"));
       }
     } catch (err) {
       if (!isObsolete()) {
-        setError(err instanceof Error ? err.message : "Network error");
+        setError(toUserFacingError(err, "portfolio"));
       }
     } finally {
       if (!isObsolete()) setIsLoading(false);
     }
-  }, [address, enabled]); // removed wsPrices from deps - use ref instead
+  }, [address, enabled]);
 
   useEffect(() => {
     if (!address || !enabled) {

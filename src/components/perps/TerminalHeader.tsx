@@ -47,7 +47,6 @@ const CROSS_CHAIN_BADGE: Record<string, { label: string; color: string; icon?: s
   hyperliquid: { label: "HL", color: "#33FF88", icon: "/tokens/hyperliquid.webp" },
 };
 
-
 const fmtStat = (v: number) => {
   if (!v) return "$0";
   if (v >= 1e9) return `$${(v / 1e9).toFixed(1)}B`;
