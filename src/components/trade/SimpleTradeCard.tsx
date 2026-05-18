@@ -223,6 +223,18 @@ export default function SimpleTradeCard({ selectedAsset, assetId, forcedProtocol
     return undefined;
   }, [assetId, resolvedMarket, markets, assetSym]);
 
+  const effectiveSzDecimals = useMemo(() => {
+    if (resolvedMarket?.szDecimals !== undefined) return resolvedMarket.szDecimals;
+    const baseAssetFromSym = assetSym.split("-")[0].toUpperCase();
+    const hlMarket = markets.find(
+      (m) =>
+        m.protocol === "hyperliquid" &&
+        m.type === "perp" &&
+        m.baseAsset.toUpperCase() === baseAssetFromSym,
+    );
+    return hlMarket?.szDecimals;
+  }, [resolvedMarket, markets, assetSym]);
+
   useEffect(() => {
     onVenueChange?.(venue);
   }, [venue, onVenueChange]);
@@ -352,6 +364,7 @@ export default function SimpleTradeCard({ selectedAsset, assetId, forcedProtocol
       hiddenOrder: false,
       asterUserId: evmAddress || undefined,
       assetId: venue === "hyperliquid" ? effectiveAssetId : undefined,
+      szDecimals: venue === "hyperliquid" ? effectiveSzDecimals : undefined,
       onTradeSuccess: () => {
         setCelebTrade({
           side,
@@ -363,7 +376,7 @@ export default function SimpleTradeCard({ selectedAsset, assetId, forcedProtocol
         setSizeUsd("");
       },
     });
-  }, [canTrade, assetSym, livePrice, maxLev, marketSymbol, chain, side, assetQty, positionSize, effectiveLeverage, collateralRequired, tpEnabled, slEnabled, tpPriceTarget, slPriceTarget, evmAddress, execute, venue, effectiveAssetId, requireApproval]);
+  }, [canTrade, assetSym, livePrice, maxLev, marketSymbol, chain, side, assetQty, positionSize, effectiveLeverage, collateralRequired, tpEnabled, slEnabled, tpPriceTarget, slPriceTarget, evmAddress, execute, venue, effectiveAssetId, effectiveSzDecimals, requireApproval]);
 
   const sectionStyle: React.CSSProperties = {
     background: "#0C0D10",

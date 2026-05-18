@@ -57,6 +57,7 @@ export default function HyperliquidPositions({ address }: HyperliquidPositionsPr
           side: position.side,
           coin: position.coin,
           markPrice: position.markPrice || market.price,
+          szDecimals: market.szDecimals,
           onSuccess: () => {
             setTimeout(() => {
               setClosingPositionIndex(null);

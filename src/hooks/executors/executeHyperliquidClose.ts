@@ -60,6 +60,7 @@ interface ClosePositionParams {
   side: "long" | "short";
   coin: string;
   markPrice?: number;
+  szDecimals?: number;
   onSuccess?: () => void;
 }
 
@@ -68,7 +69,7 @@ export async function executeHyperliquidClose(
   callbacks: TxCallbacks,
 ) {
   const { setTxState, setTxMsg, setTxSig } = callbacks;
-  const { assetId, size, side, coin, markPrice, onSuccess } = params;
+  const { assetId, size, side, coin, markPrice, szDecimals, onSuccess } = params;
 
   try {
     setTxState("signing");
@@ -108,7 +109,7 @@ export async function executeHyperliquidClose(
         a: assetId,
         b: isBuy,
         p: formatHlPerpPrice(rawPrice),
-        s: formatHlSize(size),
+        s: formatHlSize(size, szDecimals ?? 6),
         r: true,
         t: { limit: { tif: "Ioc" } },
       }],

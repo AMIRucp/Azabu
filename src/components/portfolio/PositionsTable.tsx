@@ -291,6 +291,7 @@ export default function PositionsTable({
             side: pos.side.toLowerCase() as "long" | "short",
             coin: pos.baseAsset,
             markPrice: market.price,
+            szDecimals: market.szDecimals,
             onSuccess: () => {
               closeSuccess = true;
             },

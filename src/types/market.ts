@@ -23,4 +23,5 @@ export interface UnifiedMarket {
   overnightMaxLeverage?: number | null;
   closingFee?: number;
   assetId?: number;
+  szDecimals?: number;
 }

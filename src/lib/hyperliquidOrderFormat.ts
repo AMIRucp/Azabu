@@ -19,8 +19,15 @@ export function formatHlPerpPrice(price: number): string {
   return formatHlDecimal(price, 6);
 }
 
-export function formatHlSize(size: number): string {
-  return formatHlDecimal(size, 6);
+export function roundHlSizeToDecimals(size: number, szDecimals: number): number {
+  if (!Number.isFinite(size) || size <= 0) return 0;
+  const factor = 10 ** szDecimals;
+  return Math.floor(size * factor + 1e-12) / factor;
+}
+
+export function formatHlSize(size: number, szDecimals = 6): string {
+  const rounded = roundHlSizeToDecimals(size, szDecimals);
+  return formatHlDecimal(rounded, szDecimals);
 }
 
 export function extractHyperliquidErrorMessage(err: unknown): string {

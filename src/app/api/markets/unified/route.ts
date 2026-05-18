@@ -178,6 +178,7 @@ async function fetchHyperliquidMarkets(): Promise<UnifiedMarket[]> {
         name: perp.name,
         isMarketOpen: true,
         assetId: index,
+        szDecimals: perp.szDecimals,
       } as UnifiedMarket;
     })
     .filter((p): p is UnifiedMarket => p !== null);

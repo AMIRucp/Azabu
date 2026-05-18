@@ -60,7 +60,7 @@ export async function executeHyperliquidTrade(
   callbacks: TxCallbacks,
 ) {
   const { setTxState, setTxMsg, setTxSig } = callbacks;
-  const { market, side, sizeNum, lev, otype, price, evmAddress, assetId, onTradeSuccess } = params;
+  const { market, side, sizeNum, lev, otype, price, evmAddress, assetId, szDecimals, onTradeSuccess } = params;
 
   try {
     setTxState("signing");
@@ -122,12 +122,20 @@ export async function executeHyperliquidTrade(
         : market.price * 0.9
       : parseFloat(price) || market.price;
 
+    const hlSzDecimals = szDecimals ?? 6;
+    const orderSize = formatHlSize(sizeNum, hlSzDecimals);
+    if (parseFloat(orderSize) <= 0) {
+      setTxMsg("Order size is too small for this market");
+      setTxState("error");
+      return;
+    }
+
     const result = await exchange.order({
       orders: [{
         a: assetId,
         b: isBuy,
         p: formatHlPerpPrice(rawPrice),
-        s: formatHlSize(sizeNum),
+        s: orderSize,
         r: false,
         t: isMarket ? { limit: { tif: "Ioc" } } : { limit: { tif: "Gtc" } },
       }],

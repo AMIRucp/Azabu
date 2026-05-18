@@ -30,6 +30,7 @@ interface TradeParams {
   asterUserId?: string;
   pairId?: number;
   assetId?: number;
+  szDecimals?: number;
   onTradeSuccess?: () => void;
 }
 
@@ -44,7 +45,7 @@ export function useTradeExecution() {
   const callbacks = { setTxState, setTxMsg, setTxSig };
 
   const executeTrade = useCallback(async (params: TradeParams) => {
-    const { market, side, sizeNum, posValue, lev, otype, price, maxLev, marketSymbol, collateral, tp, sl, hiddenOrder, asterUserId, assetId, onTradeSuccess } = params;
+    const { market, side, sizeNum, posValue, lev, otype, price, maxLev, marketSymbol, collateral, tp, sl, hiddenOrder, asterUserId, assetId, szDecimals, onTradeSuccess } = params;
 
     const isAsterMarket = marketSymbol?.endsWith("USDT") || market.marketName?.endsWith("USDT");
     const isLighterMarket = params.chain === "lighter" || market.protocol === "lighter";
@@ -61,7 +62,7 @@ export function useTradeExecution() {
         return;
       }
       await executeHyperliquidTrade(
-        { market, side, sizeNum, posValue, lev, otype, price, maxLev, marketSymbol, evmAddress, assetId, onTradeSuccess },
+        { market, side, sizeNum, posValue, lev, otype, price, maxLev, marketSymbol, evmAddress, assetId, szDecimals, onTradeSuccess },
         callbacks,
       );
     } else if (isAsterMarket) {

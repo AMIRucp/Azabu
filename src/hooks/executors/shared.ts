@@ -39,6 +39,7 @@ export interface AsterTradeParams extends BaseTradeParams {
 export interface HyperliquidTradeParams extends BaseTradeParams {
   evmAddress: string;
   assetId?: number;
+  szDecimals?: number;
 }
 
 export function recordTradeToDb(data: {
