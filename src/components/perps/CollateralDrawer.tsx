@@ -116,7 +116,7 @@ export default function CollateralDrawer({ open, onClose, token, chainLabel, amo
           color: "#7a7a90",
           fontSize: 13,
         }}>
-          Bridge feature coming soon
+          Open Swap → Bridge to move funds cross-chain
         </div>
       </div>
     </div>

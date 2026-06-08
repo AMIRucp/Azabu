@@ -1,7 +1,7 @@
 "use client";
 
 if (typeof window !== 'undefined' && process.env.NODE_ENV === 'production') {
-  const noop = () => {};
+  const noop = () => { };
   console.log = noop;
   console.debug = noop;
   console.info = noop;
@@ -14,7 +14,6 @@ import usePositionStore from "@/stores/usePositionStore";
 import { WalletButton } from "@/components/WalletButton";
 import { useEvmWallet } from "@/hooks/useEvmWallet";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
-import MarketTicker from "@/components/MarketTicker";
 import dynamic from 'next/dynamic';
 import UserHeader from '@/components/UserHeader';
 import { initUser, resetUser } from '@/stores/useUserStore';
@@ -22,11 +21,9 @@ import useSettingsStore from '@/stores/useSettingsStore';
 import { updateTabPnl, updateFavicon, TRADE_SOUNDS } from '@/lib/tradeAnimations';
 import type { UnifiedMarket } from '@/types/market';
 import MobileNavDrawer from '@/components/perps/MobileNavDrawer';
-import MobileBottomNav from '@/components/MobileBottomNav';
-
 const TradePage = dynamic(() => import('@/components/TradePage'), { ssr: false });
 const PerpsTerminal = dynamic(() => import('@/components/perps/PerpsTerminal'), { ssr: false });
-const SwapPageContent = dynamic(() => import('@/components/SwapPage').then(m => ({ default: m.SwapPageContent })), { ssr: false });
+const SwapPageContent = dynamic(() => import('@/components/swap/SwapPage').then(m => ({ default: m.SwapPageContent })), { ssr: false });
 const HomePage = dynamic(() => import('@/components/HomePage'), { ssr: false });
 const PortfolioPage = dynamic(() => import('@/components/PortfolioPage'), { ssr: false });
 const SettingsPage = dynamic(() => import('@/components/SettingsPage'), { ssr: false });
@@ -35,7 +32,7 @@ const LeaderboardPage = dynamic(() => import('@/components/LeaderboardPage'), { 
 type ActivePage = "home" | "trade" | "perps" | "swap" | "portfolio" | "settings" | "leaderboard";
 
 const PRIMARY_NAV: { id: ActivePage; label: string }[] = [
-  { id: "home", label: "Home" },
+  { id: "home", label: "Dashboard" },
   { id: "trade", label: "Trade" },
   { id: "perps", label: "Markets" },
   { id: "portfolio", label: "Portfolio" },
@@ -173,31 +170,6 @@ function ExchangeShell() {
     }
   }, [walletAddress]);
 
-  const lastWalletRef = useRef<string>("");
-  useEffect(() => {
-    const prev = lastWalletRef.current;
-    const next = walletAddress || "";
-    lastWalletRef.current = next;
-    if (!prev || prev === next) return;
-    if (prev.toLowerCase() === next.toLowerCase()) return;
-    try {
-      localStorage.removeItem("aster_user_id");
-      const cleanupKeys: string[] = [];
-      for (let i = 0; i < localStorage.length; i++) {
-        const k = localStorage.key(i);
-        if (!k) continue;
-        if (k.startsWith(`afx-user-${prev}`)) cleanupKeys.push(k);
-      }
-      cleanupKeys.forEach((k) => localStorage.removeItem(k));
-    } catch {}
-    try {
-      usePositionStore.getState().setPositions([]);
-    } catch {}
-    window.dispatchEvent(
-      new CustomEvent("afx-wallet-changed", { detail: { from: prev, to: next } }),
-    );
-  }, [walletAddress]);
-
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key === 'S') {
@@ -228,6 +200,7 @@ function ExchangeShell() {
     window.addEventListener("afx-navigate", handler);
     return () => window.removeEventListener("afx-navigate", handler);
   }, []);
+
 
   const handleSelectMarket = useCallback((market: UnifiedMarket) => {
     localStorage.setItem('afx_preselect_market', market.symbol);
@@ -263,8 +236,8 @@ function ExchangeShell() {
         }}
         data-testid="exchange-header"
       >
-        
-        <div className="absolute left-4 flex items-center" style={{ gap: 10, flexShrink: 0 }}>
+        {/* Logo - positioned absolutely on left */}
+        <div className="absolute left-4 flex items-center" style={{ gap: 2, flexShrink: 0 }}>
           <img
             src="/azabu-logo.png"
             alt="Azabu"
@@ -273,8 +246,8 @@ function ExchangeShell() {
           />
         </div>
 
-        
-        <nav className="flex items-center" style={{ gap: 2 }}>
+        {/* Desktop inline nav - truly centered */}
+        <nav className="flex items-center absolute left-24" style={{ gap: 2 }}>
           {[...PRIMARY_NAV, ...SECONDARY_NAV].map(({ id, label }) => {
             const active = activePage === id;
             return (
@@ -287,14 +260,16 @@ function ExchangeShell() {
                 data-testid={`desktop-nav-${id}`}
                 style={{
                   padding: '6px 14px',
-                  borderRadius: 8,
-                  border: 'none',
+                  borderRadius: 24,
                   cursor: 'pointer',
-                  fontSize: 13,
-                  fontWeight: active ? 600 : 400,
-                  fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif",
-                  color: active ? '#D4A574' : 'rgba(255,255,255,0.5)',
-                  background: active ? 'rgba(212,165,116,0.08)' : 'transparent',
+                  fontSize: 14,
+                  fontWeight: 600,
+                  fontFamily: "Inter, sans-serif",
+                  color: active ? '#FFFFFF' : 'rgba(255,255,255,0.5)',
+                  background: 'transparent',
+                  border: active ? '1px solid rgba(255,255,255,0.3)' : 'none',
+                  lineHeight: "20px",
+
                   transition: 'all 0.15s',
                   letterSpacing: '0.01em',
                   whiteSpace: 'nowrap',
@@ -308,12 +283,12 @@ function ExchangeShell() {
           })}
         </nav>
 
-        
+        {/* User header + Wallet - positioned absolutely on right */}
         <div className="absolute right-4 flex items-center shrink-0" style={{ gap: 6 }}>
           <UserHeader
             onDisconnect={() => {
               resetUser();
-              evmWallet.disconnectEvm().catch(() => {});
+              evmWallet.disconnectEvm().catch(() => { });
             }}
           />
           <WalletButton />
@@ -362,11 +337,7 @@ function ExchangeShell() {
         </div>
       </header>
 
-      <div className="hidden sm:block">
-        <MarketTicker />
-      </div>
-
-      <main className="flex-1 min-h-0 overflow-hidden sm:pb-0 pb-[72px]">
+      <main className="flex-1 min-h-0 overflow-hidden">
         <ErrorBoundary>
           {activePage === "home" && (
             <div className="afx-page-enter h-full overflow-y-auto" data-testid="page-home">
@@ -382,7 +353,7 @@ function ExchangeShell() {
 
           {activePage === "perps" && (
             <div className="afx-page-enter" style={{ height: "100%", overflow: "hidden" }} data-testid="page-perps">
-              <PerpsTerminal key={`perps:${walletAddress || "guest"}`} />
+              <PerpsTerminal />
             </div>
           )}
 
@@ -394,7 +365,7 @@ function ExchangeShell() {
 
           {activePage === "portfolio" && (
             <div className="afx-page-enter h-full overflow-y-auto" data-testid="page-portfolio">
-              <PortfolioPage key={`portfolio:${walletAddress || "guest"}`} />
+              <PortfolioPage />
             </div>
           )}
 
@@ -413,13 +384,6 @@ function ExchangeShell() {
         </ErrorBoundary>
       </main>
 
-      <MobileBottomNav
-        activePage={activePage}
-        onNavigate={(page) => {
-          if (page === "trade") setTradeFromMarkets(false);
-          setActivePage(page);
-        }}
-      />
 
       <HelpModal open={showHelp} onClose={() => setShowHelp(false)} />
     </div>

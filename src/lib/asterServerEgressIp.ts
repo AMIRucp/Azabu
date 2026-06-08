@@ -3,7 +3,6 @@ import type { NextRequest } from "next/server";
 let cached: { ip: string; at: number } | null = null;
 const TTL_MS = 60_000;
 
-/** Server egress IP for Aster agent ipWhitelist (single address). */
 export async function resolveAsterServerEgressIp(request?: NextRequest): Promise<string> {
   if (cached && Date.now() - cached.at < TTL_MS) return cached.ip;
 
@@ -18,7 +17,6 @@ export async function resolveAsterServerEgressIp(request?: NextRequest): Promise
       return cached.ip;
     }
   } catch {
-    /* fall through */
   }
 
   if (request) {

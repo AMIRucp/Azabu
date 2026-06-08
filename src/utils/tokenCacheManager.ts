@@ -1,4 +1,5 @@
 import { formatUnits } from "ethers";
+import { sanitizeTokenSymbol } from "@/lib/oneinchTokenList";
 
 export interface TokenState {
   symbol: string;
@@ -112,8 +113,8 @@ class TokenCacheManager {
     return Object.values(data.tokens)
       .filter((token: any) => this.isValidToken(token))
       .map((token: any) => ({
-        symbol: String(token.symbol).toUpperCase(),
-        name: String(token.name),
+        symbol: sanitizeTokenSymbol(String(token.symbol)),
+        name: String(token.name).replace(/\0/g, "").trim() || sanitizeTokenSymbol(String(token.symbol)),
         address: String(token.address).toLowerCase(),
         decimals: Number(token.decimals) || 18,
         logoURI: token.logoURI ? String(token.logoURI) : undefined,

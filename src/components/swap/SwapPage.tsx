@@ -3,9 +3,6 @@
 import { useState, useEffect } from "react";
 import { EvmSwapContent } from "@/components/swap/EvmSwapContent";
 
-const SANS = "'Inter', system-ui, sans-serif";
-const MONO = "'IBM Plex Mono', monospace";
-
 function navigateToTrade(embedded?: boolean) {
   window.dispatchEvent(new CustomEvent("afx-navigate", { detail: { page: "trade" } }));
   if (!embedded) {
@@ -54,9 +51,12 @@ export function SwapPageContent({ embedded, onSwapComplete }: {
   return (
     <div
       style={{
-        width: "100%", maxWidth: 420, margin: "0 auto",
+        width: "100%",
+        maxWidth: 420,
+        margin: "0 auto",
         background: "transparent",
-        opacity: mounted ? 1 : 0, transform: mounted ? "translateY(0)" : "translateY(6px)",
+        opacity: mounted ? 1 : 0,
+        transform: mounted ? "translateY(0)" : "translateY(6px)",
         transition: "opacity 0.4s, transform 0.4s",
       }}
       data-testid="swap-page-content"
@@ -64,14 +64,9 @@ export function SwapPageContent({ embedded, onSwapComplete }: {
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&display=swap');
         @keyframes swpFadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
-        .swp-field:focus { outline: none; }
-        .swp-field::placeholder { color: #1B2030 !important; }
-        .swp-field::-webkit-inner-spin-button,
-        .swp-field::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
-        .swp-field { -moz-appearance: textfield; }
       `}</style>
 
-      <div style={{ padding: "0 0 8px", fontFamily: SANS }}>
+      <div style={{ padding: "0 0 8px", fontFamily: "'Inter', system-ui, sans-serif" }}>
         <EvmSwapContent onComplete={onSwapComplete} />
       </div>
 
@@ -81,8 +76,11 @@ export function SwapPageContent({ embedded, onSwapComplete }: {
           alt=""
           aria-hidden="true"
           style={{
-            width: 16, height: 16, opacity: 0.06,
-            pointerEvents: "none", userSelect: "none",
+            width: 16,
+            height: 16,
+            opacity: 0.06,
+            pointerEvents: "none",
+            userSelect: "none",
             filter: "grayscale(0.5)",
           }}
         />

@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const CHAIN_IDS: Record<number, number> = {
-  1: 1,
-  42161: 42161,
-  8453: 8453,
-};
+import { FUSION_PLUS_EVM_CHAIN_IDS } from "@/config/bridgeEvmChains";
+
+const CHAIN_IDS: Record<number, number> = Object.fromEntries(
+  FUSION_PLUS_EVM_CHAIN_IDS.map((id) => [id, id]),
+);
 
 export async function POST(request: NextRequest) {
   try {
