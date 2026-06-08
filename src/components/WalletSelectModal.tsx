@@ -5,7 +5,7 @@ import { ARBITRUM_CHAIN_ID, HYPERLIQUID_CHAIN_ID } from "@/config/wagmiConfig";
 import { X, Download, ExternalLink, ArrowLeft, ChevronRight } from "lucide-react";
 
 const metamaskIcon = "/icons/MetaMask.png";
-const coinbaseIcon = "/icons/CoinBase.png";
+const coinbaseIcon = "/icons/Coinbase.png";
 const walletConnectIcon = "/icons/WalletConnect.jpg";
 const rabbyIcon = "/icons/Rabby.jpg";
 const trustIcon = "/icons/Trust.jpg";

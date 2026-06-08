@@ -16,6 +16,10 @@ import { SwapSuccessCard } from "./SwapSuccessCard";
 import TokenSelectorModal from "./TokenSelectorModal";
 import { Settings, SlidersHorizontal, Settings2, ChevronDown, ArrowDownUp, ArrowLeftRight } from "lucide-react";
 import { toUserFacingError } from "@/lib/userFacingErrors";
+import {
+  deriveEthUsdPrice,
+  estimateFusionPlusSwapGas,
+} from "@/lib/estimateFusionPlusGas";
 
 
 const NATIVE_ETH = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE";
@@ -191,7 +195,7 @@ function TokenPanel({
 }
 
 export function EvmSwapContent({ onComplete }: { onComplete?: () => void }) {
-  const { evmAddress, isEvmConnected, evmChainId, connectEvm, switchToChainById, getEvmSigner } = useEvmWallet();
+  const { evmAddress, isEvmConnected, evmChainId, connectEvm, switchToChainById, getEvmSigner, getEvmProvider } = useEvmWallet();
 
   const [fromChainKey, setFromChainKey] = useState<SwapChainKey>("arbitrum");
   const [toChainKey, setToChainKey] = useState<SwapChainKey>("ethereum");
@@ -212,7 +216,10 @@ export function EvmSwapContent({ onComplete }: { onComplete?: () => void }) {
   const [bridgeQuote, setBridgeQuote] = useState<FusionPlusBridgeQuote | null>(null);
   const [quoting, setQuoting] = useState(false);
   const [quoteError, setQuoteError] = useState<string | null>(null);
+  const [gasDisplay, setGasDisplay] = useState("—");
+  const [estimatingGas, setEstimatingGas] = useState(false);
   const quoteTimer = useRef<NodeJS.Timeout | null>(null);
+  const gasTimer = useRef<NodeJS.Timeout | null>(null);
 
   const [preset, setPreset] = useState<FusionPreset>("fast");
   const [showPresetSelector, setShowPresetSelector] = useState(false);
@@ -476,6 +483,7 @@ export function EvmSwapContent({ onComplete }: { onComplete?: () => void }) {
       setBridgeQuote(null);
       setToAmount("");
       setQuoteError(null);
+      setGasDisplay("—");
       return;
     }
     setSwapError(null);
@@ -623,6 +631,76 @@ export function EvmSwapContent({ onComplete }: { onComplete?: () => void }) {
 
   const numFrom = parseFloat(fromAmount) || 0;
   const toAmountNum = parseFloat(toAmount.replace(/,/g, "")) || 0;
+
+  useEffect(() => {
+    if (gasTimer.current) clearTimeout(gasTimer.current);
+
+    if (
+      !bridgeQuote ||
+      !fromToken ||
+      !toToken ||
+      !fromAmount ||
+      numFrom <= 0 ||
+      sameChain ||
+      !evmAddress ||
+      !isEvmConnected ||
+      evmChainId !== fromChainConfig.chainId
+    ) {
+      setGasDisplay("—");
+      setEstimatingGas(false);
+      return;
+    }
+
+    let cancelled = false;
+    setEstimatingGas(true);
+    gasTimer.current = setTimeout(() => {
+      void (async () => {
+        try {
+          const provider = await getEvmProvider();
+          if (!provider || cancelled) return;
+          const browserProvider = new ethers.BrowserProvider(provider as never);
+          const ethUsdPrice = deriveEthUsdPrice(
+            numFrom,
+            toAmountNum,
+            fromToken.symbol,
+            toToken.symbol,
+          );
+          const estimate = await estimateFusionPlusSwapGas({
+            provider: browserProvider,
+            walletAddress: evmAddress,
+            srcTokenAddress: fromToken.address,
+            srcTokenDecimals: fromToken.decimals,
+            amount: fromAmount,
+            ethUsdPrice,
+          });
+          if (!cancelled) setGasDisplay(estimate.display);
+        } catch {
+          if (!cancelled) setGasDisplay("—");
+        } finally {
+          if (!cancelled) setEstimatingGas(false);
+        }
+      })();
+    }, 300);
+
+    return () => {
+      cancelled = true;
+      if (gasTimer.current) clearTimeout(gasTimer.current);
+    };
+  }, [
+    bridgeQuote,
+    fromToken,
+    toToken,
+    fromAmount,
+    numFrom,
+    toAmountNum,
+    sameChain,
+    evmAddress,
+    isEvmConnected,
+    evmChainId,
+    fromChainConfig.chainId,
+    getEvmProvider,
+  ]);
+
   const fromBal = getTokenBalance(fromToken);
   const insufficientBal = fromBal != null && numFrom > 0 && numFrom > fromBal;
   const isOnCorrectChain = evmChainId === fromChainConfig.chainId;
@@ -677,16 +755,17 @@ export function EvmSwapContent({ onComplete }: { onComplete?: () => void }) {
           : `${priceImpactNum.toFixed(2)}%`
         : dash;
 
-    const estGasUsd =
-      hasQuote && !sameChain && numFrom > 0
-        ? Math.max(1.5, Math.min(15, numFrom * 0.014))
-        : null;
     const estGas =
-      estGasUsd != null ? `$${estGasUsd.toFixed(2)}` : dash;
+      quoting || estimatingGas
+        ? "…"
+        : hasQuote && !sameChain && numFrom > 0
+          ? gasDisplay
+          : dash;
 
     return { priceImpact, minReceived, estGas, route: routeLabel, priceImpactNum };
   }, [
     quoting,
+    estimatingGas,
     fromToken,
     toToken,
     numFrom,
@@ -694,6 +773,7 @@ export function EvmSwapContent({ onComplete }: { onComplete?: () => void }) {
     sameChain,
     bridgeQuote,
     hasQuote,
+    gasDisplay,
     fromChainConfig,
     toChainConfig,
   ]);
