@@ -124,7 +124,7 @@ const ICONS: Record<string, string> = {
   YZY: '/tokens/yzy.jpg',
   RSR: '/tokens/rsr.png',
   CHILLGUY: '/tokens/chillguy.png',
-  HYPE: '/tokens/hype.png',
+  HYPE: `${CMC}/32196.png`,
   AAVE: '/tokens/aave.png',
   PEPE: '/tokens/pepe.png',
   SHIB: '/tokens/shib.png',
@@ -834,6 +834,16 @@ const EMOJIS: Record<string, string> = {
   HK50: '🇭🇰', US100: '📈', JP225: '🇯🇵',
   US500: '🇺🇸',
 };
+
+export function getHyperliquidCoinLogo(symbol: string): string {
+  const base = symbol.toUpperCase()
+    .replace(/-PERP$/, '')
+    .replace(/USDT$/, '')
+    .replace(/^1M/, '')
+    .replace(/^1K/, '')
+    .replace(/^1000/, '');
+  return `https://app.hyperliquid.xyz/coins/${base}.svg`;
+}
 
 export function getIcon(symbol: string): { type: 'img' | 'emoji' | 'letter'; value: string } {
   const s = symbol.toUpperCase()

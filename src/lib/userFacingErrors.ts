@@ -146,8 +146,12 @@ function mapKnownUserErrors(message: string, context: UserErrorContext): string 
     return "Request timed out. Please try again.";
   }
 
-  if (/no route|liquidity|amount too small/.test(m)) {
-    if (context === "swap") return "No swap route available. Try a different amount or pair.";
+  if (/request failed with status code/.test(m)) {
+    if (context === "swap") return "Could not fetch a bridge quote. Try again or change the amount.";
+  }
+
+  if (/no route|liquidity|pathfinder|amount too small|bridge route/.test(m)) {
+    if (context === "swap") return "No bridge route available. Try a different amount, token, or chain.";
   }
 
   if (/setup still pending/i.test(m)) {

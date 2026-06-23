@@ -1,214 +1,139 @@
 "use client";
 
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { mono } from "./terminalTheme";
-import { MarketsIcon, TradeIcon, SwapIcon, PortfolioIcon, LeaderboardIcon, SettingsIcon } from "../navIcons";
+import {
+  MarketsIcon,
+  TradeIcon,
+  SwapIcon,
+  PortfolioIcon,
+  LeaderboardIcon,
+  SettingsIcon,
+  PredictionsIcon,
+  LanguageIcon,
+  DocsIcon,
+} from "../navIcons";
 
-const R   = 28;
-const CW  = R * 2;
-const RH  = R * 0.80;
+const SANS = "Inter, -apple-system, BlinkMacSystemFont, sans-serif";
+const DASHBOARD_NAV_ICON = "/icons/dashboard-nav.png";
+const TEXT_INACTIVE = "#9CA3AF";
+const TEXT_ACTIVE = "#FFFFFF";
+const PANEL_GRADIENT = "linear-gradient(180deg, rgba(22,22,22,0.9) 0%, rgba(10,10,10,0.9) 100%)";
 
-const C_BG     = '#020204';
-const C_FACE   = '#060608';
-const C_FACE2  = '#050507';
-const C_BORDER = 'rgba(255,255,255,0.022)';
-const C_CREST  = 'rgba(255,255,255,0.035)';
-
-function drawSeigaiha(ctx: CanvasRenderingContext2D, W: number, H: number, oy: number) {
-  ctx.fillStyle = C_BG;
-  ctx.fillRect(0, 0, W, H);
-
-  const offY     = oy % RH;
-  const rowStart = -Math.ceil(R / RH) - 2;
-  const rowEnd   = Math.ceil((H + R) / RH) + 3;
-
-  for (let row = rowStart; row < rowEnd; row++) {
-    const cy  = row * RH - offY;
-    const odd = (row & 1) === 1;
-    const xOff = odd ? R : 0;
-    const colEnd = Math.ceil(W / CW) + 3;
-
-    for (let col = -2; col < colEnd; col++) {
-      const cx = xOff + col * CW;
-
-      ctx.beginPath();
-      ctx.arc(cx, cy, R - 0.8, 0, Math.PI * 2);
-      ctx.fillStyle = (row & 1) ? C_FACE : C_FACE2;
-      ctx.fill();
-
-      ctx.beginPath();
-      ctx.arc(cx, cy - R * 0.15, R * 0.58, -Math.PI * 0.88, -Math.PI * 0.12);
-      ctx.strokeStyle = C_CREST;
-      ctx.lineWidth = 1.2;
-      ctx.stroke();
-
-      ctx.beginPath();
-      ctx.arc(cx, cy, R - 0.8, 0, Math.PI * 2);
-      ctx.strokeStyle = C_BORDER;
-      ctx.lineWidth = 0.6;
-      ctx.stroke();
-    }
-  }
-}
-
-interface Particle {
-  x: number; y: number;
-  r: number; vy: number; vx: number;
-  alpha: number; maxAlpha: number; phase: number;
-}
-
-function spawnParticle(W: number, H: number, randomY = false): Particle {
-  const maxAlpha = 0.025 + Math.random() * 0.055;
-  return {
-    x: Math.random() * W,
-    y: randomY ? Math.random() * H : H + 6,
-    r: 0.6 + Math.random() * 1.2,
-    vy: 0.12 + Math.random() * 0.24,
-    vx: (Math.random() - 0.5) * 0.12,
-    alpha: 0, maxAlpha,
-    phase: Math.random() * Math.PI * 2,
-  };
-}
-
-function drawParticles(ctx: CanvasRenderingContext2D, particles: Particle[], W: number, H: number, frame: number) {
-  for (const p of particles) {
-    const pulse = 0.5 + 0.5 * Math.sin(frame * 0.016 + p.phase);
-    const a = p.maxAlpha * pulse;
-
-    ctx.beginPath();
-    ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-    ctx.fillStyle = `rgba(255,255,255,${a.toFixed(3)})`;
-    ctx.fill();
-
-    p.y -= p.vy;
-    p.x += p.vx;
-    if (p.y < -10) Object.assign(p, spawnParticle(W, H));
-  }
-}
-
-function AzabuBackground() {
-  const ref = useRef<HTMLCanvasElement>(null);
-
-  useEffect(() => {
-    const canvas = ref.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    let raf: number, frame = 0;
-    let W = 320, H = 800;
-    let particles: Particle[] = Array.from({ length: 14 }, () => spawnParticle(W, H, true));
-
-    const resize = () => {
-      const p = canvas.parentElement;
-      W = p?.offsetWidth || 320;
-      H = p?.offsetHeight || 800;
-      canvas.width = W;
-      canvas.height = H;
-      particles = Array.from({ length: 14 }, () => spawnParticle(W, H, true));
-    };
-
-    const loop = () => {
-      frame++;
-      drawSeigaiha(ctx, W, H, frame * 0.03);
-      drawParticles(ctx, particles, W, H, frame);
-      raf = requestAnimationFrame(loop);
-    };
-
-    resize();
-    loop();
-
-    const ro = new ResizeObserver(resize);
-    if (canvas.parentElement) ro.observe(canvas.parentElement);
-    return () => { cancelAnimationFrame(raf); ro.disconnect(); };
-  }, []);
-
+function DashboardNavIcon({ active, size = 18 }: { active: boolean; size?: number }) {
   return (
-    <canvas ref={ref} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', display: 'block' }} />
+    <img
+      src={DASHBOARD_NAV_ICON}
+      alt=""
+      width={size}
+      height={size}
+      style={{
+        display: "block",
+        objectFit: "contain",
+        flexShrink: 0,
+        opacity: active ? 1 : 0.72,
+        transition: "opacity 0.2s",
+      }}
+    />
   );
 }
 
-const SANS = "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif";
-
-function NavItem({ icon, label, onClick, active, badge }: {
-  icon: ReactNode; label: string; onClick: () => void; active?: boolean; badge?: string;
+function NavItem({
+  icon,
+  label,
+  onClick,
+  active,
+  disabled,
+  comingSoon,
+}: {
+  icon: ReactNode;
+  label: string;
+  onClick?: () => void;
+  active?: boolean;
+  disabled?: boolean;
+  comingSoon?: boolean;
 }) {
   const [hovered, setHovered] = useState(false);
 
   return (
     <div style={{ padding: "2px 12px" }}>
       <button
-        onClick={onClick}
+        type="button"
+        onClick={disabled ? undefined : onClick}
+        disabled={disabled}
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
         style={{
           display: "flex",
           alignItems: "center",
-          gap: 13,
+          gap: 11,
           width: "100%",
-          padding: "11px 14px",
-          cursor: "pointer",
+          padding: "10px 12px",
+          cursor: disabled ? "default" : "pointer",
           textAlign: "left",
           border: "none",
           borderRadius: 10,
-          transition: "background 0.22s",
+          transition: "background 0.2s",
           outline: "none",
           background: active
             ? "rgba(255,255,255,0.06)"
-            : hovered
+            : hovered && !disabled
               ? "rgba(255,255,255,0.03)"
               : "transparent",
-          boxShadow: active
-            ? "inset 0 0 0 1px rgba(255,255,255,0.08)"
-            : "none",
         }}
       >
-        
-        <span style={{
-          color: active ? "rgba(255,255,255,0.9)" : "rgba(255,255,255,0.32)",
-          flexShrink: 0,
-          display: "flex",
-          transition: "color 0.2s",
-        }}>
-          {icon}
-        </span>
-
-        
-        <span style={{
-          fontSize: 15,
-          fontWeight: active ? 500 : 400,
-          color: active ? "rgba(255,255,255,0.92)" : "rgba(255,255,255,0.45)",
-          fontFamily: SANS,
-          flex: 1,
-          letterSpacing: active ? "0.2px" : "0.1px",
-          transition: "color 0.2s",
-        }}>
-          {label}
-        </span>
-
-        {badge && (
-          <span style={{
-            fontSize: 10, fontWeight: 600,
-            color: "rgba(255,255,255,0.45)",
-            background: "rgba(255,255,255,0.06)",
-            borderRadius: 4, padding: "1px 6px",
-            fontFamily: mono, letterSpacing: "0.05em",
-            border: "1px solid rgba(255,255,255,0.08)",
-          }}>
-            {badge}
+        <span style={{ flexShrink: 0, display: "flex", width: 18, justifyContent: "center" }}>{icon}</span>
+        <span
+          style={{
+            fontSize: 14,
+            fontWeight: 500,
+            lineHeight: "20px",
+            color: disabled
+              ? "rgba(156,163,175,0.55)"
+              : active
+                ? TEXT_ACTIVE
+                : TEXT_INACTIVE,
+            fontFamily: SANS,
+            flex: 1,
+            letterSpacing: 0,
+          }}
+        >
+          <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+            {label}
+            {comingSoon ? (
+              <span style={{ fontSize: 10, fontWeight: 400, color: "rgba(156,163,175,0.45)" }}>
+                Coming soon
+              </span>
+            ) : null}
           </span>
-        )}
-
-        
-        {active && (
-          <span style={{
-            width: 4, height: 4, borderRadius: "50%",
-            background: "rgba(255,255,255,0.4)",
-            flexShrink: 0,
-          }} />
-        )}
+        </span>
       </button>
     </div>
+  );
+}
+
+function SocialLink({ href, label, children }: { href: string; label: string; children: ReactNode }) {
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      aria-label={label}
+      style={{
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        width: 24,
+        height: 24,
+        color: "rgba(156,163,175,0.7)",
+        textDecoration: "none",
+        transition: "color 0.15s",
+      }}
+      onMouseEnter={(e) => { e.currentTarget.style.color = TEXT_INACTIVE; }}
+      onMouseLeave={(e) => { e.currentTarget.style.color = "rgba(156,163,175,0.7)"; }}
+    >
+      {children}
+    </a>
   );
 }
 
@@ -228,210 +153,225 @@ interface MobileNavDrawerProps {
 }
 
 export default function MobileNavDrawer({
-  open, onClose, activePage, onNavigateTrade, onNavigateMarkets,
-  onOpenMarkets, onOpenPortfolio, onOpenSettings, onNavigateSwap, onNavigateLeaderboard,
+  open,
+  onClose,
+  activePage,
+  onNavigateTrade,
+  onNavigateMarkets,
+  onOpenMarkets,
+  onOpenPortfolio,
+  onOpenSettings,
+  onNavigateSwap,
+  onNavigateLeaderboard,
 }: MobileNavDrawerProps) {
   useEffect(() => {
     document.body.style.overflow = open ? "hidden" : "";
     return () => { document.body.style.overflow = ""; };
   }, [open]);
 
-  const isTrade       = activePage === "trade" || !activePage;
-  const isMarkets     = activePage === "perps";
-  const isPortfolio   = activePage === "portfolio";
-  const isSwap        = activePage === "swap";
-  const isSettings    = activePage === "settings";
+  const isHome = activePage === "home";
+  const isTrade = activePage === "trade";
+  const isMarkets = activePage === "perps";
+  const isSwap = activePage === "swap";
   const isLeaderboard = activePage === "leaderboard";
+  const isSettings = activePage === "settings";
+
+  const closeAnd = (fn?: () => void) => {
+    fn?.();
+    onClose();
+  };
 
   return (
     <>
-      
       <div
         onClick={onClose}
+        aria-hidden
         style={{
-          position: "fixed", inset: 0, zIndex: 200,
-          background: "rgba(0,0,0,0.65)",
+          position: "fixed",
+          inset: 0,
+          zIndex: 200,
+          background: "rgba(0,0,0,0.55)",
           opacity: open ? 1 : 0,
           pointerEvents: open ? "auto" : "none",
           transition: "opacity 0.22s ease",
-          backdropFilter: "blur(10px)",
-          WebkitBackdropFilter: "blur(10px)",
+          backdropFilter: "blur(8px)",
+          WebkitBackdropFilter: "blur(8px)",
         }}
       />
 
-      
-      <div
+      <nav
+        aria-label="Mobile navigation"
         style={{
-          position: "fixed", top: 0, left: 0, bottom: 0, zIndex: 201,
-          width: "80vw", maxWidth: 300,
-          background: C_BG,
-          borderRight: "1px solid rgba(255,255,255,0.05)",
-          display: "flex", flexDirection: "column",
-          transform: open ? "translateX(0)" : "translateX(-100%)",
+          position: "fixed",
+          top: 16,
+          right: 16,
+          bottom: 16,
+          zIndex: 201,
+          width: 287,
+          maxWidth: "calc(100vw - 32px)",
+          background: PANEL_GRADIENT,
+          border: "1px solid rgba(255,255,255,0.05)",
+          borderRadius: 16,
+          boxSizing: "border-box",
+          display: "flex",
+          flexDirection: "column",
+          transform: open ? "translateX(0)" : "translateX(calc(100% + 16px))",
           opacity: open ? 1 : 0,
-          transition: "transform 0.26s cubic-bezier(0.25,0.46,0.45,0.94), opacity 0.20s ease",
+          transition: "transform 0.26s cubic-bezier(0.25,0.46,0.45,0.94), opacity 0.2s ease",
           willChange: "transform, opacity",
-          boxShadow: "16px 0 80px rgba(0,0,0,0.97)",
+          boxShadow: "0 8px 40px rgba(0,0,0,0.55)",
           overflow: "hidden",
+          backdropFilter: "blur(20px)",
+          WebkitBackdropFilter: "blur(20px)",
         }}
       >
-        
-        <div style={{ position: "absolute", inset: 0, pointerEvents: "none", zIndex: 0, overflow: "hidden" }}>
-          <AzabuBackground />
-
-          
-          <div style={{
-            position: "absolute", inset: 0,
-            background: "radial-gradient(ellipse at 50% 40%, transparent 0%, rgba(0,0,0,0.55) 100%)",
-          }} />
-        </div>
-
-        
-        <div style={{
-          display: "flex", alignItems: "center", justifyContent: "space-between",
-          padding: "22px 18px 18px",
-          borderBottom: "1px solid rgba(255,255,255,0.06)",
-          flexShrink: 0,
-          position: "relative", zIndex: 1,
-        }}>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "flex-end",
+            padding: "16px 16px 4px",
+            flexShrink: 0,
+          }}
+        >
           <button
-            onClick={() => { onOpenMarkets(); onClose(); }}
-            style={{ display: "flex", alignItems: "center", gap: 10, background: "none", border: "none", cursor: "pointer", padding: 0 }}
-          >
-            <img
-              src="/azabu-logo.png"
-              alt="Azabu"
-              style={{
-                width: 30, height: 30, objectFit: "contain", flexShrink: 0,
-                filter: "grayscale(1) brightness(1.5)",
-              }}
-            />
-            <div style={{ display: "flex", flexDirection: "column", gap: 1 }}>
-              <span style={{
-                fontSize: 19, fontWeight: 700, color: "#FFFFFF",
-                fontFamily: "'Space Grotesk', 'DM Sans', -apple-system, sans-serif",
-                letterSpacing: "-0.05em", lineHeight: 1.1,
-                textTransform: "uppercase",
-              }}>
-                Azabu
-              </span>
-              <span style={{
-                fontSize: 9.5, color: "rgba(255,255,255,0.25)", fontFamily: mono,
-                letterSpacing: "0.07em", lineHeight: 1,
-              }}>
-                PERPETUALS
-              </span>
-            </div>
-          </button>
-
-          <button
+            type="button"
             data-testid="mobile-drawer-close"
             onClick={onClose}
+            aria-label="Close menu"
             style={{
-              width: 30, height: 30, borderRadius: "50%",
-              background: "rgba(255,255,255,0.03)",
-              border: "1px solid rgba(255,255,255,0.06)",
+              width: 24,
+              height: 24,
+              background: "none",
+              border: "none",
               cursor: "pointer",
-              display: "flex", alignItems: "center", justifyContent: "center",
-              color: "rgba(255,255,255,0.30)",
-              flexShrink: 0,
-              transition: "background 0.15s, color 0.15s",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              color: TEXT_INACTIVE,
+              padding: 0,
             }}
           >
-            <svg width="10" height="10" viewBox="0 0 12 12" fill="none">
-              <path d="M1 1L11 11M11 1L1 11" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+              <path d="M1 1L11 11M11 1L1 11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
             </svg>
           </button>
         </div>
 
-        
-        <div style={{ flex: 1, overflowY: "auto", paddingTop: 12, paddingBottom: 8, position: "relative", zIndex: 1 }}>
-
+        <div style={{ flex: 1, overflowY: "auto", paddingTop: 4, paddingBottom: 8 }}>
+          <NavItem
+            active={isHome}
+            onClick={() => closeAnd(onOpenMarkets)}
+            label="Dashboard"
+            icon={<DashboardNavIcon active={isHome} size={18} />}
+          />
           <NavItem
             active={isTrade}
-            onClick={() => { onNavigateTrade?.(); onClose(); }}
+            onClick={() => closeAnd(onNavigateTrade)}
             label="Trade"
-            icon={<TradeIcon active={isTrade} size={17} />}
+            icon={<TradeIcon active={isTrade} size={18} />}
           />
-
           <NavItem
             active={isMarkets}
-            onClick={() => { onNavigateMarkets?.(); onClose(); }}
+            onClick={() => closeAnd(onNavigateMarkets)}
             label="Markets"
-            icon={<MarketsIcon active={isMarkets} size={17} />}
+            icon={<MarketsIcon active={isMarkets} size={18} />}
           />
-
           <NavItem
-            active={isPortfolio}
-            onClick={() => { onOpenPortfolio(); onClose(); }}
             label="Portfolio"
-            icon={<PortfolioIcon active={isPortfolio} size={17} />}
+            disabled
+            icon={<PortfolioIcon active={false} size={18} />}
           />
-
           <NavItem
             active={isSwap}
-            onClick={() => { onNavigateSwap(); onClose(); }}
+            onClick={() => closeAnd(onNavigateSwap)}
             label="Swap"
-            icon={<SwapIcon active={isSwap} size={17} />}
+            icon={<SwapIcon active={isSwap} size={18} />}
           />
-
-          
-          <div style={{ margin: "9px 26px", height: 1, background: "rgba(255,255,255,0.05)" }} />
-
           <NavItem
             active={isLeaderboard}
-            onClick={() => { onNavigateLeaderboard?.(); onClose(); }}
+            onClick={() => closeAnd(onNavigateLeaderboard)}
             label="Leaderboard"
-            icon={<LeaderboardIcon active={isLeaderboard} size={17} />}
+            icon={<LeaderboardIcon active={isLeaderboard} size={18} />}
           />
+          <NavItem
+            label="Predictions"
+            disabled
+            comingSoon
+            icon={<PredictionsIcon active={false} disabled size={18} />}
+          />
+
+          <div style={{ margin: "8px 24px", height: 1, background: "rgba(255,255,255,0.06)" }} />
 
           <NavItem
             active={isSettings}
-            onClick={() => { onOpenSettings(); onClose(); }}
+            onClick={() => closeAnd(onOpenSettings)}
             label="Settings"
-            icon={<SettingsIcon active={isSettings} size={17} />}
+            icon={<SettingsIcon active={isSettings} size={18} />}
           />
-
+          <NavItem
+            onClick={() => closeAnd(onOpenSettings)}
+            label="Language"
+            icon={<LanguageIcon active={false} size={18} />}
+          />
+          <NavItem
+            onClick={() => {
+              window.open("https://docs.azabu.fi", "_blank", "noopener,noreferrer");
+              onClose();
+            }}
+            label="Docs"
+            icon={<DocsIcon active={false} size={18} />}
+          />
         </div>
 
-        
-        <div style={{ flexShrink: 0, position: "relative", zIndex: 1 }}>
-          <div style={{ height: 1, background: "rgba(255,255,255,0.05)" }} />
-
-          <div style={{
-            padding: "12px 20px",
-            paddingBottom: "calc(12px + env(safe-area-inset-bottom, 0px))",
-            background: "rgba(0,0,0,0.4)",
-            display: "flex", alignItems: "center", justifyContent: "space-between",
-          }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-              <img src="/azabu-logo.png" alt="" style={{ width: 13, height: 13, opacity: 0.15, objectFit: "contain", filter: "grayscale(1)" }} />
-              <span style={{ fontSize: 9, color: "rgba(255,255,255,0.18)", fontFamily: mono, letterSpacing: "0.1em", textTransform: "uppercase" }}>
-                Azabu
-              </span>
-            </div>
-            <div style={{ display: "flex", gap: 14 }}>
-              <a
-                href="https://x.com/azabufi"
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{ fontSize: 10, color: "rgba(255,255,255,0.22)", textDecoration: "none", fontFamily: mono, letterSpacing: "0.03em", display: "flex", alignItems: "center", gap: 3 }}
-              >
-                Twitter
-                <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-              </a>
-              <a
-                href="#"
-                onClick={e => { e.preventDefault(); onClose(); }}
-                style={{ fontSize: 10, color: "rgba(255,255,255,0.22)", textDecoration: "none", fontFamily: mono, letterSpacing: "0.03em", display: "flex", alignItems: "center", gap: 3 }}
-              >
-                Support
-                <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-              </a>
-            </div>
+        <div
+          style={{
+            flexShrink: 0,
+            padding: "14px 20px",
+            paddingBottom: "calc(16px + env(safe-area-inset-bottom, 0px))",
+          }}
+        >
+          <p
+            style={{
+              margin: "0 0 10px",
+              fontSize: 9,
+              fontWeight: 500,
+              letterSpacing: "0.1em",
+              textTransform: "uppercase",
+              color: "rgba(156,163,175,0.55)",
+              fontFamily: mono,
+            }}
+          >
+            Charts by TradingView
+          </p>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <SocialLink href="https://x.com/azabufi" label="X">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+              </svg>
+            </SocialLink>
+            <SocialLink href="https://azabu.fi" label="Website">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z" />
+              </svg>
+            </SocialLink>
+            <SocialLink href="https://github.com/azabufi" label="GitHub">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z" />
+              </svg>
+            </SocialLink>
+            <SocialLink href="https://t.me/azabufi" label="Telegram">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M11.944 0A12 12 0 000 12a12 12 0 0012 12 12 12 0 0012-12A12 12 0 0012 0a12 12 0 00-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 01.171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z" />
+              </svg>
+            </SocialLink>
+            <SocialLink href="https://discord.gg/azabufi" label="Discord">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M20.317 4.37a19.791 19.791 0 00-4.885-1.515.074.074 0 00-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 00-5.487 0 12.64 12.64 0 00-.617-1.25.077.077 0 00-.079-.037A19.736 19.736 0 003.677 4.37a.07.07 0 00-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 00.031.057 19.9 19.9 0 005.993 3.03.078.078 0 00.084-.028 14.09 14.09 0 001.226-1.994.076.076 0 00-.041-.106 13.107 13.107 0 01-1.872-.892.077.077 0 01-.008-.128 10.2 10.2 0 00.372-.292.074.074 0 01.077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 01.078.01c.12.098.246.198.373.292a.077.077 0 01-.006.127 12.299 12.299 0 01-1.873.892.077.077 0 00-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 00.084.028 19.839 19.839 0 006.002-3.03.077.077 0 00.032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 00-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z" />
+              </svg>
+            </SocialLink>
           </div>
         </div>
-      </div>
+      </nav>
     </>
   );
 }

@@ -41,6 +41,7 @@ export interface TradeSubmitAreaProps {
   retryTpSl?: () => void;
   evmConnected?: boolean;
   isMobile?: boolean;
+  figmaLayout?: boolean;
 }
 
 export default function TradeSubmitArea(props: TradeSubmitAreaProps) {
@@ -50,7 +51,7 @@ export default function TradeSubmitArea(props: TradeSubmitAreaProps) {
     txState, txMsg, txSig, dismiss, handleSubmit,
     pendingConfirm, setPendingConfirm, executeTradeInner,
     onGetToken, onDeposit, onConnectWallet, viewOnly, retryTpSl,
-    evmConnected, isMobile,
+    evmConnected, isMobile, figmaLayout,
   } = props;
 
   const submitBtnRef = useRef<HTMLButtonElement>(null);
@@ -82,6 +83,15 @@ export default function TradeSubmitArea(props: TradeSubmitAreaProps) {
       return { background: T.bgEl, color: T.text3, border: "none", cursor: "not-allowed", opacity: 0.7 };
     }
     const tint = side === "long" ? T.green : T.red;
+    if (figmaLayout) {
+      return {
+        background: side === "long" ? "#00C087" : "#FF4D4D",
+        color: "#FFFFFF",
+        border: "none",
+        fontWeight: 700,
+        fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
+      };
+    }
     return {
       background: `${tint}cc`,
       color: "#fff",
@@ -196,9 +206,15 @@ export default function TradeSubmitArea(props: TradeSubmitAreaProps) {
           }}
           disabled={busy || insufficientBalance}
           style={{
-            width: "100%", padding: isMobile ? "12px 0" : "13px 0", borderRadius: isMobile ? 8 : 8,
+            width: "100%",
+            padding: figmaLayout ? "15px 0" : (isMobile ? "12px 0" : "13px 0"),
+            borderRadius: figmaLayout ? 999 : (isMobile ? 8 : 8),
             cursor: (busy || insufficientBalance) ? "not-allowed" : "pointer",
-            fontSize: isMobile ? 12 : 13, fontWeight: 700, fontFamily: mono, textTransform: "uppercase", letterSpacing: "0.06em",
+            fontSize: figmaLayout ? 14 : (isMobile ? 12 : 13),
+            fontWeight: figmaLayout ? 700 : 700,
+            fontFamily: figmaLayout ? "'Inter', -apple-system, BlinkMacSystemFont, sans-serif" : mono,
+            textTransform: "uppercase",
+            letterSpacing: figmaLayout ? "0.04em" : "0.06em",
             ...getButtonStyle(),
             transition: "opacity 0.15s",
             opacity: busy ? 0.6 : 1,
@@ -212,14 +228,16 @@ export default function TradeSubmitArea(props: TradeSubmitAreaProps) {
         </button>
       )}
 
-      <div style={{ marginTop: 6, textAlign: "center" }}>
-        <span data-testid="trade-protocol-label" style={{ fontSize: 9, color: T.text3, fontFamily: mono, letterSpacing: "0.06em", fontWeight: 400 }}>
-          {!anyWalletReady && needsEvm
-            ? (isHL ? "Requires EVM wallet for Hyperliquid" : "Requires EVM wallet for Arbitrum")
-            : protocol
-          }
-        </span>
-      </div>
+      {!figmaLayout && (
+        <div style={{ marginTop: 6, textAlign: "center" }}>
+          <span data-testid="trade-protocol-label" style={{ fontSize: 9, color: T.text3, fontFamily: mono, letterSpacing: "0.06em", fontWeight: 400 }}>
+            {!anyWalletReady && needsEvm
+              ? (isHL ? "Requires EVM wallet for Hyperliquid" : "Requires EVM wallet for Arbitrum")
+              : protocol
+            }
+          </span>
+        </div>
+      )}
     </>
   );
 }

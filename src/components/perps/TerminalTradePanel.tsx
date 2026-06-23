@@ -10,8 +10,11 @@ import TradeSubmitArea from "./TradeSubmitArea";
 import CollateralBanner from "./CollateralBanner";
 import CollateralDrawer from "./CollateralDrawer";
 import { DepositModal } from "@/components/DepositModal";
+import PillButton from "@/components/shared/PillButton";
 import { onTradeConfirmed } from "@/lib/tradeAnimations";
 import TradeSuccessOverlay, { type CelebrationTrade } from "./TradeSuccessOverlay";
+import TradeConversionInputs from "@/components/trade/TradeConversionInputs";
+import TradeTpSlSection from "@/components/trade/TradeTpSlSection";
 import { roundHlSizeToDecimals } from "@/lib/hyperliquidOrderFormat";
 
 type DepositProtocol = "aster" | "hyperliquid";
@@ -59,9 +62,10 @@ interface TerminalTradePanelProps {
   fundingRate?: number;
   openInterest?: number;
   volume24h?: number;
+  figmaLayout?: boolean;
 }
 
-export default function TerminalTradePanel({ market, chain, asterUserId, pairId, initialSide, onTradeSuccess, viewOnly, isMobile, isNarrow, selectedProtocol, fundingRate, openInterest, volume24h }: TerminalTradePanelProps) {
+export default function TerminalTradePanel({ market, chain, asterUserId, pairId, initialSide, onTradeSuccess, viewOnly, isMobile, isNarrow, selectedProtocol, fundingRate, openInterest, volume24h, figmaLayout }: TerminalTradePanelProps) {
   const { isEvmConnected } = useEvmWallet();
 
   const settingsDefaults = useSettingsStore();
@@ -112,6 +116,8 @@ export default function TerminalTradePanel({ market, chain, asterUserId, pairId,
   const [showTpSl, setShowTpSl] = useState(false);
   const [tp, setTp] = useState("");
   const [sl, setSl] = useState("");
+  const [tpGain, setTpGain] = useState("");
+  const [slLoss, setSlLoss] = useState("");
   const [marginMode, setMarginMode] = useState<"cross" | "isolated">("cross");
   const [hiddenOrder, setHiddenOrder] = useState(false);
   const [pendingConfirm, setPendingConfirm] = useState(false);
@@ -639,6 +645,204 @@ export default function TerminalTradePanel({ market, chain, asterUserId, pairId,
             ))}
           </div>
         )}
+
+        <CollateralDrawer open={drawerOpen} onClose={() => { setDrawerOpen(false); refreshBalance(); }} token={collateralToken} chainLabel={collateralChainLabel} amount={collateralDeficit} srcChain={bestSrcChain ?? undefined} />
+        <DepositModal open={depositModalOpen} onClose={() => { setDepositModalOpen(false); refreshBalance(); }} defaultProtocol={depositDefaultProtocol || undefined} />
+      </div>
+    );
+  }
+
+  if (figmaLayout) {
+    const LONG_GREEN = "#B4F4C8";
+    const SHORT_RED = "#F87171";
+    const O = "#FF7A00";
+    const LBL = "#888888";
+    const SANS = "'Inter', -apple-system, BlinkMacSystemFont, sans-serif";
+    const STROKE = "#1E1E1E";
+    const FIGMA_ORDER_TAB_ACTIVE_BG =
+      "radial-gradient(ellipse 80% 110% at 50% 0%, rgba(255,122,0,0.70) 0%, rgba(255,110,0,0.30) 42%, rgba(26,26,26,0.95) 100%)";
+
+    const orderTypes = [
+      { value: "market" as const, label: "Market" },
+      { value: "limit" as const, label: "Limit" },
+      { value: "stop" as const, label: "Stop" },
+    ];
+
+    const assetDecimals = market.price >= 100 ? 4 : 6;
+
+    const handleSizeChange = (value: string) => setSize(value);
+
+    const handleDenomChange = (next: "asset" | "usd") => {
+      if (next === sizeDenom) return;
+      const num = parseFloat(size) || 0;
+      if (num > 0 && market.price > 0) {
+        if (sizeDenom === "asset" && next === "usd") {
+          setSize((num * market.price).toFixed(2));
+        } else if (sizeDenom === "usd" && next === "asset") {
+          setSize((num / market.price).toFixed(assetDecimals));
+        } else {
+          setSize("");
+        }
+      } else {
+        setSize("");
+      }
+      setSizeDenom(next);
+    };
+
+    const stepSize = (dir: 1 | -1) => {
+      const current =
+        sizeDenom === "usd"
+          ? parseFloat(size) || 0
+          : parseFloat(size) || sizeNum || 0;
+      const step =
+        sizeDenom === "usd"
+          ? Math.max(0.01, (parseFloat(size) || posValue) * 0.01) || 0.01
+          : Math.max(0.01, sizeNum * 0.01) || 0.01;
+      const next = Math.max(0, current + dir * step);
+      setSize(
+        sizeDenom === "usd"
+          ? next.toFixed(2)
+          : next.toFixed(assetDecimals),
+      );
+    };
+
+    return (
+      <div ref={tradePanelRef} data-testid="terminal-trade-panel" style={{ background: "transparent", padding: "0 10px 12px", height: "100%", overflow: "auto", position: "relative", minWidth: 0, boxSizing: "border-box" }}>
+        {celebrationTrade && <TradeSuccessOverlay trade={celebrationTrade} onDismiss={() => setCelebrationTrade(null)} />}
+
+        <div style={{ display: "flex", gap: 6, marginBottom: 10 }}>
+          {orderTypes.map(({ value, label }) => (
+            <PillButton
+              key={value}
+              variant="accent"
+              active={otype === value}
+              data-testid={`trade-otype-${value}`}
+              onClick={() => setOtype(value)}
+              style={{
+                flex: 1,
+                minWidth: 0,
+                height: 32,
+                fontSize: 12,
+                fontWeight: 500,
+                ...(otype === value ? { background: FIGMA_ORDER_TAB_ACTIVE_BG } : {}),
+              }}
+            >
+              {label}
+            </PillButton>
+          ))}
+        </div>
+
+        <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
+          {(["long", "short"] as const).map((s) => {
+            const isActive = side === s;
+            const isL = s === "long";
+            const activeColor = isL ? LONG_GREEN : SHORT_RED;
+            return (
+              <button
+                key={s}
+                data-testid={`trade-side-${s}`}
+                onClick={() => setSide(s)}
+                style={{
+                  flex: 1,
+                  padding: "11px 10px",
+                  borderRadius: 12,
+                  cursor: "pointer",
+                  border: isActive ? `1px solid ${activeColor}` : "1px solid #262626",
+                  background: isActive
+                    ? isL
+                      ? "rgba(180, 244, 200, 0.04)"
+                      : "rgba(248, 113, 113, 0.04)"
+                    : "rgba(255, 255, 255, 0.02)",
+                  color: isActive ? activeColor : LBL,
+                  fontSize: 13,
+                  fontWeight: 500,
+                  fontFamily: SANS,
+                  lineHeight: 1.2,
+                  transition: "border-color 0.15s, background 0.15s, color 0.15s",
+                }}
+              >
+                {isL ? "Long" : "Short"}
+              </button>
+            );
+          })}
+        </div>
+
+        {otype !== "market" && (
+          <div style={{ marginBottom: 12 }}>
+            <label style={{ fontSize: 9, color: LBL, fontFamily: mono, marginBottom: 4, display: "block", letterSpacing: "0.06em" }}>PRICE (USD)</label>
+            <input data-testid="trade-price-input" type="text" value={price} onChange={e => setPrice(e.target.value)} placeholder={market.price > 0 ? market.price.toFixed(2) : "0.00"} style={{ width: "100%", padding: "10px 0", background: "transparent", border: "none", borderBottom: "1px solid #1E1E1E", color: "#FFFFFF", fontSize: 14, fontFamily: mono, outline: "none", fontWeight: 600 }} />
+          </div>
+        )}
+
+        <div style={{ marginBottom: 12 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+            <label style={{ fontSize: 9, color: LBL, fontFamily: mono, letterSpacing: "0.1em", fontWeight: 600 }}>SIZE</label>
+            <span style={{ fontSize: 9, color: LBL, fontFamily: mono }}>MAX: {availableBalance !== null ? `$${availableBalance.toFixed(2)}` : "—"}</span>
+          </div>
+          <TradeConversionInputs
+            value={size}
+            onChange={handleSizeChange}
+            denom={sizeDenom}
+            onDenomChange={handleDenomChange}
+            assetSymbol={market.sym}
+            quoteSymbol={quoteAsset}
+            onStep={stepSize}
+          />
+          <div style={{ display: "flex", gap: 0, marginTop: 6 }}>
+            {["25%", "50%", "75%", "100%"].map(p => (
+              <button key={p} data-testid={`trade-size-pct-${p}`} onClick={() => {
+                if (availableBalance !== null && availableBalance > 0) {
+                  const pctVal = parseInt(p) / 100;
+                  const amt = availableBalance * pctVal;
+                  if (sizeDenom === "usd") setSize(amt.toFixed(2));
+                  else if (market.price > 0) setSize((amt / market.price).toFixed(market.price >= 100 ? 4 : 6));
+                }
+              }} style={{ flex: 1, padding: "6px 0", border: "none", background: "transparent", color: LBL, fontSize: 11, fontFamily: mono, cursor: "pointer" }}>{p}</button>
+            ))}
+          </div>
+        </div>
+
+        <div style={{ marginBottom: 10 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+            <label style={{ fontSize: 9, color: LBL, fontFamily: mono, letterSpacing: "0.1em", fontWeight: 600 }}>LEVERAGE</label>
+            <span data-testid="trade-leverage-display" style={{ fontSize: 14, color: O, fontWeight: 700, fontFamily: mono }}>{lev}x</span>
+          </div>
+          <input data-testid="trade-leverage-slider" type="range" min={1} max={maxLev} value={Math.min(lev, maxLev)} onChange={e => setLev(parseInt(e.target.value))} style={{ width: "100%", accentColor: O, height: 4, cursor: "pointer", borderRadius: 2 }} />
+          <div style={{ display: "flex", justifyContent: "space-between", marginTop: 6 }}>
+            {[1, 5, 10, maxLev].filter((v, i, a) => a.indexOf(v) === i).map(v => (
+              <button key={v} data-testid={`trade-quick-lev-${v}`} onClick={() => setLev(v)} style={{ padding: "2px 4px", border: "none", background: "transparent", cursor: "pointer", fontFamily: mono, fontSize: 10, color: lev === v ? "#AAAAAA" : LBL }}>{v}x</button>
+            ))}
+          </div>
+        </div>
+
+        <TradeTpSlSection
+          tp={tp}
+          sl={sl}
+          onTpChange={setTp}
+          onSlChange={setSl}
+          tpGain={tpGain}
+          slLoss={slLoss}
+          onTpGainChange={setTpGain}
+          onSlLossChange={setSlLoss}
+          quoteAsset={quoteAsset}
+          tpPnl={tpPnl}
+          slPnl={slPnl}
+        />
+
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginBottom: 10, paddingTop: 8, borderTop: `1px solid ${STROKE}` }}>
+          {[
+            { l: "MARGIN REQ.", v: sizeNum > 0 ? `$${collateral.toFixed(2)}` : "$0.00" },
+            { l: "LIQ. PRICE", v: sizeNum > 0 ? `$${liqPrice.toFixed(2)}` : "—" },
+            { l: "POSITION VAL.", v: sizeNum > 0 ? `$${posValue.toFixed(2)}` : "$0.00" },
+          ].map(r => (
+            <div key={r.l} data-testid={`trade-summary-${r.l.toLowerCase().replace(/\.\s/g, "-").replace(/\s/g, "-")}`}>
+              <div style={{ fontSize: 8, color: LBL, fontFamily: mono, letterSpacing: "0.06em", marginBottom: 3 }}>{r.l}</div>
+              <div style={{ fontSize: 11, color: "#FFFFFF", fontFamily: mono, fontWeight: 600 }}>{r.v}</div>
+            </div>
+          ))}
+        </div>
+
+        <TradeSubmitArea T={T} chain={chainForSubs} market={market} side={side} sizeNum={sizeNum} posValue={posValue} collateral={collateral} lev={lev} walletConnected={!!walletConnected} availableBalance={availableBalance} protocol={protocol} txState={txState} txMsg={txMsg} txSig={txSig} dismiss={dismiss} handleSubmit={handleSubmit} pendingConfirm={pendingConfirm} setPendingConfirm={setPendingConfirm} executeTradeInner={executeTradeInner} onGetToken={() => setDrawerOpen(true)} onDeposit={openDeposit} onConnectWallet={openWalletModal} viewOnly={viewOnly} retryTpSl={canRetryTpSl ? retryTpSl : undefined} evmConnected={evmConnected} isMobile={isMobile} figmaLayout />
 
         <CollateralDrawer open={drawerOpen} onClose={() => { setDrawerOpen(false); refreshBalance(); }} token={collateralToken} chainLabel={collateralChainLabel} amount={collateralDeficit} srcChain={bestSrcChain ?? undefined} />
         <DepositModal open={depositModalOpen} onClose={() => { setDepositModalOpen(false); refreshBalance(); }} defaultProtocol={depositDefaultProtocol || undefined} />

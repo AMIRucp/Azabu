@@ -23,7 +23,6 @@ export function verifyAsterWeb3SignMessage(
       const recovered = ethers.verifyMessage(payload, signature);
       if (recovered.toLowerCase() === want) return true;
     } catch {
-      /* try next encoding */
     }
   }
   return false;

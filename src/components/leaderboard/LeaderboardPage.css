@@ -1,0 +1,1001 @@
+/* Leaderboard styles — consume the global theme tokens from app/globals.css.
+   No local colour redefinitions; numbers use the shared mono font. */
+
+/* page content root — rendered inside the app shell's scroll area, so it has no
+   fixed height or scroll of its own. Own stacking context so the trophy's
+   z-index:-1 stays above the page bg (contained here) and behind the content. */
+.lb-root {
+  position: relative;
+  z-index: 0;
+  color: var(--text-primary);
+}
+
+/* trophy pinned to the bottom-left of the screen (viewport), sitting behind the
+   content via negative z-index. Fixed so it stays at the screen edge even when
+   the page is shorter than the viewport. */
+.lb-trophy-layer {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 0;
+  z-index: -1;
+  pointer-events: none;
+}
+.lb-trophy {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 260px;
+  height: 440px;
+  background-image: url("/leaderboard/trophy.png");
+  background-repeat: no-repeat;
+  background-position: left bottom;
+  background-size: contain;
+}
+
+.lb-shell {
+  position: relative;
+  z-index: 1;
+  max-width: 1280px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+/* ------------------------------- header -------------------------------- */
+.lb-header {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  padding: 20px 36px;
+}
+.lb-logo {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--text-primary);
+}
+.lb-nav {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.lb-nav-item {
+  padding: 8px 14px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  background: transparent;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: color 0.15s, background 0.15s, border-color 0.15s;
+}
+.lb-nav-item:hover {
+  color: var(--text-primary);
+}
+.lb-nav-item[data-active="true"] {
+  color: var(--text-primary);
+  font-weight: 600;
+  background: var(--surface-glass);
+  border-color: var(--border-active);
+}
+.lb-wallet {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: auto;
+  cursor: pointer;
+  padding: 7px 16px;
+  border-radius: 999px;
+  background: var(--surface-glass);
+  border: 1px solid var(--border-active);
+  color: var(--text-primary);
+}
+.lb-wallet-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--success);
+}
+.lb-wallet-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+  text-align: left;
+}
+.lb-wallet-text b {
+  font-size: 13px;
+  font-weight: 600;
+}
+.lb-wallet-text small {
+  font-size: 9px;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+}
+
+/* -------------------------------- body --------------------------------- */
+.lb-body {
+  padding: 48px 36px 60px;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+/* intro */
+.lb-intro {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+.lb-intro-left {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  flex: 1 1 360px;
+  min-width: 0;
+}
+.lb-title {
+  margin: 0;
+  font-size: 34px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  background-image: var(--title-gradient);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+.lb-title span {
+  color: inherit;
+  -webkit-text-fill-color: transparent;
+}
+.lb-epoch {
+  margin: 6px 0 0;
+  font-size: 13px;
+  color: #9ca3af;
+}
+.lb-epoch-dates {
+  color: #888888;
+}
+
+/* hero rank card */
+.lb-rank-card {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  flex-wrap: nowrap;
+  padding: 24px;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  background: linear-gradient(
+    180deg,
+    rgba(22, 22, 22, 0.6) 0%,
+    rgba(10, 10, 10, 0.6) 100%
+  );
+  backdrop-filter: blur(7px);
+}
+.lb-rank-num {
+  font-size: 34px;
+  font-weight: 800;
+  letter-spacing: -1px;
+  color: #fff;
+}
+.lb-rank-avatar {
+  width: 56px;
+  height: 56px;
+  font-size: 18px;
+  font-weight: 700;
+  background: linear-gradient(135deg, #d97a3a, #b85a2a);
+}
+.lb-rank-id {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 200px;
+  min-width: 0;
+}
+.lb-rank-id h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #fff;
+}
+.lb-rank-id p {
+  margin: 0;
+  font-size: 11px;
+  color: #9ca3af;
+}
+.lb-xp-to-next {
+  color: #888888;
+}
+.lb-progress {
+  position: relative;
+}
+.lb-progress::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  height: 4px;
+  border-radius: 4px;
+  background: #1f1f1f;
+}
+.lb-progress-fill {
+  position: relative;
+  height: 4px;
+  border-radius: 4px;
+  background: radial-gradient(ellipse at center, #ff6b00 0%, #994000 100%);
+}
+.lb-progress-labels {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 6px;
+  font-size: 9px;
+  letter-spacing: 0.5px;
+  color: #6b7280;
+}
+.lb-progress-labels .pro {
+  color: #e08a2b;
+}
+.lb-rank-stats {
+  display: flex;
+  gap: 36px;
+  margin-left: auto;
+  flex-shrink: 0;
+  border-left: 1px solid rgb(63 63 63);
+  padding-left: 16px;
+}
+.lb-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: flex-start;
+}
+.lb-stat-label {
+  font-size: 9px;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: #9ca3af;
+}
+.lb-stat-val {
+  font-size: 15px;
+  font-weight: 600;
+  color: #fff;
+}
+.lb-stat-val.lb-pos {
+  color: #34d399;
+}
+.lb-stat-val.lb-neg {
+  color: #f87171;
+}
+
+/* -------------------------------- podium ------------------------------- */
+.lb-podium-wrap {
+  position: relative;
+}
+/* warm backlight behind the top-3 cards; image with a radial fallback */
+.lb-podium-glow {
+  position: absolute;
+  inset: -36px -24px -16px -24px;
+  z-index: 0;
+  background-image: url("/leaderboard/glow.png"),
+    radial-gradient(
+      ellipse at center,
+      color-mix(in srgb, var(--accent-color) 26%, transparent),
+      transparent 70%
+    );
+  background-repeat: no-repeat, no-repeat;
+  background-position: center, center;
+  background-size: 100% 100%, 100% 100%;
+  pointer-events: none;
+  opacity: 0.9;
+}
+.lb-podium {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  gap: 12px;
+  align-items: stretch;
+}
+.lb-podium-card {
+  position: relative;
+  --podium-accent: var(--border-color);
+  width: 155.78px;
+  /* extra top padding so the rank badge clears the avatar */
+  padding: 54px 14px 16px;
+  text-align: center;
+  /* graduated warm glow on every card; intensity steps up by rank below */
+  background: linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--accent-color) 6%, transparent),
+      transparent 55%
+    ),
+    var(--glass-fill-50);
+  backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--border-color);
+  border-top: 2px solid var(--podium-accent);
+  border-radius: 14.22px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  box-shadow: var(--shadow-drop);
+}
+/* slight glow fading downward from the accent top border */
+.lb-podium-card::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 32px;
+  z-index: -1;
+  pointer-events: none;
+  border-radius: 14.22px 14.22px 0 0;
+  background: linear-gradient(
+    to bottom,
+    color-mix(in srgb, var(--podium-accent) 7%, transparent),
+    transparent
+  );
+}
+.lb-podium-card[data-accent="gold"] {
+  --podium-accent: var(--rank-gold);
+}
+.lb-podium-card[data-accent="bronze"] {
+  --podium-accent: var(--rank-bronze);
+}
+.lb-podium-card[data-accent="silver"] {
+  --podium-accent: var(--rank-silver);
+  background: linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--accent-color) 9%, transparent),
+      transparent 58%
+    ),
+    var(--glass-fill-50);
+}
+.lb-podium-card[data-rank="1"] {
+  /* gradient bottom -> top: #886807 -> #161616, at 50% opacity */
+  background: linear-gradient(
+    to top,
+    color-mix(in srgb, #886807 50%, transparent) 0%,
+    color-mix(in srgb, #161616 50%, transparent) 100%
+  );
+  box-shadow: 0 0 36px color-mix(in srgb, var(--tier-elite) 20%, transparent),
+    var(--shadow-drop);
+}
+.lb-podium-rank {
+  position: absolute;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  min-width: 28.444px;
+  height: 28.444px;
+  padding: 0;
+  justify-content: center;
+  align-items: center;
+  border-radius: 7.111px;
+  border: 0.889px solid color-mix(in srgb, var(--podium-accent) 30%, transparent);
+  background: color-mix(in srgb, var(--podium-accent) 10%, transparent);
+  box-shadow: 0 3.556px 3.556px 0 rgba(0, 0, 0, 0.25);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--podium-accent);
+}
+.lb-podium-name {
+  margin: 2px 0 0;
+  font-size: 14px;
+  font-weight: 400;
+}
+.lb-podium-vol {
+  margin: 4px 0 0;
+  font-family: var(--font-mono);
+  font-size: 20px;
+  font-weight: 500;
+}
+.lb-podium-vol-label {
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+.lb-podium-xp {
+  margin: 6px 0 0;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 600;
+  background-image: var(--xp-gradient);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+.lb-podium-tier {
+  font-size: 10px;
+  color: var(--text-secondary);
+}
+
+/* ------------------------------- avatar -------------------------------- */
+.lb-avatar {
+  display: inline-grid;
+  place-items: center;
+  border-radius: 50%;
+  flex-shrink: 0;
+  font-weight: 600;
+  color: #fff;
+  box-shadow: 0 4px 4px 0 rgba(0, 0, 0, 0.25);
+}
+
+/* -------------------------------- dots --------------------------------- */
+.lb-dots {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+.lb-dots i {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+}
+.lb-dots em {
+  font-style: normal;
+  font-size: 10px;
+  color: var(--text-muted);
+  margin-left: 2px;
+}
+
+/* ------------------------------- toolbar ------------------------------- */
+.lb-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.lb-segmented {
+  display: flex;
+  gap: 8px;
+}
+.lb-seg-btn {
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+  padding: 11px 20px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  background: var(--surface-glass);
+  backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--border-color);
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+}
+/* full labels by default; short labels only swap in on very small screens */
+.lb-seg-short {
+  display: none;
+}
+.lb-seg-btn:hover {
+  color: var(--text-primary);
+  border-color: var(--tab-active-border);
+  background: var(--tab-glow-fill), var(--surface-glass);
+}
+.lb-seg-btn[data-active="true"] {
+  color: var(--text-primary);
+  border: 0.89px solid var(--tab-active-border);
+  /* inner glow rising from the bottom, clipped to the pill (no leak) */
+  background: var(--tab-glow-fill), var(--surface-glass);
+}
+.lb-search {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: auto;
+  width: 240px;
+  max-width: 100%;
+  padding: 9px 16px;
+  border-radius: 999px;
+  background: var(--surface-glass);
+  backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--border-color);
+  color: var(--text-muted);
+}
+.lb-search input {
+  flex: 1;
+  min-width: 0;
+  background: none;
+  border: none;
+  outline: none;
+  color: var(--text-primary);
+  font-size: 13px;
+}
+.lb-search input::placeholder {
+  color: #9ca3af;
+}
+
+/* -------------------------------- table -------------------------------- */
+.lb-table {
+  position: relative;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  background: linear-gradient(
+    180deg,
+    rgba(22, 22, 22, 0.6) 0%,
+    rgba(10, 10, 10, 0.6) 100%
+  );
+  box-shadow: var(--shadow-drop);
+  overflow: hidden;
+  backdrop-filter: blur(7px);
+}
+/* soft glow emerging from the bottom-left, stretched up toward the top-right */
+.lb-table::before {
+  content: "";
+  position: absolute;
+  left: -12%;
+  bottom: -18%;
+  width: 115%;
+  height: 125%;
+  z-index: 0;
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse 130% 135% at 0% 100%,
+    color-mix(in srgb, #99260d 50%, transparent) 0%,
+    color-mix(in srgb, #99260d 24%, transparent) 38%,
+    transparent 72%
+  );
+  filter: blur(48px);
+}
+/* keep table content above the glow */
+.lb-thead,
+.lb-tbody {
+  position: relative;
+  z-index: 1;
+}
+/* once a page shows more than the threshold, the body becomes a scroll area
+   (the "slider") so rows 21–40 reveal without stretching the page */
+.lb-tbody[data-scroll="true"] {
+  max-height: 70vh;
+  overflow-y: auto;
+  scrollbar-gutter: stable;
+}
+.lb-thead,
+.lb-row {
+  display: grid;
+  grid-template-columns: 64px minmax(220px, 1.4fr) 1fr 1fr 1fr 1fr 150px;
+  align-items: center;
+  padding: 0 16px;
+}
+.lb-thead {
+  height: 48px;
+  border-bottom: 1px solid var(--border-color);
+}
+.lb-th {
+  color: #9ca3af;
+  font-family: Inter, var(--font-sans, sans-serif);
+  font-size: 10px;
+  font-style: normal;
+  font-weight: 700;
+  line-height: 15px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+.lb-th--num,
+.lb-cell--num,
+.lb-th--level {
+  text-align: right;
+}
+.lb-row {
+  height: 72px;
+  border-bottom: 1px solid var(--surface-glass);
+  transition: background 0.15s;
+}
+.lb-row:last-child {
+  border-bottom: none;
+}
+.lb-row:hover {
+  background: var(--surface-glass);
+}
+.lb-cell {
+  font-size: 14px;
+}
+.lb-cell--rank {
+  font-family: var(--font-mono);
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+/* top-3 serial numbers match the podium gold / silver / bronze accents */
+.lb-cell--rank[data-rank="1"] {
+  color: var(--rank-gold);
+}
+.lb-cell--rank[data-rank="2"] {
+  color: var(--rank-silver);
+}
+.lb-cell--rank[data-rank="3"] {
+  color: var(--rank-bronze);
+}
+.lb-cell--trader {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+.lb-trader-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+.lb-trader-name {
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.lb-cell--num {
+  font-family: var(--font-mono);
+  font-weight: 500;
+}
+.lb-cell--muted {
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+.lb-pos {
+  color: var(--pnl-positive);
+}
+.lb-neg {
+  color: var(--error);
+}
+
+/* level / tier */
+.lb-cell--level {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+.lb-level-line {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.lb-level-tag {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+.lb-level-xp {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 600;
+  background-image: var(--xp-gradient);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+
+.lb-tier {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 999px;
+}
+.lb-tier[data-tier="novice"] {
+  color: var(--tier-novice);
+  background: color-mix(in srgb, var(--tier-novice) 15%, transparent);
+}
+.lb-tier[data-tier="challenger"] {
+  color: var(--tier-challenger);
+  background: color-mix(in srgb, var(--tier-challenger) 15%, transparent);
+}
+.lb-tier[data-tier="trader"] {
+  color: var(--tier-trader);
+  background: color-mix(in srgb, var(--tier-trader) 15%, transparent);
+}
+.lb-tier[data-tier="pro"] {
+  color: var(--tier-pro);
+  background: color-mix(in srgb, var(--tier-pro) 15%, transparent);
+}
+.lb-tier[data-tier="elite"] {
+  color: var(--tier-elite);
+  background: color-mix(in srgb, var(--tier-elite) 15%, transparent);
+}
+.lb-tier[data-tier="legend"] {
+  color: var(--tier-legend);
+  background: color-mix(in srgb, var(--tier-legend) 15%, transparent);
+}
+
+/* -------------------------------- states ------------------------------- */
+.lb-empty {
+  padding: 48px 16px;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 14px;
+}
+
+/* ------------------------------ pagination ----------------------------- */
+.lb-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  margin-top: 4px;
+}
+.lb-page-btn {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  color: var(--text-secondary);
+  background: var(--surface-glass);
+  border: 1px solid var(--border-color);
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+}
+.lb-page-btn:hover:not(:disabled) {
+  color: var(--text-primary);
+  border-color: var(--tab-active-border);
+  background: var(--tab-glow-fill), var(--surface-glass);
+}
+.lb-page-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.lb-page-info {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-secondary);
+  min-width: 120px;
+  text-align: center;
+}
+
+/* ----------------------------- responsive ------------------------------ */
+
+/* tablet / small laptop: stack the hero above the podium and centre/justify
+   everything in a single column */
+@media (max-width: 1158px) {
+  .lb-body {
+    padding: 40px 24px 56px;
+  }
+  .lb-intro {
+    flex-direction: column;
+    align-items: center;
+  }
+  .lb-intro-left {
+    flex: 1 1 160px;
+    align-items: center;
+    text-align: center;
+  }
+  .lb-podium-wrap {
+    width: 100%;
+  }
+  .lb-podium {
+    width: 100%;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  .lb-rank-card {
+    width: 100%;
+    justify-content: center;
+  }
+  .lb-rank-stats {
+    margin-left: auto;
+  }
+  .lb-toolbar {
+    justify-content: center;
+  }
+  .lb-search {
+    margin-left: 0;
+  }
+}
+
+/* tablet: drop the Volume (3rd) and PnL % (5th) columns and let the remaining
+   five columns shrink fluidly so the gaps tighten as the screen narrows */
+@media (max-width: 860px) {
+  .lb-thead > :nth-child(3),
+  .lb-thead > :nth-child(5),
+  .lb-row > :nth-child(3),
+  .lb-row > :nth-child(5) {
+    display: none;
+  }
+  .lb-thead,
+  .lb-row {
+    grid-template-columns: 52px minmax(140px, 1fr) 1fr 0.9fr 120px;
+    padding: 0 12px;
+  }
+  /* shrink the trader avatar (dp) to save horizontal space */
+  .lb-cell--trader .lb-avatar {
+    width: 26px !important;
+    height: 26px !important;
+    font-size: 9px !important;
+  }
+}
+
+/* large phone: hide top nav, let toolbar + table reflow */
+@media (max-width: 720px) {
+  .lb-header {
+    padding: 16px;
+  }
+  .lb-nav {
+    display: none;
+  }
+  .lb-body {
+    padding: 28px 16px 48px;
+    gap: 22px;
+  }
+  .lb-title {
+    font-size: 28px;
+  }
+  .lb-rank-card {
+    flex-wrap: wrap;
+    gap: 16px;
+    padding: 18px;
+  }
+  .lb-rank-stats {
+    width: 100%;
+    margin-left: 0;
+    justify-content: space-between;
+    gap: 16px;
+    flex-shrink: 1;
+    /* no left divider once the stats wrap onto their own row */
+    border-left: none;
+    padding-left: 0;
+  }
+  /* drop the top-3 podium entirely on mobile */
+  .lb-podium-wrap {
+    display: none;
+  }
+  /* keep both filter groups on one line with a small gap; search wraps below */
+  .lb-toolbar {
+    gap: 8px;
+  }
+  .lb-segmented {
+    gap: 6px;
+    flex: 1 1 0;
+    min-width: 0;
+  }
+  .lb-seg-btn {
+    flex: 1 1 0;
+    min-width: 0;
+    padding: 8px 8px;
+    font-size: 12px;
+    white-space: nowrap;
+  }
+  .lb-search {
+    margin-left: 0;
+    /* extra space above the search bar, separating it from the filter buttons */
+    margin-top: 8px;
+    width: 100%;
+    order: 3;
+  }
+  /* horizontal scroll keeps the table columns readable on narrow screens
+     (Volume + PnL % stay hidden via the 860px rule, so five columns here) */
+  .lb-table {
+    overflow-x: auto;
+  }
+  .lb-thead,
+  .lb-row {
+    grid-template-columns: 44px 160px 100px 84px 120px;
+    min-width: 508px;
+  }
+}
+
+/* small phone: stats wrap, and the table becomes a compact row that fits the
+   width (no horizontal scroll). Roomier gaps here; tightened further at 460px.
+   Columns: rank | trader (flexes) | PnL $ | Win/Loss | Level·XP */
+@media (max-width: 560px) {
+  .lb-rank-id {
+    width: 100%;
+  }
+  .lb-table {
+    overflow-x: visible;
+  }
+  .lb-thead,
+  .lb-row {
+    grid-template-columns: 24px minmax(0, 1fr) auto auto auto;
+    gap: 10px;
+    padding: 0 12px;
+    min-width: 0;
+  }
+  .lb-row {
+    height: 60px;
+  }
+  .lb-th {
+    font-size: 8px;
+    letter-spacing: 0.5px;
+  }
+  .lb-cell {
+    font-size: 13px;
+  }
+  .lb-cell--rank {
+    font-size: 15px;
+    font-weight: 700;
+  }
+  .lb-cell--trader {
+    gap: 8px;
+  }
+  .lb-cell--trader .lb-avatar {
+    width: 30px !important;
+    height: 30px !important;
+    font-size: 11px !important;
+  }
+  .lb-trader-name {
+    font-size: 12px;
+  }
+  .lb-cell--num {
+    font-size: 12px;
+    font-weight: 600;
+  }
+  .lb-cell--muted {
+    color: #888888;
+    font-size: 8px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  /* drop the "L52" tag, keep XP + tier badge */
+  .lb-level-tag {
+    display: none;
+  }
+  .lb-level-xp {
+    font-size: 11px;
+  }
+  .lb-tier {
+    font-size: 9px;
+    padding: 2px 6px;
+  }
+}
+
+/* very small phone: give the filter pills a 10px flex base and use short labels */
+@media (max-width: 410px) {
+  .lb-seg-btn {
+    flex: 1 1 10px;
+  }
+  .lb-seg-full {
+    display: none;
+  }
+  .lb-seg-short {
+    display: inline;
+  }
+}
+
+/* smallest phones: tighten the compact row further — smaller gaps and fonts */
+@media (max-width: 460px) {
+  .lb-thead,
+  .lb-row {
+    grid-template-columns: 20px minmax(0, 1fr) auto auto auto;
+    gap: 6px;
+    padding: 0 8px;
+  }
+  .lb-row {
+    height: 54px;
+  }
+  .lb-cell {
+    font-size: 11px;
+  }
+  .lb-cell--rank {
+    font-size: 14px;
+  }
+  .lb-cell--trader {
+    gap: 6px;
+  }
+  .lb-cell--trader .lb-avatar {
+    width: 26px !important;
+    height: 26px !important;
+    font-size: 9px !important;
+  }
+  .lb-trader-name {
+    font-size: 11px;
+  }
+  .lb-cell--num {
+    font-size: 11px;
+  }
+  .lb-level-xp {
+    font-size: 10px;
+  }
+  .lb-tier {
+    font-size: 8px;
+    padding: 2px 5px;
+  }
+}

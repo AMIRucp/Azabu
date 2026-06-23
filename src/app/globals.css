@@ -9,7 +9,6 @@
   .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 }
 
-/* ─── Nav drawer ripple blobs ─────────────────────────────────────────────── */
 @keyframes nav-blob-drift-1 {
   0%   { transform: translate(0px, 0px) scale(1); opacity: 0.7; }
   25%  { transform: translate(28px, -38px) scale(1.12); opacity: 0.55; }
@@ -153,6 +152,45 @@ img[src*="azabu-logo"] {
     --error: #EF4444;
     --info: #3B82F6;
 
+    /* tier / leaderboard palette — mirrors the ranks in xpService.ts */
+    --tier-novice: #9CA3AF;
+    --tier-challenger: #22C55E;
+    --tier-trader: #3B82F6;
+    --tier-pro: #A855F7;
+    --tier-elite: #F59E0B;
+    --tier-legend: #EF4444;
+    --badge-pink: #EC4899;
+
+    /* shared page-title gradient: white -> dark grey, left to right */
+    --title-gradient: linear-gradient(90deg, #fff 0%, #282828 50%);
+
+    /* frosted-glass panels (Figma: Linear fill 60%, white 5% / 0.89 stroke, blur 12.44) */
+    --glass-fill: linear-gradient(155deg, rgba(28, 28, 30, 0.6) 0%, rgba(14, 14, 16, 0.6) 100%);
+    --glass-fill-50: linear-gradient(155deg, rgba(28, 28, 30, 0.5) 0%, rgba(14, 14, 16, 0.5) 100%);
+    --glass-border: rgba(255, 255, 255, 0.05);
+    /* transparent fill so backdrop-filter blur is actually visible through it */
+    --glass-fill-clear: rgba(160, 160, 160, 0.04);
+    --glass-blur: 20px;
+
+    /* active metric tab (Figma: stroke #3E3E3E, radial glow #FF6F00) */
+    --tab-active-border: #3e3e3e;
+    --tab-glow: #ff6f00;
+    /* reusable bottom-inner glow for button hover + selected states */
+    --tab-glow-fill: radial-gradient(60% 90% at 50% 118%, var(--tab-glow) 0%, transparent 62%);
+
+    /* standard card drop shadow */
+    --shadow-drop: 0px 6px 18px 0px rgba(0, 0, 0, 0.35);
+
+    /* podium rank-position accent colours */
+    --rank-gold: #f7c948;
+    --rank-silver: #888888;
+    --rank-bronze: #cd7f32;
+
+    /* XP points: bottom-up gradient */
+    --xp-gradient: linear-gradient(to top, #ff6b00 0%, #ffaa6c 100%);
+    /* positive PnL colour */
+    --pnl-positive: #82dfa4;
+
     --surface-glass: rgba(255, 255, 255, 0.03);
     --glow-accent: rgba(212, 165, 116, 0.08);
     --shadow-card: 0 0 0 1px rgba(255,255,255,0.02), 0 8px 24px rgba(0,0,0,0.4);
@@ -261,6 +299,20 @@ img[src*="azabu-logo"] {
   letter-spacing: -0.010em;
   line-height: 1.3;
   color: var(--text-primary);
+}
+
+/* Page-title gradient treatment — applies to every title tier across all pages.
+   Use the standalone .text-gradient class to opt other headings in. */
+.text-gradient,
+.text-display,
+.text-title1,
+.text-title2,
+.text-title3 {
+  background-image: var(--title-gradient);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
 }
 
 .text-headline {
@@ -478,7 +530,6 @@ img[src*="azabu-logo"] {
   backdrop-filter: blur(4px);
 }
 
-/* WalletConnect modal z-index override */
 [role="dialog"] {
   z-index: 999999 !important;
 }
@@ -812,4 +863,52 @@ button:active {
 @keyframes samurai-pulse {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.65; }
+}
+
+@keyframes market-ticker-scroll {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+.market-ticker-shell {
+  display: flex;
+  align-items: center;
+}
+
+.market-ticker-track {
+  display: flex;
+  width: max-content;
+  height: 34px;
+  animation: market-ticker-scroll 56s linear infinite;
+  will-change: transform;
+}
+
+.market-ticker-slot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  flex-shrink: 0;
+  padding-inline: 52px;
+}
+
+.market-ticker-slot:not(:last-child)::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translate(50%, -50%);
+  width: 1px;
+  height: 14px;
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.market-ticker-shell:hover .market-ticker-track {
+  animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .market-ticker-track {
+    animation: none;
+  }
 }

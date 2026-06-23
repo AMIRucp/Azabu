@@ -107,13 +107,23 @@ export function usePortfolioData() {
   const noWallet = !evmAddress;
 
   useEffect(() => {
-    if (!evmAddress || !hlDataMatchesWallet) {
+    if (!evmAddress) {
       const { positions, setPositions } = usePositionStore.getState();
       if (positions.some((p) => p.protocol === "hyperliquid")) {
         setPositions(positions.filter((p) => p.protocol !== "hyperliquid"));
       }
       return;
     }
+
+    if (!hlDataMatchesWallet) {
+      if (hlLoading) return;
+      const { positions, setPositions } = usePositionStore.getState();
+      if (positions.some((p) => p.protocol === "hyperliquid")) {
+        setPositions(positions.filter((p) => p.protocol !== "hyperliquid"));
+      }
+      return;
+    }
+
     const { positions, setPositions } = usePositionStore.getState();
     if (hlPositionsScoped.length > 0) {
       const hlPositionsMapped = hlPositionsScoped.map(hlPos => {
@@ -160,10 +170,10 @@ export function usePortfolioData() {
         (p) => p.protocol !== "hyperliquid" && p.protocol !== "aster"
       );
       setPositions([...otherPositions, ...asterKeep, ...hlPositionsMapped]);
-    } else if (positions.some((p) => p.protocol === "hyperliquid")) {
+    } else if (!hlLoading && positions.some((p) => p.protocol === "hyperliquid")) {
       setPositions(positions.filter((p) => p.protocol !== "hyperliquid"));
     }
-  }, [hlPositionsScoped, evmAddress, hlDataMatchesWallet]);
+  }, [hlPositionsScoped, evmAddress, hlDataMatchesWallet, hlLoading]);
 
   const asterMappedPositions = useMemo(
     () => mapAsterPositionRiskRows(asterPositionPayload.rows),
@@ -498,9 +508,7 @@ export function usePortfolioData() {
       ? onChainWallet + hlEquity + asterEquity
       : filteredTotalNetWorth;
 
-  const hlSettled = !hlLoading;
-  const asterSettled = !loading || asterBalancePayload.queriedUser !== null;
-  const balancesLoading = !!evmAddress && !hlSettled && !asterSettled;
+  const balancesLoading = !!evmAddress && (hlLoading || loading);
 
   return {
     data,

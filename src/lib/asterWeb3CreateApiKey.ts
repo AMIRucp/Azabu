@@ -157,7 +157,6 @@ export async function asterWeb3CreateApiKey(params: {
   network?: string;
   ip?: string;
   sourceCode?: string;
-  /** When true, never retry create with the same signature (nonce is single-use). */
   uniqueDesc?: boolean;
 }): Promise<AsterWeb3CreateApiKeyResult> {
   const sourceAddr = ethers.getAddress(params.walletAddress.trim());

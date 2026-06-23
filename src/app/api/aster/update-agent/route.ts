@@ -68,7 +68,7 @@ export async function GET(request: NextRequest) {
     ipWhitelist,
     canSpotTrade: false,
     canPerpTrade: true,
-    canWithdraw: false,
+    canWithdraw: true,
     asterChain: ASTER_CHAIN,
     user: userNorm,
     nonce,
@@ -135,7 +135,6 @@ export async function POST(request: NextRequest) {
     try {
       data = JSON.parse(rawText);
     } catch {
-      /* non-json */
     }
     const errObj = data as { msg?: string; message?: string; error?: string; code?: number };
 

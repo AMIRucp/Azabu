@@ -105,6 +105,9 @@ export const FUSION_PLUS_DST_CHAIN = 42161;
 export const HL_BRIDGE_CONTRACT = "0x2Df1c51E09aECF9cacB7bc98cB1742757f163dF7";
 export const USDC_ARBITRUM = "0xaf88d065e77c8cC2239327C5EDb3A432268e5831";
 
+/** 1inch Limit Order Protocol v6 — Fusion+ requires token allowance to this contract (not escrow factory). */
+export const FUSION_PLUS_LOP_ROUTER = "0x111111125421ca6dc452d289314280a0f8842a65";
+
 export const ERC20_APPROVE_ABI = [
   "function approve(address spender, uint256 amount) returns (bool)",
   "function allowance(address owner, address spender) view returns (uint256)",

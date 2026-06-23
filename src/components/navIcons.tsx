@@ -1,16 +1,7 @@
 const ACCENT_LIGHT = "#E8C4A0";
-const INACTIVE = "rgba(255,255,255,0.30)";
+const INACTIVE = "#9CA3AF";
 
 function c(active: boolean) { return active ? ACCENT_LIGHT : INACTIVE; }
-
-export function HomeIcon({ active, size = 22 }: { active: boolean; size?: number }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={c(active)} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M3 10.5L12 3L21 10.5" />
-      <path d="M5 9.5V19.5A1 1 0 006 20.5H9.5V15A1 1 0 0110.5 14H13.5A1 1 0 0114.5 15V20.5H18A1 1 0 0019 19.5V9.5" />
-    </svg>
-  );
-}
 
 export function MarketsIcon({ active, size = 22 }: { active: boolean; size?: number }) {
   return (
@@ -24,7 +15,7 @@ export function MarketsIcon({ active, size = 22 }: { active: boolean; size?: num
 
 export function TradeIcon({ active, size = 22 }: { active: boolean; size?: number }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={active ? "#fff" : "rgba(255,255,255,0.55)"} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={c(active)} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
       <path d="M3 18L10 8" />
       <path d="M7.5 8L10 8L10 10.5" />
       <path d="M14 6L21 16" />
@@ -69,6 +60,36 @@ export function SettingsIcon({ active, size = 22 }: { active: boolean; size?: nu
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={c(active)} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
       <circle cx="12" cy="12" r="3" />
       <path d="M12 1v2m0 16v2M4.22 4.22l1.41 1.41m10.74 10.74l1.41 1.41M1 12h2m16 0h2M4.22 19.78l1.41-1.41m10.74-10.74l1.41-1.41" />
+    </svg>
+  );
+}
+
+export function PredictionsIcon({ active, size = 22, disabled }: { active: boolean; size?: number; disabled?: boolean }) {
+  const stroke = disabled ? "rgba(156,163,175,0.45)" : c(active);
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={stroke} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 20C17.5228 20 22 16.4183 22 12C22 7.58172 17.5228 4 12 4C6.47715 4 2 7.58172 2 12C2 13.933 2.59787 15.723 3.6 17.2L2 22L6.8 20.4C8.277 21.402 10.067 22 12 22Z" />
+      <path d="M8 12H16" />
+    </svg>
+  );
+}
+
+export function LanguageIcon({ active, size = 22 }: { active: boolean; size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={c(active)} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="9" />
+      <path d="M3 12H21" />
+      <path d="M12 3C14.5 6.5 15.8 9.2 16 12C15.8 14.8 14.5 17.5 12 21C9.5 17.5 8.2 14.8 8 12C8.2 9.2 9.5 6.5 12 3Z" />
+    </svg>
+  );
+}
+
+export function DocsIcon({ active, size = 22 }: { active: boolean; size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={c(active)} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M7 4H17L20 7V20H7V4Z" />
+      <path d="M17 4V7H20" />
+      <path d="M10 11H16M10 15H16" />
     </svg>
   );
 }

@@ -5,7 +5,6 @@ import { fileURLToPath } from 'url';
 const require = createRequire(import.meta.url);
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-/** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: false,
   async headers() {

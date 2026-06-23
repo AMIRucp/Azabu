@@ -52,8 +52,26 @@ export function TokenSelector({ token, onClick, testId, balance }: {
   );
 }
 
-export function SuccessView({ fromSymbol, toSymbol, fromAmt, toAmt, txLink, onNew }: {
-  fromSymbol: string; toSymbol: string; fromAmt: string; toAmt: string; txLink: string; onNew: () => void;
+export function SuccessView({
+  fromSymbol,
+  toSymbol,
+  fromAmt,
+  toAmt,
+  txLink,
+  onNew,
+  title = "Swap complete",
+  actionLabel = "New Swap",
+  footerHint,
+}: {
+  fromSymbol: string;
+  toSymbol: string;
+  fromAmt: string;
+  toAmt: string;
+  txLink: string;
+  onNew: () => void;
+  title?: string;
+  actionLabel?: string;
+  footerHint?: string;
 }) {
   return (
     <div style={{ animation: "swpFadeIn 0.3s ease-out", padding: "24px 0" }}>
@@ -63,12 +81,18 @@ export function SuccessView({ fromSymbol, toSymbol, fromAmt, toAmt, txLink, onNe
           <path d="M12 20l6 6 10-12" fill="none" stroke="#9BA4AE" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
         <div style={{ fontSize: 16, fontWeight: 600, color: "#E6EDF3", marginBottom: 4, fontFamily: SANS }}>
-          Swapped {fromAmt} {fromSymbol} {"\u2192"} {toAmt} {toSymbol}
+          {title}
+        </div>
+        <div style={{ fontSize: 13, color: "#9BA4AE", marginBottom: 8, fontFamily: SANS }}>
+          {fromAmt} {fromSymbol} {"\u2192"} {toAmt} {toSymbol}
         </div>
         {txLink && (
           <a href={txLink} target="_blank" rel="noreferrer" style={{ fontSize: 11, color: "#6B7280", fontFamily: MONO, textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 4 }} data-testid="link-tx">
-            View transaction <ExternalLink style={{ width: 12, height: 12 }} />
+            View order <ExternalLink style={{ width: 12, height: 12 }} />
           </a>
+        )}
+        {footerHint && (
+          <div style={{ fontSize: 11, color: "#555B6A", marginTop: 10, fontFamily: SANS }}>{footerHint}</div>
         )}
       </div>
       <button onClick={onNew} data-testid="button-new-swap" style={{
@@ -76,7 +100,7 @@ export function SuccessView({ fromSymbol, toSymbol, fromAmt, toAmt, txLink, onNe
         fontWeight: 550, fontFamily: SANS, cursor: "pointer",
         background: "transparent", border: "1px solid #181A20", color: "#9BA4AE",
         transition: "all 0.15s",
-      }}>New Swap</button>
+      }}>{actionLabel}</button>
     </div>
   );
 }

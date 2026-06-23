@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import { getAddress } from "viem";
 import { useAccount, useConnect, useDisconnect, useSwitchChain, useReconnect } from "wagmi";
 import {
@@ -68,6 +68,7 @@ export function useEvmWallet() {
   const { disconnectAsync } = useDisconnect();
   const { switchChainAsync } = useSwitchChain();
   const { reconnect } = useReconnect();
+  const disconnectingRef = useRef(false);
 
   const isEthereum = chainId === ETHEREUM_CHAIN_ID;
   const isArbitrum = chainId === ARBITRUM_CHAIN_ID;
@@ -76,13 +77,15 @@ export function useEvmWallet() {
 
   useEffect(() => {
     const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible') {
+      if (document.visibilityState === "visible" && !disconnectingRef.current) {
         reconnect();
       }
     };
 
     const handleFocus = () => {
-      reconnect();
+      if (!disconnectingRef.current) {
+        reconnect();
+      }
     };
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
@@ -112,8 +115,19 @@ export function useEvmWallet() {
   }, [connectAsync, connectors]);
 
   const disconnectEvm = useCallback(async () => {
-    await disconnectAsync();
-  }, [disconnectAsync]);
+    disconnectingRef.current = true;
+    try {
+      if (connector) {
+        await disconnectAsync({ connector });
+      } else {
+        await disconnectAsync();
+      }
+    } finally {
+      window.setTimeout(() => {
+        disconnectingRef.current = false;
+      }, 3000);
+    }
+  }, [disconnectAsync, connector]);
 
   const switchToArbitrum = useCallback(async () => {
     if (!isConnected || isArbitrum) return;

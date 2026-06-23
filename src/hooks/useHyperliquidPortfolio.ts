@@ -136,17 +136,26 @@ export function useHyperliquidPortfolio({
     }
   }, [address, enabled]);
 
+  const prevAddressRef = useRef<string | undefined>(undefined);
+
   useEffect(() => {
     if (!address || !enabled) {
+      prevAddressRef.current = undefined;
       setData(null);
       setError(null);
+      setIsLoading(false);
       return;
     }
 
+    const walletChanged = prevAddressRef.current?.toLowerCase() !== address.toLowerCase();
+    prevAddressRef.current = address;
+
     fetchGenRef.current += 1;
-    setData(null);
     setError(null);
-    setIsLoading(true);
+    if (walletChanged) {
+      setData(null);
+      setIsLoading(true);
+    }
     fetchPortfolio();
 
     if (pollInterval > 0) {

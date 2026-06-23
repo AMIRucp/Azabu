@@ -1,5 +1,7 @@
 "use client";
 
+import { BRIDGE_EVM_CHAINS, getBridgeEvmChain } from "@/config/bridgeEvmChains";
+
 export const MONO = "'JetBrains Mono', monospace";
 export const SANS = "'Inter', system-ui, sans-serif";
 
@@ -7,10 +9,16 @@ export const SLIPPAGE_PRESETS = [0.1, 0.3, 0.5, 1.0, 2.0];
 
 export type FusionPreset = "fast" | "medium" | "slow";
 
+export const FUSION_PRESET_DURATION_SEC: Record<FusionPreset, number> = {
+  fast: 180,
+  medium: 360,
+  slow: 600,
+};
+
 export const FUSION_PRESET_OPTIONS: Array<{ key: FusionPreset; label: string; description: string }> = [
-  { key: "fast", label: "Fast", description: "~3 min, best price" },
-  { key: "medium", label: "Medium", description: "~6 min, better price" },
-  { key: "slow", label: "Slow", description: "~10 min, optimal price" },
+  { key: "fast", label: "Fast", description: "~3 min to fill" },
+  { key: "medium", label: "Medium", description: "~6 min to fill" },
+  { key: "slow", label: "Slow", description: "~10 min to fill" },
 ];
 
 export const CARD = "#0E1014";
@@ -32,26 +40,15 @@ export interface TokenState {
 const CMC_ICON_EVM = (id: number) => `https://s2.coinmarketcap.com/static/img/coins/64x64/${id}.png`;
 const NATIVE_ETH = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE";
 
-export const SWAP_CHAINS = [
-  {
-    key: "ethereum" as const,
-    label: "Ethereum",
-    shortLabel: "ETH",
-    chainId: 1,
-    color: "#627EEA",
-    logo: "/tokens/ethereum.png",
-    explorer: "https://etherscan.io",
-  },
-  {
-    key: "arbitrum" as const,
-    label: "Arbitrum",
-    shortLabel: "ARB",
-    chainId: 42161,
-    color: "#28A0F0",
-    logo: "/tokens/arb.webp",
-    explorer: "https://arbiscan.io",
-  },
-] as const;
+export const SWAP_CHAINS = BRIDGE_EVM_CHAINS.map((chain) => ({
+  key: chain.key,
+  label: chain.label,
+  shortLabel: chain.shortLabel,
+  chainId: chain.chainId,
+  color: chain.color,
+  logo: chain.logo,
+  explorer: chain.explorer,
+}));
 
 export type SwapChainKey = typeof SWAP_CHAINS[number]["key"];
 
@@ -62,7 +59,15 @@ export function getFallbackTokens(chainId: number): TokenState[] {
     case 42161:
       return ARB_TOKENS;
     default:
-      return ETH_TOKENS;
+      return (
+        getBridgeEvmChain(chainId)?.fallbackTokens.map((t) => ({
+          symbol: t.symbol,
+          name: t.name,
+          address: t.address,
+          decimals: t.decimals,
+          logoURI: t.logoURI,
+        })) ?? ETH_TOKENS
+      );
   }
 }
 

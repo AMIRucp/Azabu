@@ -39,7 +39,8 @@ export const metadata: Metadata = {
   title: "Azabu | Alternative Futures Exchange",
   description: "AFX -- Alternative Futures Exchange. 275+ leveraged markets across crypto, stocks, commodities, and indices.",
   icons: {
-    icon: "/favicon.png",
+    icon: "/Azabu%20logo.png",
+    apple: "/Azabu%20logo.png",
   },
   other: {
     "mobile-web-app-capable": "yes",

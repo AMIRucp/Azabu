@@ -414,7 +414,6 @@ export function AsterAgentApprovalModal({ open, onClose, onApproved }: Props) {
         try {
           await ethereum.request({ method: "wallet_switchEthereumChain", params: [{ chainId: currentChainId }] });
         } catch {
-          /* ignore */
         }
       }
     };

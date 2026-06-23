@@ -11,7 +11,6 @@ const FRESHNESS_GUARD_MS = 5000;
 export function usePositionRefresh(intervalMs = 30000) {
   const { evmAddress } = useEvmWallet();
   const setPositions = usePositionStore((s) => s.setPositions);
-  const setLoading = usePositionStore((s) => s.setLoading);
   const setError = usePositionStore((s) => s.setError);
   const fetchingRef = useRef(false);
 
@@ -23,26 +22,22 @@ export function usePositionRefresh(intervalMs = 30000) {
     if (!force && lastUpdated > 0 && Date.now() - lastUpdated < FRESHNESS_GUARD_MS) return;
 
     fetchingRef.current = true;
-    setLoading(true);
     try {
       const positions = await fetchAllPositions(undefined, evmAddress);
-
       if (positions.length > 0) {
         setPositions(positions);
       }
     } catch (err) {
       setError(toUserFacingError(err, "portfolio"));
     } finally {
-      setLoading(false);
       fetchingRef.current = false;
     }
-  }, [evmAddress, setPositions, setLoading, setError]);
+  }, [evmAddress, setPositions, setError]);
 
   const refreshToken = usePositionStore((s) => s.refreshToken);
 
   useEffect(() => {
     if (!evmAddress) return;
-    usePositionStore.getState().setPositions([]);
     refresh(true);
     const iv = setInterval(() => refresh(), intervalMs);
     return () => clearInterval(iv);
