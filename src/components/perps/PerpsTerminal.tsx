@@ -273,42 +273,18 @@ export default function PerpsTerminal() {
       }
     }
 
-    if (isMobile) {
-      const resolvedProto = protocol || "hyperliquid";
-      localStorage.setItem("afx_trade_market", JSON.stringify({ 
-        sym: baseAsset, 
-        protocol: resolvedProto,
-        assetId: assetId 
-      }));
-      localStorage.setItem("afx_perps_asset", baseAsset);
-      localStorage.setItem("afx_last_market", baseAsset);
-      const chainVal = resolvedProto === "aster" ? "arbitrum" : resolvedProto;
-      localStorage.setItem("afx_last_chain", chainVal);
-      window.dispatchEvent(new CustomEvent("afx-navigate", { detail: { page: "trade" } }));
-      return;
-    }
-
-    setSym(symbol);
-    setSelectedProtocol(protocol);
-    setBrowserMode(false);
-    localStorage.setItem("afx_last_market", symbol);
-    if (protocol) {
-      const chainMap: Record<string, "arbitrum" | "hyperliquid" | "lighter"> = {
-        aster: "arbitrum",
-        hyperliquid: "hyperliquid",
-        lighter: "lighter",
-      };
-      const targetChain = chainMap[protocol];
-      if (targetChain && targetChain !== chain) {
-        skipChainReset.current = true;
-        setChain(targetChain);
-      }
-      if (targetChain) localStorage.setItem("afx_last_chain", targetChain);
-    }
-    setShowMarketSelector(false);
-    setBottomTab("data");
-    setDataTab("orderbook");
-  }, [chain, isMobile]);
+    const resolvedProto = protocol || "hyperliquid";
+    localStorage.setItem("afx_trade_market", JSON.stringify({
+      sym: baseAsset,
+      protocol: resolvedProto,
+      assetId: assetId,
+    }));
+    localStorage.setItem("afx_perps_asset", baseAsset);
+    localStorage.setItem("afx_last_market", baseAsset);
+    const chainVal = resolvedProto === "aster" ? "arbitrum" : resolvedProto;
+    localStorage.setItem("afx_last_chain", chainVal);
+    window.dispatchEvent(new CustomEvent("afx-navigate", { detail: { page: "trade" } }));
+  }, []);
 
   const handleTradeSuccess = useCallback(() => {
     setPosRefreshKey(k => k + 1);
